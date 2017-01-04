@@ -9,6 +9,7 @@ import flixel.system.FlxSound;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.tweens.misc.NumTween;
+import inputHandlers.MoveInputHandler;
 
 /**
  * The cursor that the player moves around the map to direct their characters.
@@ -29,16 +30,6 @@ import flixel.tweens.misc.NumTween;
  * 			anchor coordinates would be increased by 2.
  * 		- Create a new set of tweens that dictate how the corners should move about
  * 			their new anchor coordinates.
- * 
- * 	User input handling follows this pattern of logic:
- * 		- When the user initially presses a movement key, the logical position of 
- * 			the cursor (measured in rows and columns) increments by one in that 
- * 			direction.
- * 		- Whenever any movement key is initially pressed or released, an internal 
- * 			timer (counting up, like a stopwatch) resets.
- * 		- If that internal timer is over a certain threshold value and the cursor
- * 			is not currently moving, then the cursor will attempt to move using the
- * 			inputs that are currently held down.
  * 
  * 	Cursor movement follows this pattern of logic:
  * 		- Calculate the cursor's real position in the scene by multiplying its logical
@@ -494,101 +485,21 @@ class MapCursor
 	///////////////////////////////////////
 	
 	/**
-	 * Recieves a set of boolean input values and determines if movement should occur.
-	 * 
-	 * @param	upInput		Boolean value indicating an "up" input.
-	 * @param	downInput	Boolean value indicating a "down" input.
-	 * @param	leftInput	Boolean value indicating a "left" input.
-	 * @param	rightInput	Boolean value indicating a "right" input.
-	 */
-	private function processMovementInput(upInput:Bool, downInput:Bool, leftInput:Bool, 
-		rightInput:Bool):Void
-	{
-		var vertMove:Int	= 0;
-		var horizMove:Int	= 0;
-		
-		if (upInput)
-		{
-			vertMove--;
-		}
-		if (downInput)
-		{
-			vertMove++;
-		}
-		if (leftInput)
-		{
-			horizMove--;
-		}
-		if (rightInput)
-		{
-			horizMove++;
-		}
-		
-		if (vertMove != 0 || horizMove != 0)
-		{
-			moveCursorPos(new FlxPoint(horizMove, vertMove));
-		}
-	}
-	
-	/**
 	 * Changes col and row variables of the cursor & plays movement sound effect.
 	 * 
 	 * @param	colRowChanges	A point with contents (column change amount, row change amount)
 	 */
-	private function moveCursorPos(colRowChanges:FlxPoint):Void
-	{	//need to cast float values to int.
-		col += cast colRowChanges.x;
-		row += cast colRowChanges.y;
-		moveSound.play(true);
-	}
-	
-	/**
-	 * Identifies if a new movement input was pressed this frame. 
-	 * If so, it sets moveInputChanged to true and attempts movement.
-	 */
-	private function attemptPressedMovement():Void
-	{
-		if (FlxG.keys.justPressed.UP || FlxG.keys.justPressed.DOWN || 
-			FlxG.keys.justPressed.LEFT || FlxG.keys.justPressed.RIGHT ||
-			FlxG.keys.justReleased.UP || FlxG.keys.justReleased.DOWN || 
-			FlxG.keys.justReleased.LEFT || FlxG.keys.justReleased.RIGHT)
+	private function moveCursorPos(vertMove:Int, horizMove:Int, heldMove:Bool):Void
+	{	
+		var xPos:Int = col * tileSize;
+		var yPos:Int = row * tileSize;
+		if (!heldMove || //If the movement is "held", then only move if not currently moving.
+			(currCornerArr[0].getAnchorX() == xPos + currentAnchorLX &&
+			currCornerArr[0].getAnchorY() == yPos + currentAnchorTY))
 		{
-			moveInputChanged = true;
-			processMovementInput(FlxG.keys.justPressed.UP, FlxG.keys.justPressed.DOWN, 
-					FlxG.keys.justPressed.LEFT, FlxG.keys.justPressed.RIGHT);
-		}	
-	}
-	
-	/**
-	 * Identifies if the current movement inputs have been held down for some time,
-	 * if it has been held without changes for long enough, then it will attempt to
-	 * move in the held direction if it is not currently moving.
-	 * 
-	 * NOTE: It may not matter in the long run, but the "held movement" test also passes
-	 * 	if the player isn't holding any buttons at all for long enough, which may not be
-	 * 	desired behavior.
-	 * 
-	 * @param	elapsed	The amount of time since the last atteptHeldMovement in seconds.
-	 */
-	private function attemptHeldMovement(elapsed:Float):Void
-	{
-		if (!moveInputChanged)
-		{
-			timeMoveHeld += elapsed;
-			
-			var xPos:Float = col * tileSize;
-			var yPos:Float = row * tileSize;
-			if (timeMoveHeld >  timeMoveHeldThreshold && 
-				currCornerArr[0].getAnchorX() == xPos + currentAnchorLX &&
-				currCornerArr[0].getAnchorY() == yPos + currentAnchorTY)
-			{
-				processMovementInput(FlxG.keys.pressed.UP, FlxG.keys.pressed.DOWN, 
-					FlxG.keys.pressed.LEFT, FlxG.keys.pressed.RIGHT);
-			}
-		}
-		else
-		{
-			timeMoveHeld = 0;
+			row += vertMove;
+			col += horizMove;
+			moveSound.play(true);
 		}
 	}
 	
@@ -617,7 +528,7 @@ class MapCursor
 		{
 			vertMove--;
 		}
-		if (currCornerArr[0].getAnchorY() < yPos + currentAnchorTY)
+		else if (currCornerArr[0].getAnchorY() < yPos + currentAnchorTY)
 		{
 			vertMove++;
 		}
@@ -813,10 +724,8 @@ class MapCursor
 		
 		// NOTE: end of likely-to-be-replaced section.
 		
-		attemptPressedMovement();
-		attemptHeldMovement(elapsed);
+		MoveInputHandler.handleMovement(elapsed, moveCursorPos);
 		moveCornerAnchors();
-		cleanupVariables();
 	}
 }
 
