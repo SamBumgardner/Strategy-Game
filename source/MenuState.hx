@@ -1,5 +1,7 @@
 package;
 
+import flixel.input.keyboard.FlxKey;
+import inputHandlers.MoveInputHandler;
 import cursors.MapCursor;
 import flixel.FlxG;
 import flixel.FlxSprite;
@@ -29,11 +31,13 @@ class MenuState extends FlxState
 		add(mapCursor.getTotalFlxGroup());
 		
 		
+		MoveInputHandler.setMoveKeys(FlxKey.UP, FlxKey.DOWN, FlxKey.LEFT, FlxKey.RIGHT);
 	}
 
 	override public function update(elapsed:Float):Void
 	{
 		super.update(elapsed);
 		mapCursor.update(elapsed);
+		MoveInputHandler.updateCycleFinished();
 	}
 }
