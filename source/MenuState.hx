@@ -1,5 +1,6 @@
 package;
 
+import boxes.BoxCreator;
 import cursors.MapCursor;
 import flixel.FlxG;
 import flixel.FlxSprite;
@@ -28,6 +29,13 @@ class MenuState extends FlxState
 		mapCursor = new MapCursor();
 		add(mapCursor.getTotalFlxGroup());
 		
+		BoxCreator.setBoxType(AssetPaths.box_test__png, 15, 15);
+		add(BoxCreator.createBox(55, 150));
+		BoxCreator.setBoxType(AssetPaths.box_big_bg__png, 15, 45);
+		var secondBox:FlxSprite = BoxCreator.createBox(300, 200);
+		secondBox.x = 300;
+		secondBox.y = 200;
+		add(secondBox);
 		
 	}
 
