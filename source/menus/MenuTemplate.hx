@@ -161,8 +161,6 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	 */
 	public function setX(newX:Float):Float
 	{
-		trace("called set_x");
-		
 		var xDiff:Float = newX - x;
 		totalFlxGrp.forEach(moveSpriteX.bind(_, xDiff), true);
 		

@@ -48,8 +48,6 @@ import utilities.UpdatingEntity;
  * 		- The tweening functions active on the corners will handle updating the corners'
  * 			actual x/y position so that they are in the proper position relative to their
  * 			newly-moved anchor coordinates.
- * 			
- * 		
  * 
  * @author Samuel Bumgardner
  */
@@ -401,6 +399,7 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 		currMoveMode = MoveModes.NONE;
 	}
 	
+	
 	///////////////////////////////////////
 	//       CORNER MOVEMENT MODES       //
 	///////////////////////////////////////
@@ -621,6 +620,7 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 		currMoveMode = MoveModes.EXPANDED_STILL;
 	}
 	
+	
 	///////////////////////////////////////
 	//          CURSOR MOVEMENT          //
 	///////////////////////////////////////
@@ -742,7 +742,6 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 			}
 		}
 	}
-	
 	
 	
 	///////////////////////////////////////

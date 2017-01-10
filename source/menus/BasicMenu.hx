@@ -17,10 +17,15 @@ import utilities.UpdatingEntity;
 /**
  * A basic menu class that uses an array of strings (provided as a parameter upon instantiation)
  * 	to create a basic vertical menu. 
+ * 
  * @author Samuel Bumgardner
  */
 class BasicMenu extends MenuTemplate implements VarSizedBox 
 {
+	///////////////////////////////////////
+	//         DATA  DECLARATION         //
+	///////////////////////////////////////
+	
 	/**
 	 * Variables to satisfy VarSizedBox interface.
 	 * Specifies the qualities of the menu's box.
