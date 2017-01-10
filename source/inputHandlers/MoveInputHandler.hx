@@ -47,6 +47,11 @@ class MoveInputHandler
 	///////////////////////////////////////
 	
 	/**
+	 * Boolean value that indicates if init() has already been called to perform first-time setup.
+	 */
+	static public var initialized(default, null):Bool = false;
+	
+	/**
 	 * Tracks if any new inputs have been entered in this frame.
 	 * 	Used in processMovementInput() and attemptHeldMovement()
 	 */
