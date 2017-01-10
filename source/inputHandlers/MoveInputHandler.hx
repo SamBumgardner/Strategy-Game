@@ -117,11 +117,15 @@ class MoveInputHandler
 	 */
 	static public function handleMovement(elapsed:Float, moveCallback:Int->Int->Bool->Void):Void
 	{
+		if (!initialized)
+		{
+			trace("ERROR: Called handleMovement() before performing first-time initialization.");
+		}
+		
 		if (alreadyCalledThisFrame)
 		{
-			trace("ERROR: MoveInputHandler's handleMovement() was already called this frame.",
-				"This probably means that one of your menus or cursors is still trying",
-				"to accept movement inputs even though it should be inactive.");
+			trace("ERROR: MoveInputHandler's handleMovement() was already called this frame",
+					"\n or forgot to call updateCycleFinished().");
 		}
 		
 		attemptPressedMovement(moveCallback);
