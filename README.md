@@ -15,6 +15,7 @@ To build and run Potion-Shop on Windows or Linux (note: only tested on Windows),
 
 1. Ensure you have [Haxe](http://www.haxe.org/download) and [HaxeFlixel](http://www.haxeflixel.com) installed on your computer.
   * Installing HaxeFlixel should also automatically install [OpenFl](http://www.openfl.org/learn/docs/getting-started/) and [Lime](https://lib.haxe.org/p/lime).
+  * After HaxeFlixel's installation has finished, open a new command prompt and run `haxelib install flixel-addons` to install an additional library of extra HaxeFlixel features.
 3. Clone or download this repository to your computer.	
 4. Open a command prompt in the newly created `\Strategy-Game` folder.
 5. Run the command `haxelib run lime test neko` to build and run the executable.
