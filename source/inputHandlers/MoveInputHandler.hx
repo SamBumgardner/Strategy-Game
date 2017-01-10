@@ -27,14 +27,14 @@ import flixel.input.keyboard.FlxKey;
  * 
  * NOTE:
  * 	User input handling follows this pattern of logic:
- * 		- When the user initially presses a movement key, the logical position of 
- * 			the cursor (measured in rows and columns) increments by one in that 
- * 			direction.
+ * 		- When the user initially presses a movement key, a movement callback function
+ * 			is called with the pressed key information passed along as parameters.
  * 		- Whenever any movement key is initially pressed or released, an internal 
  * 			timer (counting up, like a stopwatch) resets.
- * 		- If that internal timer is over a certain threshold value and the cursor
- * 			is not currently moving, then the cursor will attempt to move using the
- * 			inputs that are currently held down.
+ * 		- If that internal timer is over a certain threshold value, the movement callback
+ * 			is called using the inputs that are currently held down. It is up to the object
+ * 			that defined the callback function to use those inputs responsibly, since that 
+ * 			callback function will be called every frame after the threshold has passed.
  * 
  * @author Samuel Bumgardner
  */
@@ -45,6 +45,11 @@ class MoveInputHandler
 	///////////////////////////////////////
 	//         DATA  DECLARATION         //
 	///////////////////////////////////////
+	
+	/**
+	 * Boolean value that indicates if init() has already been called to perform first-time setup.
+	 */
+	static public var initialized(default, null):Bool = false;
 	
 	/**
 	 * Tracks if any new inputs have been entered in this frame.
@@ -75,7 +80,9 @@ class MoveInputHandler
 	/**
 	 * Boolean variable that tracks whether an object has already used input-handling 
 	 * 	functionality this frame. If so, then the input-handling function shouldn't be
-	 * 	called again (on this frame).
+	 * 	called again (on this frame). Technically you can, but held behavior may not 
+	 * 	function exactly as desired. That, and multiple objects will be consuming the 
+	 * 	same inputs.
 	 */
 	static private var alreadyCalledThisFrame:Bool;
 	
@@ -85,6 +92,21 @@ class MoveInputHandler
 	///////////////////////////////////////
 	//         PUBLIC  INTERFACE         //
 	///////////////////////////////////////
+	
+	/**
+	 * Function that performs first-time setup for MoveInputHandler.
+	 * Must be called before this class is actually used to handle inputs.
+	 * 
+	 * @param	up		Initial key used for "up" input.
+	 * @param	down	Initial key used for "down" input.
+	 * @param	left	Initial key used for "left" input.
+	 * @param	right	Initial key used for "right" input.
+	 */
+	static public function init(up:FlxKey, down:FlxKey, left:FlxKey, right:FlxKey)
+	{
+		setMoveKeys(up, down, left, right);
+		initialized = true;
+	}
 	
 	/**
 	 * Recieves FlxKeys, then adjusts its internal variables to match that
@@ -105,6 +127,19 @@ class MoveInputHandler
 	}
 	
 	/**
+	 * Resets the (non-key) variables of the MoveInputHandler back to their original values,
+	 * 	so held movement doesn't carry over when transitioning between menus.
+	 * 
+	 * Should be called by an external class whenever the object interacting with the
+	 * 	MoveInputHandler changes.
+	 */
+	static public function resetNumVars():Void
+	{
+		moveInputChanged = false;
+		timeMoveHeld = 0;
+	}
+	
+	/**
 	 * Main point of interaction between MoveInputHandler and any classes that want
 	 * 	to move. Goes through the process of attempting pressed and held movement,
 	 * 	and cleans up its own variables.
@@ -112,22 +147,27 @@ class MoveInputHandler
 	 * NOTE: Should only be called once per update cycle, otherwise held input will
 	 * 	not function as intended (and multiple objects will be consuming the same inputs).
 	 * 
-	 * @param	elapsed			Time since last call to this function, in seconds
+	 * @param	elapsed			Time since last call to this function, in seconds.
 	 * @param	moveCallback	Function that defines how movement inputs should be used.
 	 */
 	static public function handleMovement(elapsed:Float, moveCallback:Int->Int->Bool->Void):Void
 	{
+		if (!initialized)
+		{
+			trace("ERROR: Called handleMovement() before performing first-time initialization.");
+		}
+		
 		if (alreadyCalledThisFrame)
 		{
-			trace("ERROR: MoveInputHandler's handleMovement() was already called this frame.",
-				"This probably means that one of your menus or cursors is still trying",
-				"to accept movement inputs even though it should be inactive.");
+			trace("ERROR: MoveInputHandler's handleMovement() was already called this frame",
+					"\n or forgot to call updateCycleFinished().");
 		}
-		alreadyCalledThisFrame = true;
 		
 		attemptPressedMovement(moveCallback);
 		attemptHeldMovement(elapsed, moveCallback);
 		cleanupVariables();
+		
+		alreadyCalledThisFrame = true;
 	}
 	
 	/**
@@ -150,11 +190,12 @@ class MoveInputHandler
 	 * Recieves a set of boolean input values and determines if movement should occur.
 	 * If the movment is "held", it may follow an alternative set of rules.
 	 * 
-	 * @param	upInput		Boolean value indicating an "up" input.
-	 * @param	downInput	Boolean value indicating a "down" input.
-	 * @param	leftInput	Boolean value indicating a "left" input.
-	 * @param	rightInput	Boolean value indicating a "right" input.
-	 * @param	heldMove	Boolean value indicating whether these inputs are "pressed" or "held".
+	 * @param	upInput			Boolean value indicating an "up" input.
+	 * @param	downInput		Boolean value indicating a "down" input.
+	 * @param	leftInput		Boolean value indicating a "left" input.
+	 * @param	rightInput		Boolean value indicating a "right" input.
+	 * @param	heldMove		Boolean value indicating if inputs are "pressed" or "held".
+	 * @param	moveCallback	Function to be called with the results of inputs.
 	 */
 	static private function processMovementInput(upInput:Bool, downInput:Bool, leftInput:Bool, 
 		rightInput:Bool, heldMove:Bool, moveCallback:Int->Int->Bool->Void):Void
@@ -188,6 +229,8 @@ class MoveInputHandler
 	/**
 	 * Identifies if a new movement input was pressed this frame. 
 	 * If so, it sets moveInputChanged to true and attempts movement.
+	 * 
+	 * @param	moveCallback	Function to be passed along to processMovementInput. Defines how movement inputs should be used.
 	 */
 	static private function attemptPressedMovement(moveCallback:Int->Int->Bool->Void):Void
 	{
@@ -207,19 +250,25 @@ class MoveInputHandler
 	 * if it has been held without changes for long enough, then it will attempt to
 	 * move in the held direction.
 	 * 
-	 * The caller is responsible for identifying
+	 * The caller is responsible for handling held movement. Held buttons will be reported
+	 * 	every frame, which is probably far more frequent than the caller wants to actually
+	 * 	do something because an input was held.
 	 * 
 	 * NOTE: It may not matter in the long run, but the "held movement" test also passes
 	 * 	if the player isn't holding any buttons at all for long enough, which may not be
 	 * 	desired behavior.
 	 * 
 	 * @param	elapsed	The amount of time since the last atteptHeldMovement in seconds.
+	 * @param	moveCallback	Function to be passed along to processMovementInput. Defines how movement inputs should be used.
 	 */
 	static private function attemptHeldMovement(elapsed:Float, moveCallback:Int->Int->Bool->Void):Void
 	{
 		if (!moveInputChanged)
 		{
-			timeMoveHeld += elapsed;
+			if(!alreadyCalledThisFrame)
+			{
+				timeMoveHeld += elapsed;
+			}
 			
 			if (timeMoveHeld > timeMoveHeldThreshold)
 			{

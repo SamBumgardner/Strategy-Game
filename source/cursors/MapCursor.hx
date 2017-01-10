@@ -1,6 +1,6 @@
 package cursors;
 
-import cursors.CornerSprite;
+import cursors.AnchoredSprite;
 import flixel.FlxG;
 import flixel.group.FlxGroup;
 import flixel.math.FlxPoint;
@@ -9,7 +9,13 @@ import flixel.system.FlxSound;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
 import flixel.tweens.misc.NumTween;
+import inputHandlers.ActionInputHandler;
 import inputHandlers.MoveInputHandler;
+import observerPattern.eventSystem.EventTypes;
+import utilities.HideableEntity;
+import observerPattern.Observed;
+import observerPattern.Subject;
+import utilities.UpdatingEntity;
 
 /**
  * The cursor that the player moves around the map to direct their characters.
@@ -24,7 +30,7 @@ import inputHandlers.MoveInputHandler;
  * 		- Clear out the tweens carrying out the old movement function.
  * 		- Change the anchor offsets tracked by the map cursor to match the new 
  * 			movement function's offsets.
- * 		- Adjust the anchor values of the CornerSprites by the difference between
+ * 		- Adjust the anchor values of the corners by the difference between
  * 			their old anchor coordinates and the new ones. For example, if the old anchor
  * 			offset for the top left corner was -5 and the new offset is -3, the corner's
  * 			anchor coordinates would be increased by 2.
@@ -42,29 +48,39 @@ import inputHandlers.MoveInputHandler;
  * 		- The tweening functions active on the corners will handle updating the corners'
  * 			actual x/y position so that they are in the proper position relative to their
  * 			newly-moved anchor coordinates.
- * 			
- * 		
  * 
  * @author Samuel Bumgardner
  */
-class MapCursor
+class MapCursor implements UpdatingEntity implements HideableEntity implements Observed
 {
 	///////////////////////////////////////
 	//         DATA  DECLARATION         //
 	///////////////////////////////////////
 	
 	/**
+	 * Variable to satisify UpdatingEntity interface.
+	 * Determines whether this object should execute the body of its update function.
+	 */
+	public var active:Bool = false;
+	
+	/**
+	 * Variable to satisfy Observed interface.
+	 * Used to notify observers when input events occur.
+	 */
+	public var subject:Subject;
+	
+	/**
 	 * Arrays for holding different sets of corner graphics, for use in different
 	 * situations.
 	 */
-	private var normCornerArr:Array<CornerSprite> = new Array<CornerSprite>();
-	private var targetCornerArr:Array<CornerSprite> = new Array<CornerSprite>();
+	private var normCornerArr:Array<AnchoredSprite> = new Array<AnchoredSprite>();
+	private var targetCornerArr:Array<AnchoredSprite> = new Array<AnchoredSprite>();
 	
 	/**
 	 * Shallow copy of the array that is currently being displayed by MapCursor.
 	 * Should not be changed directly, but instead done by calling changeCurrCornerArr().
 	 */
-	private var currCornerArr:Array<CornerSprite>;
+	private var currCornerArr:Array<AnchoredSprite>;
 	
 	/**
 	 * Array of NumTween objects that act upon the corner that sits
@@ -85,9 +101,10 @@ class MapCursor
 	private var totalFlxGrp:FlxGroup = new FlxGroup();
 	
 	/**
-	 * Sound effect to be played upon cursor movement.
+	 * Sound effects that are played in response to various keyboard inputs.
 	 */
 	private var moveSound:FlxSound;
+	private var confirmSound:FlxSound;
 	
 	/**
 	 * Integers that track what row/column of the map's grid the MapCursor is in.
@@ -139,7 +156,8 @@ class MapCursor
 	/**
 	 * The minimum amount of time the button must be held to start continuously moving.
 	 */
-	private var timeMoveHeldThreshold:Float = .25;
+	private var timeMoveHeldThreshold(default, null):Float = .25;
+	
 	
 	///////////////////////////////////////
 	//          INITIALIZATION           //
@@ -148,9 +166,11 @@ class MapCursor
 	/**
 	 * Initializer.
 	 */
-	public function new() 
+	public function new(?id:Int = 0) 
 	{	
 		initSoundAssets();
+		
+		subject = new Subject(this, id);
 		
 		initCornerGrp(AssetPaths.normal_cursor_corner__png, normCornerArr, true);
 		initCornerGrp(AssetPaths.target_cursor_corner__png, targetCornerArr);
@@ -163,10 +183,11 @@ class MapCursor
 	private function initSoundAssets():Void
 	{
 		moveSound = FlxG.sound.load(AssetPaths.cursor_move__wav);
+		confirmSound = FlxG.sound.load(AssetPaths.cursor_confirm__wav);
 	}
 	
 	/**
-	 * Creates a set of 4 CornerSprites with identical graphics to be the corners of the cursor.
+	 * Creates a set of 4 AnchoredSprites with identical graphics to be the corners of the cursor.
 	 * Corners are created starting from the top-left corner and proceeding clockwise,
 	 * and are added to both the provided array and the cursor's totalFlxGroup. Is also 
 	 * responsible for setting a corner
@@ -176,25 +197,21 @@ class MapCursor
 	 * @param	beginActive		Indicates whether the provided group should be set as the first currCornerArr.
 	 * @return	The array that was originally passed into the function, now full of sprites. Useful for chaining.
 	 */
-	private function initCornerGrp(cornerGraphic:FlxGraphicAsset, cornerArr:Array<CornerSprite>, ?beginActive:Bool = false):Array<CornerSprite>
+	private function initCornerGrp(cornerGraphic:FlxGraphicAsset, cornerArr:Array<AnchoredSprite>, ?beginActive:Bool = false):Array<AnchoredSprite>
 	{
-		var corner:CornerSprite;
-		var onRightSide:Bool = false;
-		var onBottomSide:Bool = false;
+		var corner:AnchoredSprite;
 		for (cornerType in 0...4)
 		{
+			corner = new AnchoredSprite(0, 0, cornerGraphic);
+			
 			if (cornerType == CornerTypes.TOP_RIGHT || cornerType == CornerTypes.BOTTOM_RIGHT)
 			{
-				onRightSide = true;
+				corner.flipX = true;
 			}
 			if (cornerType == CornerTypes.BOTTOM_RIGHT || cornerType == CornerTypes.BOTTOM_LEFT)
 			{
-				onBottomSide = true;
+				corner.flipY = true;
 			}
-			corner = new CornerSprite(0, 0, cornerGraphic, onRightSide, onBottomSide);
-			
-			onRightSide = false;
-			onBottomSide = false;
 			
 			if (!beginActive)
 			{
@@ -216,6 +233,128 @@ class MapCursor
 	
 	
 	///////////////////////////////////////
+	//         PUBLIC  INTERFACE         //
+	///////////////////////////////////////
+	
+	/**
+	 * Getter method for TotalFlxGroup.
+	 * 
+	 * @return This object's totalFlxGroup.
+	 */
+	public function getTotalFlxGroup():FlxGroup
+	{
+		return totalFlxGrp;
+	}
+	
+	/**
+	 * Sets new values for row and col. The cursor will move toward the new position at
+	 * normal speed.
+	 * 
+	 * @param	newRow	New value for row.
+	 * @param	newCol	New value for col.
+	 */
+	public function moveToPosition(newRow:Int, newCol:Int):Void
+	{
+		row = newRow;
+		col = newCol;
+	}
+	
+	/**
+	 * Sets new values for row and col, and immediately jumps the cursor's corners to the
+	 * new position.
+	 * 
+	 * @param	newRow	New value for row.
+	 * @param	newCol	New value for col.
+	 */
+	public function jumpToPosition(newRow:Int, newCol:Int):Void
+	{
+		row = newRow;
+		col = newCol;
+		jumpCorners();
+	}
+	
+	/**
+	 * Public function for changing movement modes. 
+	 * 
+	 * @param	newMovementMode	The desired movement mode. Use entries from MoveModes enum below.
+	 */
+	public function changeMovementModes(newMovementMode:Int):Void
+	{
+		switch (newMovementMode)
+		{
+			case MoveModes.BOUNCE_IN_OUT: bounceInOut();
+			case MoveModes.EXPANDED_STILL: expandedStill();
+			default: trace("ERROR: invalid MoveMode.");
+		}
+	}
+	
+	/**
+	 * Public function for changing the cursor type.
+	 * 
+	 * @param	newCursorType	The desired cursor type. Use entries from CursorTypes enum below.
+	 */
+	public function changeCursorType(newCursorType:Int):Void
+	{
+		switch (newCursorType)
+		{
+			case CursorTypes.NORMAL:	changeCurrCornerArr(normCornerArr);
+			case CursorTypes.TARGET:	changeCurrCornerArr(targetCornerArr);
+			default: trace("ERROR: invalid CursorType.");
+		}
+	}
+	
+	/**
+	 * Public function for changing input modes.
+	 * 
+	 * @param	newInputMode	The desired input mode. Use entries from InputModes enum below.
+	 */
+	public function changeInputModes(newInputMode:Int):Void
+	{
+		currInputMode = newInputMode;
+	}
+	
+	/**
+	 * Hides the MapCursor's corners from view.
+	 */
+	public function hide():Void
+	{
+		for (corner in currCornerArr)
+		{
+			corner.visible = false;
+			corner.active = false;
+		}
+	}
+	
+	/**
+	 * Reveals the MapCursor's corners.
+	 */
+	public function reveal():Void
+	{
+		for (corner in currCornerArr)
+		{
+			corner.visible = true;
+			corner.active = true;
+		}
+	}
+	
+	/**
+	 * Sets MapCursor to execute the body of its update() function when called.
+	 */
+	public function activate():Void
+	{
+		active = true;
+	}
+	
+	/**
+	 * Sets MapCursor to not execute the body of its update() function when called.
+	 */
+	public function deactivate():Void
+	{
+		active = false;
+	}
+	
+	
+	///////////////////////////////////////
 	//        CORNER MANIPULATION        //
 	///////////////////////////////////////
 	
@@ -224,9 +363,9 @@ class MapCursor
 	 * Note that this does NOT make any changes to the array of tweens, so a new movement mode
 	 * function must be called after this to make the corners move to their correct positions.
 	 * 
-	 * @param	newCornerArr	The array of CornerSprites that currCornerArr should become a shallow copy of.
+	 * @param	newCornerArr	The array of corners that currCornerArr should become a shallow copy of.
 	 */
-	private function changeCurrCornerArr(newCornerArr:Array<CornerSprite>):Void
+	private function changeCurrCornerArr(newCornerArr:Array<AnchoredSprite>):Void
 	{
 		for (i in 0...currCornerArr.length)
 		{
@@ -259,6 +398,7 @@ class MapCursor
 		}
 		currMoveMode = MoveModes.NONE;
 	}
+	
 	
 	///////////////////////////////////////
 	//       CORNER MOVEMENT MODES       //
@@ -373,7 +513,7 @@ class MapCursor
 	 * @param	cornerType		Which corner this particular object is. (See CornerTypes enum)
 	 * @param	offsetValue		How far the corner should be offset from its anchor.
 	 */
-	private function bounceFunc(corner:CornerSprite, cornerType:Int, offsetValue:Float):Void
+	private function bounceFunc(corner:AnchoredSprite, cornerType:Int, offsetValue:Float):Void
 	{
 		if (offsetValue > corner.width / 2)
 		{
@@ -442,7 +582,7 @@ class MapCursor
 	 * 
 	 * @param	elapsed		Time since last call to stillFunc, in seconds
 	 */
-	private function stillFunc(corner:CornerSprite, elapsed:Float):Void
+	private function stillFunc(corner:AnchoredSprite, elapsed:Float):Void
 	{
 		corner.x = corner.getAnchorX();
 		corner.y = corner.getAnchorY();
@@ -479,6 +619,7 @@ class MapCursor
 		
 		currMoveMode = MoveModes.EXPANDED_STILL;
 	}
+	
 	
 	///////////////////////////////////////
 	//          CURSOR MOVEMENT          //
@@ -558,110 +699,49 @@ class MapCursor
 	
 	
 	///////////////////////////////////////
-	//         PUBLIC  INTERFACE         //
+	//          CURSOR ACTIONS           //
 	///////////////////////////////////////
 	
 	/**
-	 * Getter method for TotalFlxGroup.
+	 * Is not expecting to ever get a call with heldAction being true (because of its call
+	 * 	to ActionInputHandler, see below in the update function) but I set up the test at
+	 * 	the start of the function just in case.
 	 * 
-	 * @return This object's totalFlxGroup.
-	 */
-	public function getTotalFlxGroup():FlxGroup
-	{
-		return totalFlxGrp;
-	}
-	
-	/**
-	 * Sets new values for row and col. The cursor will move toward the new position at
-	 * normal speed.
+	 * Can (and probably should) be overridden by child classes of this, since different
+	 * 	menus may not need to notify PAINT, NEXT, or INFO events. If it is overridden with
+	 * 	the intent to replace this function, make sure to NOT call super.doCursorAction();
 	 * 
-	 * @param	newRow	New value for row.
-	 * @param	newCol	New value for col.
+	 * @param	pressedKeys
+	 * @param	heldAction
 	 */
-	public function moveToPosition(newRow:Int, newCol:Int):Void
+	private function doCursorAction(pressedKeys:Array<Bool>, heldAction:Bool)
 	{
-		row = newRow;
-		col = newCol;
-	}
-	
-	/**
-	 * Sets new values for row and col, and immediately jumps the cursor's corners to the
-	 * new position.
-	 * 
-	 * @param	newRow	New value for row.
-	 * @param	newCol	New value for col.
-	 */
-	public function jumpToPosition(newRow:Int, newCol:Int):Void
-	{
-		row = newRow;
-		col = newCol;
-		jumpCorners();
-	}
-	
-	/**
-	 * Public function for changing movement modes. 
-	 * 
-	 * @param	newMovementMode	The desired movement mode. Use entries from MoveModes enum below.
-	 */
-	public function changeMovementModes(newMovementMode:Int):Void
-	{
-		switch (newMovementMode)
+		if (!heldAction)
 		{
-			case MoveModes.BOUNCE_IN_OUT: bounceInOut();
-			case MoveModes.EXPANDED_STILL: expandedStill();
-			default: trace("ERROR: invalid MoveMode.");
+			// Could also be done with a loop, but this ends up being easier to understand.
+			if (pressedKeys[KeyIndex.CONFIRM])
+			{
+				confirmSound.play(true);
+				subject.notify(EventTypes.CONFIRM);
+			}
+			else if (pressedKeys[KeyIndex.CANCEL])
+			{
+				subject.notify(EventTypes.CANCEL);
+			}
+			else if (pressedKeys[KeyIndex.PAINT])
+			{
+				subject.notify(EventTypes.PAINT);
+			}
+			else if (pressedKeys[KeyIndex.NEXT])
+			{
+				subject.notify(EventTypes.NEXT);
+			}
+			else if (pressedKeys[KeyIndex.INFO])
+			{
+				subject.notify(EventTypes.INFO);
+			}
 		}
 	}
-	
-	/**
-	 * Public function for changing the cursor type.
-	 * 
-	 * @param	newCursorType	The desired cursor type. Use entries from CursorTypes enum below.
-	 */
-	public function changeCursorType(newCursorType:Int):Void
-	{
-		switch (newCursorType)
-		{
-			case CursorTypes.NORMAL:	changeCurrCornerArr(normCornerArr);
-			case CursorTypes.TARGET:	changeCurrCornerArr(targetCornerArr);
-			default: trace("ERROR: invalid CursorType.");
-		}
-	}
-	
-	/**
-	 * Public function for changing input modes.
-	 * 
-	 * @param	newInputMode	The desired input mode. Use entries from InputModes enum below.
-	 */
-	public function changeInputModes(newInputMode:Int):Void
-	{
-		currInputMode = newInputMode;
-	}
-	
-	/**
-	 * Hides the MapCursor from view and stops it from updating.
-	 */
-	public function hideCursor():Void
-	{
-		for (corner in currCornerArr)
-		{
-			corner.visible = false;
-			corner.active = false;
-		}
-	}
-	
-	/**
-	 * Reveals the MapCursor and resumes its updating.
-	 */
-	public function revealCursor():Void
-	{
-		for (corner in currCornerArr)
-		{
-			corner.visible = true;
-			corner.active = true;
-		}
-	}
-	
 	
 	
 	///////////////////////////////////////
@@ -685,47 +765,54 @@ class MapCursor
 	 */
 	public function update(elapsed:Float):Void
 	{
-		// NOTE: This section is temporary, and will likely be replaced by game logic later.
-		
-		if (currMoveMode != MoveModes.EXPANDED_STILL && FlxG.keys.pressed.ALT)
+		if (active)
 		{
-			expandedStill();
-		}
-		else if (currMoveMode != MoveModes.BOUNCE_IN_OUT && !FlxG.keys.pressed.ALT)
-		{
-			bounceInOut();
-		}
-		
-		// Compare [0] index of arrays as a shortcut to see if they contain the same elements.
-		if (currCornerArr[0] != targetCornerArr[0] && FlxG.keys.pressed.CONTROL)
-		{
-			changeCurrCornerArr(targetCornerArr);
-			if (currMoveMode == MoveModes.EXPANDED_STILL)
+			// NOTE: This section is temporary, and will likely be replaced by game logic later.
+			
+			if (currMoveMode != MoveModes.EXPANDED_STILL && FlxG.keys.pressed.ALT)
 			{
 				expandedStill();
 			}
-			else
+			else if (currMoveMode != MoveModes.BOUNCE_IN_OUT && !FlxG.keys.pressed.ALT)
 			{
 				bounceInOut();
 			}
-		}
-		else if (currCornerArr[0] != normCornerArr[0] && !FlxG.keys.pressed.CONTROL)
-		{
-			changeCurrCornerArr(normCornerArr);
-			if (currMoveMode == MoveModes.EXPANDED_STILL)
+			
+			// Compare [0] index of arrays as a shortcut to see if they contain the same elements.
+			if (currCornerArr[0] != targetCornerArr[0] && FlxG.keys.pressed.CONTROL)
 			{
-				expandedStill();
+				changeCurrCornerArr(targetCornerArr);
+				if (currMoveMode == MoveModes.EXPANDED_STILL)
+				{
+					expandedStill();
+				}
+				else
+				{
+					bounceInOut();
+				}
 			}
-			else
+			else if (currCornerArr[0] != normCornerArr[0] && !FlxG.keys.pressed.CONTROL)
 			{
-				bounceInOut();
+				changeCurrCornerArr(normCornerArr);
+				if (currMoveMode == MoveModes.EXPANDED_STILL)
+				{
+					expandedStill();
+				}
+				else
+				{
+					bounceInOut();
+				}
 			}
+			
+			// NOTE: end of likely-to-be-replaced section.
+			
+			if (currInputMode != InputModes.DISABLED)
+			{
+				ActionInputHandler.handleActions(elapsed, doCursorAction, false);
+				MoveInputHandler.handleMovement(elapsed, moveCursorPos);
+			}
+			moveCornerAnchors();
 		}
-		
-		// NOTE: end of likely-to-be-replaced section.
-		
-		MoveInputHandler.handleMovement(elapsed, moveCursorPos);
-		moveCornerAnchors();
 	}
 }
 

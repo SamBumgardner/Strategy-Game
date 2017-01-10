@@ -3,7 +3,6 @@ import flixel.system.FlxAssets.FlxGraphicAsset;
 
 /**
  * Interface for use by any class that uses a box created by BoxCreator.
- * 
  * Declares a set of variables needed to interact with the BoxCreator static functions.
  * 
  * @author Samuel Bumgardner
