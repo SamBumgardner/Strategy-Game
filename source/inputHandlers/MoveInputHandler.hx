@@ -87,6 +87,21 @@ class MoveInputHandler
 	///////////////////////////////////////
 	
 	/**
+	 * Function that performs first-time setup for MoveInputHandler.
+	 * Must be called before this class is actually used to handle inputs.
+	 * 
+	 * @param	up		Initial key used for "up" input.
+	 * @param	down	Initial key used for "down" input.
+	 * @param	left	Initial key used for "left" input.
+	 * @param	right	Initial key used for "right" input.
+	 */
+	static public function init(up:FlxKey, down:FlxKey, left:FlxKey, right:FlxKey)
+	{
+		setMoveKeys(up, down, left, right);
+		initialized = true;
+	}
+	
+	/**
 	 * Recieves FlxKeys, then adjusts its internal variables to match that
 	 * 	new set of FlxKeys.
 	 * 
@@ -102,6 +117,19 @@ class MoveInputHandler
 		downKey = newDown;
 		leftKey = newLeft;
 		rightKey = newRight;
+	}
+	
+	/**
+	 * Resets the (non-key) variables of the MoveInputHandler back to their original values,
+	 * 	so held movement doesn't carry over when transitioning between menus.
+	 * 
+	 * Should be called by an external class whenever the object interacting with the
+	 * 	MoveInputHandler changes.
+	 */
+	static public function resetNumVars():Void
+	{
+		moveInputChanged = false;
+		timeMoveHeld = 0;
 	}
 	
 	/**
