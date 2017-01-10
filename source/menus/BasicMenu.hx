@@ -10,8 +10,8 @@ import flixel.system.FlxAssets.FlxGraphicAsset;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
 import inputHandlers.ActionInputHandler.KeyIndex;
-import utilities.EventTypes;
-import utilities.Subject;
+import observerPattern.eventSystem.EventTypes;
+import observerPattern.Subject;
 import utilities.UpdatingEntity;
 
 /**

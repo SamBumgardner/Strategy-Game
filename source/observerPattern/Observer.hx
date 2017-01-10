@@ -1,6 +1,7 @@
-package utilities;
+package observerPattern;
 
-import utilities.InputEvent;
+import observerPattern.Observed;
+import observerPattern.eventSystem.InputEvent;
 
 /**
  * Basic interface for observers in the Observer design patern.

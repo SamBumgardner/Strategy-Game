@@ -1,4 +1,4 @@
-package utilities;
+package observerPattern.eventSystem;
 
 /**
  * typeDef for the ActionEvent class, which is really just a wrapper around an int. 

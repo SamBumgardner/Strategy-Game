@@ -1,4 +1,4 @@
-package utilities;
+package observerPattern.eventSystem;
 
 /**
  * Functions to be used on InputEvent-type variables to set and get its fields.

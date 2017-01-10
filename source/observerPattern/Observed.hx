@@ -1,4 +1,4 @@
-package utilities;
+package observerPattern;
 
 /**
  * Basic interface for observed objects in the Observer design pattern.

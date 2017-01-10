@@ -11,10 +11,10 @@ import flixel.tweens.FlxTween;
 import flixel.tweens.misc.NumTween;
 import inputHandlers.ActionInputHandler;
 import inputHandlers.MoveInputHandler;
-import utilities.EventTypes;
+import observerPattern.eventSystem.EventTypes;
 import utilities.HideableEntity;
-import utilities.Observed;
-import utilities.Subject;
+import observerPattern.Observed;
+import observerPattern.Subject;
 import utilities.UpdatingEntity;
 
 /**

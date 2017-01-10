@@ -1,4 +1,4 @@
-package utilities;
+package observerPattern.eventSystem;
 
 /**
  * Enum defining the different types of input events that can occur.

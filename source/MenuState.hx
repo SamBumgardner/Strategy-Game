@@ -13,13 +13,13 @@ import flixel.text.FlxText;
 import flixel.ui.FlxButton;
 import flixel.math.FlxMath;
 import menus.MenuTemplate;
-import utilities.InputEvent;
-import utilities.EventTypes;
-import utilities.Observed;
-import utilities.Observer;
+import observerPattern.eventSystem.InputEvent;
+import observerPattern.eventSystem.EventTypes;
+import observerPattern.Observed;
+import observerPattern.Observer;
 import utilities.UpdatingEntity;
 
-using utilities.EventExtender;
+using observerPattern.eventSystem.EventExtender;
 
 /**
  * Currently a test bed for new features. 

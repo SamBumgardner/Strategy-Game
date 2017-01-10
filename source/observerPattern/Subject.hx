@@ -1,9 +1,11 @@
-package utilities;
+package observerPattern;
 
-import utilities.InputEvent;
-import utilities.EventExtender;
+import observerPattern.Observed;
+import observerPattern.Observer;
+import observerPattern.eventSystem.InputEvent;
+import observerPattern.eventSystem.EventExtender;
 
-using utilities.EventExtender;
+using observerPattern.eventSystem.EventExtender;
 
 /**
  * Basic class for subjects in the Observer design pattern.
