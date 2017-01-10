@@ -1,6 +1,6 @@
 package cursors;
 
-import cursors.CornerSprite;
+import cursors.AnchoredSprite;
 import flixel.FlxG;
 import flixel.group.FlxGroup;
 import flixel.math.FlxPoint;
