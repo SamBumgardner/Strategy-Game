@@ -24,7 +24,7 @@ import inputHandlers.MoveInputHandler;
  * 		- Clear out the tweens carrying out the old movement function.
  * 		- Change the anchor offsets tracked by the map cursor to match the new 
  * 			movement function's offsets.
- * 		- Adjust the anchor values of the CornerSprites by the difference between
+ * 		- Adjust the anchor values of the corners by the difference between
  * 			their old anchor coordinates and the new ones. For example, if the old anchor
  * 			offset for the top left corner was -5 and the new offset is -3, the corner's
  * 			anchor coordinates would be increased by 2.
@@ -57,14 +57,14 @@ class MapCursor
 	 * Arrays for holding different sets of corner graphics, for use in different
 	 * situations.
 	 */
-	private var normCornerArr:Array<CornerSprite> = new Array<CornerSprite>();
-	private var targetCornerArr:Array<CornerSprite> = new Array<CornerSprite>();
+	private var normCornerArr:Array<AnchoredSprite> = new Array<AnchoredSprite>();
+	private var targetCornerArr:Array<AnchoredSprite> = new Array<AnchoredSprite>();
 	
 	/**
 	 * Shallow copy of the array that is currently being displayed by MapCursor.
 	 * Should not be changed directly, but instead done by calling changeCurrCornerArr().
 	 */
-	private var currCornerArr:Array<CornerSprite>;
+	private var currCornerArr:Array<AnchoredSprite>;
 	
 	/**
 	 * Array of NumTween objects that act upon the corner that sits
@@ -166,7 +166,7 @@ class MapCursor
 	}
 	
 	/**
-	 * Creates a set of 4 CornerSprites with identical graphics to be the corners of the cursor.
+	 * Creates a set of 4 AnchoredSprites with identical graphics to be the corners of the cursor.
 	 * Corners are created starting from the top-left corner and proceeding clockwise,
 	 * and are added to both the provided array and the cursor's totalFlxGroup. Is also 
 	 * responsible for setting a corner
@@ -176,25 +176,21 @@ class MapCursor
 	 * @param	beginActive		Indicates whether the provided group should be set as the first currCornerArr.
 	 * @return	The array that was originally passed into the function, now full of sprites. Useful for chaining.
 	 */
-	private function initCornerGrp(cornerGraphic:FlxGraphicAsset, cornerArr:Array<CornerSprite>, ?beginActive:Bool = false):Array<CornerSprite>
+	private function initCornerGrp(cornerGraphic:FlxGraphicAsset, cornerArr:Array<AnchoredSprite>, ?beginActive:Bool = false):Array<AnchoredSprite>
 	{
-		var corner:CornerSprite;
-		var onRightSide:Bool = false;
-		var onBottomSide:Bool = false;
+		var corner:AnchoredSprite;
 		for (cornerType in 0...4)
 		{
+			corner = new AnchoredSprite(0, 0, cornerGraphic);
+			
 			if (cornerType == CornerTypes.TOP_RIGHT || cornerType == CornerTypes.BOTTOM_RIGHT)
 			{
-				onRightSide = true;
+				corner.flipX = true;
 			}
 			if (cornerType == CornerTypes.BOTTOM_RIGHT || cornerType == CornerTypes.BOTTOM_LEFT)
 			{
-				onBottomSide = true;
+				corner.flipY = true;
 			}
-			corner = new CornerSprite(0, 0, cornerGraphic, onRightSide, onBottomSide);
-			
-			onRightSide = false;
-			onBottomSide = false;
 			
 			if (!beginActive)
 			{
@@ -224,9 +220,9 @@ class MapCursor
 	 * Note that this does NOT make any changes to the array of tweens, so a new movement mode
 	 * function must be called after this to make the corners move to their correct positions.
 	 * 
-	 * @param	newCornerArr	The array of CornerSprites that currCornerArr should become a shallow copy of.
+	 * @param	newCornerArr	The array of corners that currCornerArr should become a shallow copy of.
 	 */
-	private function changeCurrCornerArr(newCornerArr:Array<CornerSprite>):Void
+	private function changeCurrCornerArr(newCornerArr:Array<AnchoredSprite>):Void
 	{
 		for (i in 0...currCornerArr.length)
 		{
@@ -373,7 +369,7 @@ class MapCursor
 	 * @param	cornerType		Which corner this particular object is. (See CornerTypes enum)
 	 * @param	offsetValue		How far the corner should be offset from its anchor.
 	 */
-	private function bounceFunc(corner:CornerSprite, cornerType:Int, offsetValue:Float):Void
+	private function bounceFunc(corner:AnchoredSprite, cornerType:Int, offsetValue:Float):Void
 	{
 		if (offsetValue > corner.width / 2)
 		{
@@ -442,7 +438,7 @@ class MapCursor
 	 * 
 	 * @param	elapsed		Time since last call to stillFunc, in seconds
 	 */
-	private function stillFunc(corner:CornerSprite, elapsed:Float):Void
+	private function stillFunc(corner:AnchoredSprite, elapsed:Float):Void
 	{
 		corner.x = corner.getAnchorX();
 		corner.y = corner.getAnchorY();

@@ -4,13 +4,13 @@ import flixel.FlxSprite;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 
 /**
- * A single corner of a MapCursor. This class is designed to do small movements
+ * An extension of a normal FlxSprite. This class is designed to do small movements
  * around its "anchor coordinates" and not much else. That movement logic is specified
- * inside MapCursor, so head over there to see how this class is used.
+ * inside whatever class is using it, so go to those classes to see .
  * 
  * @author Samuel Bumgardner
  */
-class CornerSprite extends FlxSprite
+class AnchoredSprite extends FlxSprite
 {
 	///////////////////////////////////////
 	//         DATA  DECLARATION         //
@@ -34,21 +34,12 @@ class CornerSprite extends FlxSprite
 	 * @param	X				The starting x coordinate for this sprite.
 	 * @param	Y				The starting y coordinate for this sprite.
 	 * @param	SimpleGraphic	The single-frame graphic of the corner.
-	 * @param	shouldFlipX		Whether this corner's graphic should be flipped horizontally.
-	 * @param	shouldFlipY		Whether this corner's graphic should be flipped vertically.
+	 * @param	shouldFlipX		Whether this graphic should be flipped horizontally.
+	 * @param	shouldFlipY		Whether this graphic should be flipped vertically.
 	 */
-	public function new(?X:Float = 0, ?Y:Float = 0, ?SimpleGraphic:FlxGraphicAsset, 
-		?shouldFlipX:Bool = false, ?shouldFlipY:Bool = false) 
+	public function new(?X:Float = 0, ?Y:Float = 0, ?SimpleGraphic:FlxGraphicAsset) 
 	{
 		super(X, Y, SimpleGraphic);
-		if (shouldFlipX)
-		{
-			flipX = true;
-		}
-		if (shouldFlipY)
-		{
-			flipY = true;
-		}
 		anchorX = X;
 		anchorY = Y;
 	}
