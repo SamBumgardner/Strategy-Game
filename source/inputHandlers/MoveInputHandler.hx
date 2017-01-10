@@ -123,11 +123,12 @@ class MoveInputHandler
 				"This probably means that one of your menus or cursors is still trying",
 				"to accept movement inputs even though it should be inactive.");
 		}
-		alreadyCalledThisFrame = true;
 		
 		attemptPressedMovement(moveCallback);
 		attemptHeldMovement(elapsed, moveCallback);
 		cleanupVariables();
+		
+		alreadyCalledThisFrame = true;
 	}
 	
 	/**
@@ -219,7 +220,10 @@ class MoveInputHandler
 	{
 		if (!moveInputChanged)
 		{
-			timeMoveHeld += elapsed;
+			if(!alreadyCalledThisFrame)
+			{
+				timeMoveHeld += elapsed;
+			}
 			
 			if (timeMoveHeld > timeMoveHeldThreshold)
 			{
