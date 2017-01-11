@@ -33,6 +33,7 @@ class MissionState extends FlxState implements Observer
 	private var mapCursor:MapCursor;
 	
 	private var tileSize(default, never):Int = 64;
+	private var deadzoneBorderTiles(default, never) = 2;
 	
 	private var menu:BasicMenu;
 	private var menu2:BasicMenu;
@@ -51,9 +52,7 @@ class MissionState extends FlxState implements Observer
 		initMap();
 		initMapCursor();
 		
-		
-		
-		
+		initCamera();
 		
 		menu = new BasicMenu(50, 100, ["Unit", "Status", "Options", "Suspend", "End"], 1);
 		menu.subject.addObserver(this);
@@ -99,6 +98,25 @@ class MissionState extends FlxState implements Observer
 	{
 		add(mapCursor.totalFlxGrp);
 		updateableObjects.push(mapCursor);
+	}
+	
+	/**
+	 * Must be called after mapCursor has been created, which should happen in initMap().
+	 */
+	private function initCamera():Void
+	{
+		if (mapCursor == null)
+		{
+			trace("ERROR: Camera could not be set up because mapCursor was not created before " +
+				"initCamera() was called.");
+		}
+		else
+		{
+		FlxG.camera.follow(mapCursor.cameraHitbox, 1);
+		FlxG.camera.deadzone = new FlxRect (tileSize * deadzoneBorderTiles, 
+			tileSize * deadzoneBorderTiles, FlxG.width - deadzoneBorderTiles * tileSize * 2,
+			FlxG.height - deadzoneBorderTiles * tileSize * 2);
+		}
 	}
 	
 	private function placeEntitites(entityName:String, entityData:Xml):Void
