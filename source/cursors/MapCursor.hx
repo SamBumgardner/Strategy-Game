@@ -98,7 +98,7 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	 * FlxGroup containing all sprites under this object's supervision. Rather than
 	 * directly adding MapCursor to the FlxState, this FlxGroup will be added.
 	 */
-	private var totalFlxGrp:FlxGroup = new FlxGroup();
+	public var totalFlxGrp(default, null):FlxGroup = new FlxGroup();
 	
 	/**
 	 * Sound effects that are played in response to various keyboard inputs.
@@ -235,16 +235,6 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	///////////////////////////////////////
 	//         PUBLIC  INTERFACE         //
 	///////////////////////////////////////
-	
-	/**
-	 * Getter method for TotalFlxGroup.
-	 * 
-	 * @return This object's totalFlxGroup.
-	 */
-	public function getTotalFlxGroup():FlxGroup
-	{
-		return totalFlxGrp;
-	}
 	
 	/**
 	 * Sets new values for row and col. The cursor will move toward the new position at
