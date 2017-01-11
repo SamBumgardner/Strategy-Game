@@ -5,6 +5,7 @@ import flixel.FlxBasic;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
+import flixel.math.FlxPoint;
 import flixel.system.FlxSound;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
@@ -62,6 +63,13 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	private var y:Float;
 	
 	/**
+	 * The scroll factor to be used by all visual components of a menu.
+	 * Is set to zero because menus should always appear at the same point
+	 * 	on the screen regardless of camera position.
+	 */
+	private var menuScrollFactor(default, never):FlxPoint = new FlxPoint(0, 0);
+	
+	/**
 	 * FlxGroup that holds all HaxeFlixel-inheriting components used by this menu.
 	 */
 	public var totalFlxGrp(default, null):FlxGroup = new FlxGroup();
@@ -115,7 +123,7 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	private var framesLeftInMove:Int = 0;
 	
 	/**
-	 * Sound effect to be played upon cursor movement.
+	 * Sound effects to be played after cursor actions.
 	 */
 	private var moveSound:FlxSound;
 	private var confirmSound:FlxSound;
@@ -146,6 +154,31 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 		moveSound = FlxG.sound.load(AssetPaths.menu_move__wav);
 		confirmSound = FlxG.sound.load(AssetPaths.menu_confirm__wav);
 		cancelSound = FlxG.sound.load(AssetPaths.menu_cancel__wav);
+	}
+	
+	/**
+	 * Sets the scroll factors of all sprites in totalFlxGrp to (0,0).
+	 * Must be called by child classes during initalization after setting up all visual 
+	 * 	menu components.
+	 */
+	private function setScrollFactors():Void
+	{
+		totalFlxGrp.forEach(setSpriteScroll, true);
+	}
+	
+	/**
+	 * Helper function for setScrollFactors().
+	 * Determines if the targetSprite is an FlxSprite, and if so sets its scrollFactor
+	 * 	to match the menuScrollFactor, which is (0, 0).
+	 * 
+	 * @param	targetSprite	The FlxBasic object that is being operated upon.
+	 */
+	private function setSpriteScroll(targetSprite:FlxBasic):Void
+	{
+		if (Std.is(targetSprite, FlxSprite))
+		{
+			(cast targetSprite).scrollFactor = menuScrollFactor;
+		}
 	}
 	
 	
