@@ -115,6 +115,15 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	private var row:Int = 0;
 	
 	/**
+	 * Set of integers that define the column and row boundaries of the map.
+	 * 	maxCol and maxRow are set using parameters passed into new().
+	 */
+	private var minCol(default, never):Int = 0;
+	private var minRow(default, never):Int = 0;
+	private var maxCol:Int;
+	private var maxRow:Int;
+	
+	/**
 	 * Integer that holds the size of tiles used on the map, measured in pixels.
 	 * Changing this value will alter the movement of this cursor significantly!
 	 */
@@ -173,10 +182,18 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	
 	/**
 	 * Initializer.
+	 * 
+	 * @param	mapWidth	The width of the current map, in pixels.
+	 * @param	mapHeight	The height of the current map, in pixels.
+	 * @param	id			Passed along to the MapCursor's subject, used to identify itself when notifying events.
 	 */
-	public function new(?id:Int = 0) 
+	public function new(mapWidth:Int, mapHeight:Int, ?id:Int = 0) 
 	{	
 		initSoundAssets();
+		
+		// The maxCol and maxRow shouldn't need to be floored, but better safe than sorry.
+		maxCol = Math.floor(mapWidth / tileSize - 1);
+		maxRow = Math.floor(mapHeight / tileSize - 1);
 		
 		subject = new Subject(this, id);
 		cameraHitbox = new FlxObject(0, 0, tileSize, tileSize);
@@ -625,17 +642,35 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	///////////////////////////////////////
 	
 	/**
-	 * Changes col and row variables of the cursor & plays movement sound effect.
+	 * After checking that the attempted movement is valid, changes col and row variables 
+	 * 	of the cursor & plays movement sound effect.
 	 * 
 	 * @param	colRowChanges	A point with contents (column change amount, row change amount)
 	 */
 	private function moveCursorPos(vertMove:Int, horizMove:Int, heldMove:Bool):Void
 	{	
+		// If vertical movement is not valid, set to 0.
+		if (!(row + vertMove >= minRow && row + vertMove <= maxRow))
+		{
+			vertMove = 0;
+		}
+		
+		// If horizontal movement is not valid, set to 0.
+		if (!(col + horizMove >= minCol && col + horizMove <= maxCol))
+		{
+			horizMove = 0;
+		}
+		
 		var xPos:Int = col * tileSize;
 		var yPos:Int = row * tileSize;
-		if (!heldMove || //If the movement is "held", then only move if not currently moving.
+		
+		if (// If at least one of the movement directions was valid...
+			(vertMove != 0 || horizMove != 0) &&
+			// If the movement is "held", then only move if not currently moving.
+			(!heldMove || 
 			(currCornerArr[0].getAnchorX() == xPos + currentAnchorLX &&
 			currCornerArr[0].getAnchorY() == yPos + currentAnchorTY))
+			)
 		{
 			row += vertMove;
 			col += horizMove;

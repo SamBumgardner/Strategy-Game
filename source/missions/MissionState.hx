@@ -125,7 +125,7 @@ class MissionState extends FlxState implements Observer
 		var y:Int = Std.parseInt(entityData.get("y"));
 		if (entityName == "map_cursor")
 		{
-			mapCursor = new MapCursor(0);
+			mapCursor = new MapCursor(map.width, map.height, 0);
 			mapCursor.subject.addObserver(this);
 			
 			var row:Int = Math.floor(y / tileSize);
