@@ -2,6 +2,7 @@ package cursors;
 
 import cursors.AnchoredSprite;
 import flixel.FlxG;
+import flixel.FlxObject;
 import flixel.group.FlxGroup;
 import flixel.math.FlxPoint;
 import flixel.system.FlxAssets.FlxGraphicAsset;
@@ -158,6 +159,13 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	 */
 	private var timeMoveHeldThreshold(default, null):Float = .25;
 	
+	/**
+	 * FlxObject tracked by the camera inside the MissionState.
+	 * This object was required because having the camera track a single corner caused
+	 * 	problems due to the bouncing movement of corners, and the fact that they were
+	 * 	often times outside of the square box the cursor logically takes up.
+	 */
+	public var cameraHitbox:FlxObject;
 	
 	///////////////////////////////////////
 	//          INITIALIZATION           //
@@ -171,6 +179,7 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 		initSoundAssets();
 		
 		subject = new Subject(this, id);
+		cameraHitbox = new FlxObject(0, 0, tileSize, tileSize);
 		
 		initCornerGrp(AssetPaths.normal_cursor_corner__png, normCornerArr, true);
 		initCornerGrp(AssetPaths.target_cursor_corner__png, targetCornerArr);
@@ -260,7 +269,7 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	{
 		row = newRow;
 		col = newCol;
-		jumpCorners();
+		jumpCursor();
 	}
 	
 	/**
@@ -672,19 +681,36 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	}
 	
 	/**
-	 * Jumps the corners' anchors and x/y values to match the cursor's current position.
+	 * Changes the cameraHitbox x and y values to match the position of the top left
+	 * 	corner's anchor location minus the anchor's offset. 
+	 * This allows the cameraHitbox to move smoothly around.
 	 */
-	private function jumpCorners():Void
+	private function updateCameraHitboxPos():Void
+	{
+		cameraHitbox.x = currCornerArr[CornerTypes.TOP_LEFT].getAnchorX() - currentAnchorTY;
+		cameraHitbox.y = currCornerArr[CornerTypes.TOP_LEFT].getAnchorY() - currentAnchorLX;
+	}
+	
+	/**
+	 * Jumps the corners' anchors and x/y values to match the cursor's current position.
+	 * Also updates the cameraHitbox position to match.
+	 */
+	private function jumpCursor():Void
 	{
 		var xDifference = col * tileSize + currentAnchorLX - currCornerArr[0].getAnchorX();
 		var yDifference = row * tileSize + currentAnchorTY - currCornerArr[0].getAnchorY();
 		
+		// Change corner anchors and move corner sprites.
 		for (corner in currCornerArr)
 		{
 			corner.setAnchor(corner.getAnchorX() + xDifference, 
 				corner.getAnchorY() + yDifference);
 			corner.jumpToAnchor();
 		}
+		
+		// Change cameraHitbox position.
+		cameraHitbox.x += xDifference;
+		cameraHitbox.y += yDifference;
 	}
 	
 	
@@ -751,6 +777,30 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	 * (and thus doesn't recieve any updates naturally) it's up to the 
 	 * state to call this object's update manually.
 	 * 
+	 * NOTE: 
+	 * 	Because MapCursor's update() function is currently called after super.update()
+	 * 		inside of the MissionState, updateCameraHitboxPos() must be called before
+	 * 		moveCornerAnchors().
+	 * 	This is necessary because the corners' tweening functions update at some point
+	 * 		during the MissionState's super.update(), which sets the corners' visual 
+	 * 		positions to whatever the anchor positions are at that moment (after adding
+	 * 		and/or subtracting any necessary offsets).
+	 * 	We need to make sure that the anchor values used for changing the corners' visual
+	 * 		positions and the anchor values used for changing the cameraHitbox's position
+	 * 		are the same, otherwise the two will get offset from one another by one frame.
+	 * 
+	 * 	Basically, we need the corners' tweens' updates and updateCameraHitbox() to occur
+	 * 		on the same side of moveCornerAnchors(), otherwise one will get ahead of the other
+	 * 		by one frame during movement.
+	 * 	Because MapCursor is updated after MissionState's super.update() (which updates the
+	 * 		tweens) we need to make sure that the camera hitbox is updated before corner
+	 * 		anchors move.
+	 * 	If MapCursor's update() call in MissionState is ever moved to be before super.update(),
+	 * 		then we will need to move updateCameraHitbox() to happen after MoveCornerAnchors().
+	 * 	That way, updateCameraHitbox() and the tween updates will happen with the same anchor
+	 * 		values, ensuring that the camera hitbox and corner positions remain in sync with
+	 * 		one another.
+	 * 
 	 * @param	elapsed
 	 */
 	public function update(elapsed:Float):Void
@@ -798,6 +848,8 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 			
 			if (currInputMode != InputModes.DISABLED)
 			{
+				updateCameraHitboxPos();
+				
 				ActionInputHandler.handleActions(elapsed, doCursorAction, false);
 				MoveInputHandler.handleMovement(elapsed, moveCursorPos);
 			}
