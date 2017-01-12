@@ -29,7 +29,19 @@
   </LevelValueDefinitions>
   <LayerDefinitions>
     <LayerDefinition xsi:type="TileLayerDefinition">
-      <Name>terrain</Name>
+      <Name>terrain_strategic</Name>
+      <Grid>
+        <Width>64</Width>
+        <Height>64</Height>
+      </Grid>
+      <ScrollFactor>
+        <X>1</X>
+        <Y>1</Y>
+      </ScrollFactor>
+      <ExportMode>CSV</ExportMode>
+    </LayerDefinition>
+    <LayerDefinition xsi:type="TileLayerDefinition">
+      <Name>terrain_visual</Name>
       <Grid>
         <Width>64</Width>
         <Height>64</Height>
@@ -54,8 +66,17 @@
   </LayerDefinitions>
   <Tilesets>
     <Tileset>
-      <Name>terrain_forest</Name>
+      <Name>terrain_visual_forest</Name>
       <FilePath>..\assets\images\terrain_forest.png</FilePath>
+      <TileSize>
+        <Width>64</Width>
+        <Height>64</Height>
+      </TileSize>
+      <TileSep>0</TileSep>
+    </Tileset>
+    <Tileset>
+      <Name>terrain_strategic_forest</Name>
+      <FilePath>terrain_strategic_forest.png</FilePath>
       <TileSize>
         <Width>64</Width>
         <Height>64</Height>
