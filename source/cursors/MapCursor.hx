@@ -152,23 +152,6 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	private var expandedStillBY:Int	= -8;
 	
 	/**
-	 * Tracks if any new inputs have been entered in this frame.
-	 * Used in processMovementInput() and attemptHeldMovement()
-	 */
-	private var moveInputChanged:Bool = false;
-	
-	/**
-	 * Tracks the total amount of time that the current set of directional inputs
-	 * have been held for. Used in attemptHeldMovement().
-	 */
-	private var timeMoveHeld:Float = 0;
-	
-	/**
-	 * The minimum amount of time the button must be held to start continuously moving.
-	 */
-	private var timeMoveHeldThreshold(default, null):Float = .25;
-	
-	/**
 	 * FlxObject tracked by the camera inside the MissionState.
 	 * This object was required because having the camera track a single corner caused
 	 * 	problems due to the bouncing movement of corners, and the fact that they were
@@ -798,14 +781,6 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	///////////////////////////////////////
 	//         UPDATE FUNCTIONS          //
 	///////////////////////////////////////
-	
-	/**
-	 * Handles resetting any variables necessary at the end of an update cycle.
-	 */
-	public function cleanupVariables():Void
-	{
-		moveInputChanged = false;
-	}
 	
 	/**
 	 * Since this object isn't going to be "added" to the game state
