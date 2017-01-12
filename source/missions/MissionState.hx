@@ -178,6 +178,7 @@ class MissionState extends FlxState implements Observer
 	
 	override public function update(elapsed:Float):Void
 	{
+		ActionInputHandler.bufferActions(elapsed);
 		super.update(elapsed);
 		updateableObjects[currentlyUpdatingIndex].update(elapsed);
 		MoveInputHandler.updateCycleFinished();
