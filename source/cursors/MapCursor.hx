@@ -129,8 +129,8 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	 * Integers that track what row/column of the map's grid the MapCursor is in.
 	 * Multiply by tileSize to find the x and y position of MapCursor.
 	 */
-	private var col:Int = 0;
-	private var row:Int = 0;
+	public var col(default, null):Int = 0;
+	public var row(default, null):Int = 0;
 	
 	/**
 	 * Set of integers that define the column and row boundaries of the map.
@@ -675,6 +675,7 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 			col += horizMove;
 			isMoving = true;
 			moveSound.play(true);
+			subject.notify(EventTypes.MOVE);
 		}
 	}
 	
