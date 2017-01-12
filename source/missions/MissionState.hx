@@ -21,7 +21,13 @@ import utilities.UpdatingEntity;
 using observerPattern.eventSystem.EventExtender;
 
 /**
- * ...
+ * Instantiates and coordinates all of the game components of the
+ * 	mission part of gameplay, which is where the meat of the action is.
+ * 
+ * Will use manager classes to handle the fine components, mostly acting
+ * 	as an public interface for all of its managers to access and call
+ * 	functions on to manage the overall flow of gameplay.
+ * 
  * @author Samuel Bumgardner
  */
 class MissionState extends FlxState implements Observer
@@ -99,7 +105,12 @@ class MissionState extends FlxState implements Observer
 	}
 	
 	/**
-	 * MapCursor should have already been created by initMap's placeEntities
+	 * Must be called after MapCursor has been created, which should happen in initMap().
+	 * 
+	 * This function is not included in the section of placeEntities that creates the 
+	 * 	MapCursor because we may not want to add the contents of its totalFlxGrp and
+	 * 	push it into updateable objects in the same order that objects are created in 
+	 * 	placeEntities.
 	 */
 	private function initMapCursor():Void
 	{
