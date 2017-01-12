@@ -30,10 +30,12 @@ class MissionState extends FlxState implements Observer
 	private var map:StrategyOgmoLoader;
 	private var terrainTiles:FlxTilemap;
 	
-	private var mapCursor:MapCursor;
 	public var terrainArray:Array<Array<Int>>;
+	public var mapCursor:MapCursor;
 	
-	private var tileSize(default, never):Int = 64;
+	private var mapCursorManager:MapCursorManager;
+	
+	public var tileSize(default, never):Int = 64;
 	private var deadzoneBorderTiles(default, never) = 2;
 	
 	private var menu:BasicMenu;
@@ -54,6 +56,8 @@ class MissionState extends FlxState implements Observer
 		initMapCursor();
 		
 		initCamera();
+		
+		initManagers();
 		
 		menu = new BasicMenu(50, 100, ["Unit", "Status", "Options", "Suspend", "End"], 1);
 		menu.subject.addObserver(this);
@@ -135,6 +139,11 @@ class MissionState extends FlxState implements Observer
 			var col:Int = Math.floor(x / tileSize);
 			mapCursor.jumpToPosition(row, col);
 		}
+	}
+	
+	private function initManagers():Void
+	{
+		mapCursorManager = new MapCursorManager(this);
 	}
 	
 	
