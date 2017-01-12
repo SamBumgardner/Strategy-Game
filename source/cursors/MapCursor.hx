@@ -50,6 +50,18 @@ import utilities.UpdatingEntity;
  * 			actual x/y position so that they are in the proper position relative to their
  * 			newly-moved anchor coordinates.
  * 
+ * 	Cursor actions follows this pattern of logic:
+ * 		- The cursor only reads inputs from the ActionInputHandler buffer when it is between
+ * 			cursor movements.
+ * 		- When the cursor reads inputs from the ActionInputHandler buffer, it reads all inputs
+ * 			if possible, but will stop early if its input mode changes to DISABLED as a result
+ * 			of processed action input.
+ * 		Side note: This class was the whole reason why an input buffer setup was created for the
+ * 			ActionInputHandler. Just processing inputs at the moment they arrived irrespective
+ * 			of the cursor's position could cause menus to open and the cursor to disappear while
+ * 			halfway between tiles, which looked especially bad when the camera was moving along
+ * 			with the cursor.
+ * 
  * @author Samuel Bumgardner
  */
 class MapCursor implements UpdatingEntity implements HideableEntity implements Observed
@@ -63,6 +75,12 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	 * Determines whether this object should execute the body of its update function.
 	 */
 	public var active:Bool = false;
+	
+	/**
+	 * Tracks whether the cursor is currently moving or not.
+	 * Action inputs will be deferred until the cursor has finished moving.
+	 */
+	public var isMoving:Bool = false;
 	
 	/**
 	 * Variable to satisfy Observed interface.
@@ -650,13 +668,12 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 		if (// If at least one of the movement directions was valid...
 			(vertMove != 0 || horizMove != 0) &&
 			// If the movement is "held", then only move if not currently moving.
-			(!heldMove || 
-			(currCornerArr[0].getAnchorX() == xPos + currentAnchorLX &&
-			currCornerArr[0].getAnchorY() == yPos + currentAnchorTY))
+			(!heldMove || !isMoving)
 			)
 		{
 			row += vertMove;
 			col += horizMove;
+			isMoving = true;
 			moveSound.play(true);
 		}
 	}
@@ -695,6 +712,11 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 		{
 			corner.setAnchor(corner.getAnchorX() + (tileSize / framesPerMove * horizMove),
 				corner.getAnchorY() + (tileSize / framesPerMove * vertMove));
+		}
+		if (currCornerArr[0].getAnchorX() == xPos + currentAnchorLX &&
+			currCornerArr[0].getAnchorY() == yPos + currentAnchorTY)
+		{
+			isMoving = false;
 		}
 	}
 	
@@ -737,18 +759,14 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	///////////////////////////////////////
 	
 	/**
-	 * Is not expecting to ever get a call with heldAction being true (because of its call
-	 * 	to ActionInputHandler, see below in the update function) but I set up the test at
-	 * 	the start of the function just in case.
-	 * 
 	 * Can (and probably should) be overridden by child classes of this, since different
 	 * 	menus may not need to notify PAINT, NEXT, or INFO events. If it is overridden with
 	 * 	the intent to replace this function, make sure to NOT call super.doCursorAction();
 	 * 
-	 * @param	pressedKeys
-	 * @param	heldAction
+	 * @param	pressedKeys	Indicates which inputs were pressed this frame. See ActionInputHandler's KeyIndex enum to map indexes to key types.
+	 * @param	heldAction	Indicates if the action was caused by held inputs or not.
 	 */
-	private function doCursorAction(pressedKeys:Array<Bool>, heldAction:Bool)
+	private function doCursorAction(pressedKeys:Array<Bool>, heldAction:Bool):Void
 	{
 		if (!heldAction)
 		{
@@ -786,6 +804,10 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	 * Since this object isn't going to be "added" to the game state
 	 * (and thus doesn't recieve any updates naturally) it's up to the 
 	 * state to call this object's update manually.
+	 * 
+	 * NOTE:
+	 * 	See the top of the file for an explanation of why an input buffering system
+	 * 		exists and the general idea of how it operates.
 	 * 
 	 * NOTE: 
 	 * 	Because MapCursor's update() function is currently called after super.update()
@@ -856,13 +878,26 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 			
 			// NOTE: end of likely-to-be-replaced section.
 			
+			
+			
+			// Actions should remain buffered until movement ends.
+			if (!isMoving)
+			{
+				// Call all of the buffered action functions in order.
+				while (currInputMode != InputModes.DISABLED && 
+					ActionInputHandler.actionBuffer.length > ActionInputHandler.numInputsUsed)
+				{
+					ActionInputHandler.useBufferedInput(doCursorAction);
+				}
+			}
+			
+			
 			if (currInputMode != InputModes.DISABLED)
 			{
-				updateCameraHitboxPos();
-				
-				ActionInputHandler.handleActions(elapsed, doCursorAction, false);
 				MoveInputHandler.handleMovement(elapsed, moveCursorPos);
 			}
+			
+			updateCameraHitboxPos();
 			moveCornerAnchors();
 		}
 	}
