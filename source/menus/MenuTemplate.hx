@@ -506,10 +506,6 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	 * 	notifying its observes that the event happened, and lets those observers take care
 	 * 	of manipulation of external objects.
 	 * 
-	 * Is not expecting to ever get a call with heldAction being true (because of its call
-	 * 	to ActionInputHandler, see below in the update function) but I set up the test at
-	 * 	the start of the function just in case.
-	 * 
 	 * Can (and probably should) be overridden by child classes of this, since different
 	 * 	menus may not need to notify PAINT, NEXT, or INFO events. If it is overridden with
 	 * 	the intent to replace this function, make sure to NOT call super.doCursorAction();
@@ -568,7 +564,12 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 		if (active)
 		{
 			MoveInputHandler.handleMovement(elapsed, moveCursor);
-			ActionInputHandler.handleActions(elapsed, doCursorAction, false);
+			
+			while (active && 
+				ActionInputHandler.actionBuffer.length > ActionInputHandler.numInputsUsed)
+			{
+				ActionInputHandler.useBufferedInput(doCursorAction);
+			}
 			moveCursorAnchors();
 		}
 	}
