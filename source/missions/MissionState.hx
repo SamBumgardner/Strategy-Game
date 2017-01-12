@@ -3,7 +3,6 @@ package missions;
 import cursors.MapCursor;
 import flixel.FlxG;
 import flixel.FlxState;
-import flixel.addons.editors.ogmo.FlxOgmoLoader;
 import flixel.group.FlxGroup;
 import flixel.input.keyboard.FlxKey;
 import flixel.math.FlxRect;
@@ -16,6 +15,7 @@ import observerPattern.Observed;
 import observerPattern.Observer;
 import observerPattern.eventSystem.EventTypes;
 import observerPattern.eventSystem.InputEvent;
+import utilities.StrategyOgmoLoader;
 import utilities.UpdatingEntity;
 
 using observerPattern.eventSystem.EventExtender;
@@ -27,10 +27,11 @@ using observerPattern.eventSystem.EventExtender;
 class MissionState extends FlxState implements Observer
 {
 	
-	private var map:FlxOgmoLoader;
-	private var terrain:FlxTilemap;
+	private var map:StrategyOgmoLoader;
+	private var terrainTiles:FlxTilemap;
 	
 	private var mapCursor:MapCursor;
+	public var terrainArray:Array<Array<Int>>;
 	
 	private var tileSize(default, never):Int = 64;
 	private var deadzoneBorderTiles(default, never) = 2;
@@ -83,10 +84,12 @@ class MissionState extends FlxState implements Observer
 	
 	private function initMap():Void
 	{
-		map = new FlxOgmoLoader(AssetPaths.forest_1__oel);
-		terrain = map.loadTilemap(AssetPaths.terrain_forest__png, 64, 64, "terrain");
-		terrain.follow();
-		add(terrain);
+		map = new StrategyOgmoLoader(AssetPaths.forest_1__oel);
+		terrainTiles = map.loadTilemap(AssetPaths.terrain_forest__png, 64, 64, "terrain_visual");
+		terrainTiles.follow();
+		add(terrainTiles);
+		
+		terrainArray = map.loadTerrainArray("terrain_strategic", tileSize);
 		
 		map.loadEntities(placeEntitites, "entities");
 	}
