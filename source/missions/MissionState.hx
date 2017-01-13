@@ -1,5 +1,6 @@
 package missions;
 
+import boxes.ResizeableBox;
 import cursors.MapCursor;
 import flixel.FlxG;
 import flixel.FlxState;
@@ -50,6 +51,8 @@ class MissionState extends FlxState implements Observer
 	private var menu3:BasicMenu;
 	private var menu4:BasicMenu;
 	
+	private var resizeableBox:ResizeableBox;
+	
 	private var updateableObjects:Array<UpdatingEntity> = new Array<UpdatingEntity>();
 	private var currentlyUpdatingIndex:Int = 0;
 
@@ -65,6 +68,9 @@ class MissionState extends FlxState implements Observer
 		initCamera();
 		
 		initManagers();
+		
+		resizeableBox = new ResizeableBox(300, 300, AssetPaths.box_test__png, 15, 15);
+		add(resizeableBox.totalFlxGrp);
 		
 		menu = new BasicMenu(50, 100, ["Unit", "Status", "Options", "Suspend", "End"], 1);
 		menu.subject.addObserver(this);
@@ -210,6 +216,15 @@ class MissionState extends FlxState implements Observer
 	
 	override public function update(elapsed:Float):Void
 	{
+		if (FlxG.keys.justPressed.Q)
+		{
+			resizeableBox.resize(resizeableBox.boxWidth - 30, resizeableBox.boxHeight - 30);
+		}
+		if (FlxG.keys.justPressed.W)
+		{
+			resizeableBox.resize(resizeableBox.boxWidth + 30, resizeableBox.boxHeight + 30);
+		}
+		
 		ActionInputHandler.bufferActions(elapsed);
 		super.update(elapsed);
 		updateableObjects[currentlyUpdatingIndex].update(elapsed);
