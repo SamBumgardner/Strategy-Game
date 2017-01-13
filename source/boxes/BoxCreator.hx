@@ -190,6 +190,7 @@ class BoxCreator
 			setBoxType(AssetPaths.box_test__png, 15, 15);
 		}
 		
+		// Set up sprite with empty graphic.
 		var newSprite:FlxSprite = new FlxSprite();
 		newSprite.makeGraphic(cast boxWidth, cast boxHeight, FlxColor.TRANSPARENT);
 		
@@ -198,6 +199,7 @@ class BoxCreator
 		var rightX:Float = boxWidth - borderSize;
 		var	bottomY:Float = boxHeight - borderSize;
 		
+		// Paint on background frame.
 		for (y in 0...(Math.ceil(boxHeight / bgSize) - 1))
 		{
 			for (x in 0...(Math.ceil(boxWidth / bgSize) - 1))
@@ -207,6 +209,7 @@ class BoxCreator
 			}
 		}
 		
+		// Paint on horizontal border (top and bottom) frame.
 		for (i in 1...(Math.ceil(boxWidth / borderSize) - 1))
 		{
 			targetPoint.setTo(i * borderSize, 0);
@@ -215,6 +218,7 @@ class BoxCreator
 			horizBorderFrame.paintRotatedAndFlipped(newSprite.pixels, targetPoint, 0, false, true);
 		}
 		
+		// Paint on vertical border (left and right) frame.
 		for (i in 1...(Math.ceil(boxHeight / borderSize) - 1))
 		{
 			targetPoint.setTo(0, i * borderSize);
@@ -223,14 +227,121 @@ class BoxCreator
 			vertBorderFrame.paintRotatedAndFlipped(newSprite.pixels, targetPoint, 0, true, false);
 		}
 		
+		// Paint on the corner frame four times.
 		for (i in 0...2)
 		{
 			for (j in 0...2)
 			{
 				targetPoint.setTo(rightX * i, bottomY * j);
-				cornerFrame.paintRotatedAndFlipped(newSprite.pixels, targetPoint, 0, i == 1, j == 1);
+				cornerFrame.paintRotatedAndFlipped(newSprite.pixels, targetPoint, 0,
+					i == 1, j == 1);
 			}
 		}
+		
+		return newSprite;
+	}
+	
+	/**
+	 * Creates an FlxSprite with the graphic of the bottom edge of a box, corners included.
+	 * Useful for resizing boxes, which can overlay these over some section of the box and
+	 * 	set up a clipping rectangle to make the box appear to resize at will.
+	 * 
+	 * @param	width	The desired width of the created edge.
+	 * @return	An FlxSprite with the graphic of the bottom edge of a box.
+	 */
+	public static function createBottomEdge(width:Float):FlxSprite
+	{
+		if (currGraphic == null)
+		{
+			trace("Attempted createBottomEdge, but currGraphic was not set. " +
+				"Call setBoxType() first.");
+			setBoxType(AssetPaths.box_test__png, 15, 15);
+		}
+		
+		// Set up sprite with empty graphic.
+		var newSprite:FlxSprite = new FlxSprite();
+		newSprite.makeGraphic(cast width, cast borderSize, FlxColor.TRANSPARENT);
+		
+		var targetPoint:Point = new Point();
+		
+		// Paint on horizontal border (top and bottom) frame.
+		for (i in 1...(Math.ceil(width / borderSize) - 1))
+		{
+			targetPoint.setTo(i * borderSize, 0);
+			horizBorderFrame.paintRotatedAndFlipped(newSprite.pixels, targetPoint, 0, false, true);
+		}
+		
+		// Paint on the corner frame twice
+		var rightX:Float = width - borderSize;
+		for (i in 0...2)
+		{
+			targetPoint.setTo(rightX * i, 0);
+			cornerFrame.paintRotatedAndFlipped(newSprite.pixels, targetPoint, 0, i == 1, true);
+		}
+		
+		return newSprite;
+	}
+	
+	/**
+	 * Creates an FlxSprite with the graphic of the right edge of a box, corners included.
+	 * Useful for resizing boxes, which can overlay these over some section of the box and
+	 * 	set up a clipping rectangle to make the box appear to resize at will.
+	 * 
+	 * @param	height	The desired height of the created edge.
+	 * @return	An FlxSprite with the graphic of the right edge of a box.
+	 */
+	public static function createRightEdge(height:Float):FlxSprite
+	{
+		if (currGraphic == null)
+		{
+			trace("Attempted createRightEdge, but currGraphic was not set. " +
+				"Call setBoxType() first.");
+			setBoxType(AssetPaths.box_test__png, 15, 15);
+		}
+		
+		// Set up sprite with empty graphic.
+		var newSprite:FlxSprite = new FlxSprite();
+		newSprite.makeGraphic(cast borderSize, cast height, FlxColor.TRANSPARENT);
+		
+		var targetPoint:Point = new Point();
+		
+		// Paint on vertical border (left and right) frame.
+		for (i in 1...(Math.ceil(height / borderSize) - 1))
+		{
+			targetPoint.setTo(0, i * borderSize);
+			vertBorderFrame.paintRotatedAndFlipped(newSprite.pixels, targetPoint, 0, true, false);
+		}
+		
+		// Paint on the corner frame twice.
+		var bottomY:Float = height - borderSize;
+		for (i in 0...2)
+		{
+			targetPoint.setTo(0, bottomY * i);
+			cornerFrame.paintRotatedAndFlipped(newSprite.pixels, targetPoint, 0, true, i == 1);
+		}
+		
+		return newSprite;
+	}
+	
+	/**
+	 * Creates an FlxSprite with the corner of a box as its graphic.
+	 * Useful for resizing boxes, which can overlay this over some section of the box and
+	 * 	set up a clipping rectangle to make the box appear to resize at will.
+	 * 
+	 * @param	flipX	Whether the corner should be flipped in the X direction by default.
+	 * @param	flipY	Whether the corner should be flipped in the Y direction by default.
+	 * @return	The FlxSprite with the graphic of a corner.
+	 */
+	public static function createCorner(flipX:Bool, flipY:Bool):FlxSprite
+	{
+		// Set up sprite with empty graphic.
+		var newSprite:FlxSprite = new FlxSprite();
+		newSprite.makeGraphic(borderSize, borderSize, FlxColor.TRANSPARENT);
+		
+		var targetPoint:Point = new Point();
+		
+		// Paint on the corner frame twice.
+		cornerFrame.paintRotatedAndFlipped(newSprite.pixels, targetPoint, 0, flipX, flipY);
 		
 		return newSprite;
 	}
