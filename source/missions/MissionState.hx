@@ -11,6 +11,7 @@ import inputHandlers.ActionInputHandler;
 import inputHandlers.MoveInputHandler;
 import menus.BasicMenu;
 import menus.MenuTemplate;
+import missions.managers.MapCursorManager;
 import observerPattern.Observed;
 import observerPattern.Observer;
 import observerPattern.eventSystem.EventTypes;
@@ -160,6 +161,8 @@ class MissionState extends FlxState implements Observer
 	
 	/* INTERFACE observerPattern.Observer */
 	
+	// Not final code for MissionState. Just here for ease of testing at the moment.
+	
 	public function onNotify(event:InputEvent, notifier:Observed)
 	{
 		trace("Recieved an event with id", event.getID(), "and type", event.getType());
@@ -177,7 +180,12 @@ class MissionState extends FlxState implements Observer
 			
 			if (currentlyUpdatingIndex == updateableObjects.length)
 			{
+				mapCursor.changeInputModes(InputModes.FREE_MOVEMENT);
 				currentlyUpdatingIndex = 0;
+			}
+			else
+			{
+				mapCursor.changeInputModes(InputModes.DISABLED);
 			}
 			
 			updateableObjects[currentlyUpdatingIndex].activate();
@@ -190,6 +198,7 @@ class MissionState extends FlxState implements Observer
 			updateableObjects[currentlyUpdatingIndex].deactivate();
 			(cast updateableObjects[currentlyUpdatingIndex]).hide();
 			
+			mapCursor.changeInputModes(InputModes.FREE_MOVEMENT);
 			currentlyUpdatingIndex = 0;
 			
 			updateableObjects[currentlyUpdatingIndex].activate();
