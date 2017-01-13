@@ -1,4 +1,4 @@
-package missions;
+package missions.managers;
 
 import cursors.MapCursor;
 import observerPattern.Observed;
@@ -16,6 +16,10 @@ using observerPattern.eventSystem.EventExtender;
  */
 class MapCursorManager implements Observer
 {
+	///////////////////////////////////////
+	//         DATA  DECLARATION         //
+	///////////////////////////////////////
+	
 	/**
 	 * The MissionState object that created this manager.
 	 * Used to access information about the current mission and to call
@@ -37,6 +41,11 @@ class MapCursorManager implements Observer
 		mapCursor.subject.addObserver(this);
 	}
 	
+	
+	///////////////////////////////////////
+	//         PUBLIC  INTERFACE         //
+	///////////////////////////////////////
+	
 	/**
 	 * Function to satisfy the Observer interface.
 	 * Is used to respond to events sent out by the MapCursor, and shouldn't
@@ -54,7 +63,8 @@ class MapCursorManager implements Observer
 		}
 		else
 		{
-			trace("MapCursorManager recieved an event with id", event.getID(), "and type", event.getType());
+			trace("MapCursorManager recieved an event with id", event.getID(), 
+				"and type", event.getType());
 			
 			if (event.getType() == EventTypes.CONFIRM)
 			{
