@@ -9,10 +9,10 @@ import flixel.system.FlxAssets.FlxGraphicAsset;
  */
 interface VarSizedBox 
 {
-	public var boxWidth:Int;
-	public var boxHeight:Int;
+	public var boxWidth(default, null):Int;
+	public var boxHeight(default, null):Int;
 	
-	public var boxSpriteSheet:FlxGraphicAsset;
-	public var cornerSize:Int;
-	public var backgroundSize:Int;
+	public var boxSpriteSheet(default, null):FlxGraphicAsset;
+	public var cornerSize(default, null):Int;
+	public var backgroundSize(default, null):Int;
 }

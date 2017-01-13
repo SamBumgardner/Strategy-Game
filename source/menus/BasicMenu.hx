@@ -30,11 +30,11 @@ class BasicMenu extends MenuTemplate implements VarSizedBox
 	 * Variables to satisfy VarSizedBox interface.
 	 * Specifies the qualities of the menu's box.
 	 */
-	public var boxWidth:Int;
-	public var boxHeight:Int;
-	public var boxSpriteSheet:FlxGraphicAsset = AssetPaths.box_simple__png;
-	public var cornerSize:Int		= 10;
-	public var backgroundSize:Int	= 10;
+	public var boxWidth(default, null):Int;
+	public var boxHeight(default, null):Int;
+	public var boxSpriteSheet(default, null):FlxGraphicAsset = AssetPaths.box_simple__png;
+	public var cornerSize(default, null):Int		= 10;
+	public var backgroundSize(default, null):Int	= 10;
 	
 	/**
 	 * Variable for keeping track of the menu's background box FlxSprite.
