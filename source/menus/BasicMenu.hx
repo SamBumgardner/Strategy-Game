@@ -69,6 +69,7 @@ class BasicMenu extends MenuTemplate implements VarSizedBox
 		initBgGraphics(maxTextWidth);
 		initVarSizedBox(X, Y, maxTextWidth);
 		initBasicCursor();
+		setScrollFactors();
 		
 		hide();
 	}

@@ -2,6 +2,7 @@ package cursors;
 
 import cursors.AnchoredSprite;
 import flixel.FlxG;
+import flixel.FlxObject;
 import flixel.group.FlxGroup;
 import flixel.math.FlxPoint;
 import flixel.system.FlxAssets.FlxGraphicAsset;
@@ -49,6 +50,18 @@ import utilities.UpdatingEntity;
  * 			actual x/y position so that they are in the proper position relative to their
  * 			newly-moved anchor coordinates.
  * 
+ * 	Cursor actions follows this pattern of logic:
+ * 		- The cursor only reads inputs from the ActionInputHandler buffer when it is between
+ * 			cursor movements.
+ * 		- When the cursor reads inputs from the ActionInputHandler buffer, it reads all inputs
+ * 			if possible, but will stop early if its input mode changes to DISABLED as a result
+ * 			of processed action input.
+ * 		Side note: This class was the whole reason why an input buffer setup was created for the
+ * 			ActionInputHandler. Just processing inputs at the moment they arrived irrespective
+ * 			of the cursor's position could cause menus to open and the cursor to disappear while
+ * 			halfway between tiles, which looked especially bad when the camera was moving along
+ * 			with the cursor.
+ * 
  * @author Samuel Bumgardner
  */
 class MapCursor implements UpdatingEntity implements HideableEntity implements Observed
@@ -62,6 +75,12 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	 * Determines whether this object should execute the body of its update function.
 	 */
 	public var active:Bool = false;
+	
+	/**
+	 * Tracks whether the cursor is currently moving or not.
+	 * Action inputs will be deferred until the cursor has finished moving.
+	 */
+	public var isMoving:Bool = false;
 	
 	/**
 	 * Variable to satisfy Observed interface.
@@ -98,7 +117,7 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	 * FlxGroup containing all sprites under this object's supervision. Rather than
 	 * directly adding MapCursor to the FlxState, this FlxGroup will be added.
 	 */
-	private var totalFlxGrp:FlxGroup = new FlxGroup();
+	public var totalFlxGrp(default, null):FlxGroup = new FlxGroup();
 	
 	/**
 	 * Sound effects that are played in response to various keyboard inputs.
@@ -110,8 +129,17 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	 * Integers that track what row/column of the map's grid the MapCursor is in.
 	 * Multiply by tileSize to find the x and y position of MapCursor.
 	 */
-	private var col:Int = 0;
-	private var row:Int = 0;
+	public var col(default, null):Int = 0;
+	public var row(default, null):Int = 0;
+	
+	/**
+	 * Set of integers that define the column and row boundaries of the map.
+	 * 	maxCol and maxRow are set using parameters passed into new().
+	 */
+	private var minCol(default, never):Int = 0;
+	private var minRow(default, never):Int = 0;
+	private var maxCol:Int;
+	private var maxRow:Int;
 	
 	/**
 	 * Integer that holds the size of tiles used on the map, measured in pixels.
@@ -142,22 +170,12 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	private var expandedStillBY:Int	= -8;
 	
 	/**
-	 * Tracks if any new inputs have been entered in this frame.
-	 * Used in processMovementInput() and attemptHeldMovement()
+	 * FlxObject tracked by the camera inside the MissionState.
+	 * This object was required because having the camera track a single corner caused
+	 * 	problems due to the bouncing movement of corners, and the fact that they were
+	 * 	often times outside of the square box the cursor logically takes up.
 	 */
-	private var moveInputChanged:Bool = false;
-	
-	/**
-	 * Tracks the total amount of time that the current set of directional inputs
-	 * have been held for. Used in attemptHeldMovement().
-	 */
-	private var timeMoveHeld:Float = 0;
-	
-	/**
-	 * The minimum amount of time the button must be held to start continuously moving.
-	 */
-	private var timeMoveHeldThreshold(default, null):Float = .25;
-	
+	public var cameraHitbox:FlxObject;
 	
 	///////////////////////////////////////
 	//          INITIALIZATION           //
@@ -165,12 +183,21 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	
 	/**
 	 * Initializer.
+	 * 
+	 * @param	mapWidth	The width of the current map, in pixels.
+	 * @param	mapHeight	The height of the current map, in pixels.
+	 * @param	id			Passed along to the MapCursor's subject, used to identify itself when notifying events.
 	 */
-	public function new(?id:Int = 0) 
+	public function new(mapWidth:Int, mapHeight:Int, ?id:Int = 0) 
 	{	
 		initSoundAssets();
 		
+		// The maxCol and maxRow shouldn't need to be floored, but better safe than sorry.
+		maxCol = Math.floor(mapWidth / tileSize - 1);
+		maxRow = Math.floor(mapHeight / tileSize - 1);
+		
 		subject = new Subject(this, id);
+		cameraHitbox = new FlxObject(0, 0, tileSize, tileSize);
 		
 		initCornerGrp(AssetPaths.normal_cursor_corner__png, normCornerArr, true);
 		initCornerGrp(AssetPaths.target_cursor_corner__png, targetCornerArr);
@@ -237,16 +264,6 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	///////////////////////////////////////
 	
 	/**
-	 * Getter method for TotalFlxGroup.
-	 * 
-	 * @return This object's totalFlxGroup.
-	 */
-	public function getTotalFlxGroup():FlxGroup
-	{
-		return totalFlxGrp;
-	}
-	
-	/**
 	 * Sets new values for row and col. The cursor will move toward the new position at
 	 * normal speed.
 	 * 
@@ -270,7 +287,7 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	{
 		row = newRow;
 		col = newCol;
-		jumpCorners();
+		jumpCursor();
 	}
 	
 	/**
@@ -626,21 +643,39 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	///////////////////////////////////////
 	
 	/**
-	 * Changes col and row variables of the cursor & plays movement sound effect.
+	 * After checking that the attempted movement is valid, changes col and row variables 
+	 * 	of the cursor & plays movement sound effect.
 	 * 
 	 * @param	colRowChanges	A point with contents (column change amount, row change amount)
 	 */
 	private function moveCursorPos(vertMove:Int, horizMove:Int, heldMove:Bool):Void
 	{	
+		// If vertical movement is not valid, set to 0.
+		if (!(row + vertMove >= minRow && row + vertMove <= maxRow))
+		{
+			vertMove = 0;
+		}
+		
+		// If horizontal movement is not valid, set to 0.
+		if (!(col + horizMove >= minCol && col + horizMove <= maxCol))
+		{
+			horizMove = 0;
+		}
+		
 		var xPos:Int = col * tileSize;
 		var yPos:Int = row * tileSize;
-		if (!heldMove || //If the movement is "held", then only move if not currently moving.
-			(currCornerArr[0].getAnchorX() == xPos + currentAnchorLX &&
-			currCornerArr[0].getAnchorY() == yPos + currentAnchorTY))
+		
+		if (// If at least one of the movement directions was valid...
+			(vertMove != 0 || horizMove != 0) &&
+			// If the movement is "held", then only move if not currently moving.
+			(!heldMove || !isMoving)
+			)
 		{
 			row += vertMove;
 			col += horizMove;
+			isMoving = true;
 			moveSound.play(true);
+			subject.notify(EventTypes.MOVE);
 		}
 	}
 	
@@ -679,22 +714,44 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 			corner.setAnchor(corner.getAnchorX() + (tileSize / framesPerMove * horizMove),
 				corner.getAnchorY() + (tileSize / framesPerMove * vertMove));
 		}
+		if (currCornerArr[0].getAnchorX() == xPos + currentAnchorLX &&
+			currCornerArr[0].getAnchorY() == yPos + currentAnchorTY)
+		{
+			isMoving = false;
+		}
+	}
+	
+	/**
+	 * Changes the cameraHitbox x and y values to match the position of the top left
+	 * 	corner's anchor location minus the anchor's offset. 
+	 * This allows the cameraHitbox to move smoothly around.
+	 */
+	private function updateCameraHitboxPos():Void
+	{
+		cameraHitbox.x = currCornerArr[CornerTypes.TOP_LEFT].getAnchorX() - currentAnchorTY;
+		cameraHitbox.y = currCornerArr[CornerTypes.TOP_LEFT].getAnchorY() - currentAnchorLX;
 	}
 	
 	/**
 	 * Jumps the corners' anchors and x/y values to match the cursor's current position.
+	 * Also updates the cameraHitbox position to match.
 	 */
-	private function jumpCorners():Void
+	private function jumpCursor():Void
 	{
 		var xDifference = col * tileSize + currentAnchorLX - currCornerArr[0].getAnchorX();
 		var yDifference = row * tileSize + currentAnchorTY - currCornerArr[0].getAnchorY();
 		
+		// Change corner anchors and move corner sprites.
 		for (corner in currCornerArr)
 		{
 			corner.setAnchor(corner.getAnchorX() + xDifference, 
 				corner.getAnchorY() + yDifference);
 			corner.jumpToAnchor();
 		}
+		
+		// Change cameraHitbox position.
+		cameraHitbox.x += xDifference;
+		cameraHitbox.y += yDifference;
 	}
 	
 	
@@ -703,18 +760,14 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	///////////////////////////////////////
 	
 	/**
-	 * Is not expecting to ever get a call with heldAction being true (because of its call
-	 * 	to ActionInputHandler, see below in the update function) but I set up the test at
-	 * 	the start of the function just in case.
-	 * 
 	 * Can (and probably should) be overridden by child classes of this, since different
 	 * 	menus may not need to notify PAINT, NEXT, or INFO events. If it is overridden with
 	 * 	the intent to replace this function, make sure to NOT call super.doCursorAction();
 	 * 
-	 * @param	pressedKeys
-	 * @param	heldAction
+	 * @param	pressedKeys	Indicates which inputs were pressed this frame. See ActionInputHandler's KeyIndex enum to map indexes to key types.
+	 * @param	heldAction	Indicates if the action was caused by held inputs or not.
 	 */
-	private function doCursorAction(pressedKeys:Array<Bool>, heldAction:Bool)
+	private function doCursorAction(pressedKeys:Array<Bool>, heldAction:Bool):Void
 	{
 		if (!heldAction)
 		{
@@ -749,17 +802,37 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	///////////////////////////////////////
 	
 	/**
-	 * Handles resetting any variables necessary at the end of an update cycle.
-	 */
-	public function cleanupVariables():Void
-	{
-		moveInputChanged = false;
-	}
-	
-	/**
 	 * Since this object isn't going to be "added" to the game state
 	 * (and thus doesn't recieve any updates naturally) it's up to the 
 	 * state to call this object's update manually.
+	 * 
+	 * NOTE:
+	 * 	See the top of the file for an explanation of why an input buffering system
+	 * 		exists and the general idea of how it operates.
+	 * 
+	 * NOTE: 
+	 * 	Because MapCursor's update() function is currently called after super.update()
+	 * 		inside of the MissionState, updateCameraHitboxPos() must be called before
+	 * 		moveCornerAnchors().
+	 * 	This is necessary because the corners' tweening functions update at some point
+	 * 		during the MissionState's super.update(), which sets the corners' visual 
+	 * 		positions to whatever the anchor positions are at that moment (after adding
+	 * 		and/or subtracting any necessary offsets).
+	 * 	We need to make sure that the anchor values used for changing the corners' visual
+	 * 		positions and the anchor values used for changing the cameraHitbox's position
+	 * 		are the same, otherwise the two will get offset from one another by one frame.
+	 * 
+	 * 	Basically, we need the corners' tweens' updates and updateCameraHitbox() to occur
+	 * 		on the same side of moveCornerAnchors(), otherwise one will get ahead of the other
+	 * 		by one frame during movement.
+	 * 	Because MapCursor is updated after MissionState's super.update() (which updates the
+	 * 		tweens) we need to make sure that the camera hitbox is updated before corner
+	 * 		anchors move.
+	 * 	If MapCursor's update() call in MissionState is ever moved to be before super.update(),
+	 * 		then we will need to move updateCameraHitbox() to happen after MoveCornerAnchors().
+	 * 	That way, updateCameraHitbox() and the tween updates will happen with the same anchor
+	 * 		values, ensuring that the camera hitbox and corner positions remain in sync with
+	 * 		one another.
 	 * 
 	 * @param	elapsed
 	 */
@@ -806,11 +879,26 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 			
 			// NOTE: end of likely-to-be-replaced section.
 			
+			
+			
+			// Actions should remain buffered until movement ends.
+			if (!isMoving)
+			{
+				// Call all of the buffered action functions in order.
+				while (currInputMode != InputModes.DISABLED && 
+					ActionInputHandler.actionBuffer.length > ActionInputHandler.numInputsUsed)
+				{
+					ActionInputHandler.useBufferedInput(doCursorAction);
+				}
+			}
+			
+			
 			if (currInputMode != InputModes.DISABLED)
 			{
-				ActionInputHandler.handleActions(elapsed, doCursorAction, false);
 				MoveInputHandler.handleMovement(elapsed, moveCursorPos);
 			}
+			
+			updateCameraHitboxPos();
 			moveCornerAnchors();
 		}
 	}

@@ -21,7 +21,7 @@ import flixel.input.keyboard.FlxKey;
  * 		- Whenever any movement key is initially pressed or released, an internal 
  * 			timer (counting up, like a stopwatch) resets.
  * 		- If that internal timer is over a certain threshold value AND the initial call to
- * 			HandleActions specified that the held inputs should be attempted, the action callback
+ * 			bufferActions specified that the held inputs should be attempted, the action callback
  * 			is called using the inputs that are currently held down. It is up to the object
  * 			that defined the callback function to use those inputs responsibly, since that 
  * 			callback function will be called every frame after the threshold has passed.
@@ -68,14 +68,28 @@ class ActionInputHandler
 	static private var keyBools(default, null):Array<Bool> = new Array<Bool>();
 	
 	/**
+	 * Array of applyInputs() functions with the input data already bound, so
+	 * 	the only thing it needs to be called is a callback function that uses
+	 * 	the inputs.
+	 */
+	static public var actionBuffer(default, null):Array<(Array<Bool>->Bool->Void)->Void> = 
+		new Array <(Array<Bool>->Bool->Void)->Void> ();
+	
+	/**
+	 * Tracks how many buffered inputs have been consumed this frame, then
+	 * 	removes those used indicies at the end of the frame.
+	 */
+	static public var numInputsUsed(default, null):Int = 0;
+	
+	/**
 	 * Tracks if any new inputs have been entered in this frame.
-	 * Used in processActionInput() and attemptHeldAction().
+	 * Used in processActionInput() and bufferHeldAction().
 	 */
 	static private var actionInputChanged:Bool = false;
 	
 	/**
 	 * Tracks the total amount of time that the current set of directional inputs
-	 * 	have been held for. Used in attemptHeldAction().
+	 * 	have been held for. Used in bufferHeldAction().
 	 */
 	static private var timeMoveHeld:Float = 0;
 	
@@ -169,28 +183,47 @@ class ActionInputHandler
 	 * @param	actionCallback	Fuction that defines how action inputs should be used.
 	 * @param	attemptHeld		Determines whether held inputs should be processed or ignored.
 	 */
-	static public function handleActions(elapsed:Float, actionCallback:Array<Bool>->Bool->Void,
-		attemptHeld:Bool):Void
+	static public function bufferActions(elapsed:Float):Void
 	{
 		if (!initialized)
 		{
-			trace("ERROR: Called handleActions() before performing first-time initialization.");
+			trace("ERROR: Called bufferActions() before performing first-time initialization.");
 		}
 		
 		if (alreadyCalledThisFrame)
 		{
-			trace("ERROR: ActionInputHandler's handleActions() was already called this frame",
-				"\n or forgot to call updateCycleFinished().");
+			trace("ERROR: ActionInputHandler's bufferActions() was already called this frame" +
+				" or forgot to call updateCycleFinished().");
 		}
 		
-		attemptPressedAction(actionCallback);
-		if (attemptHeld)
-		{
-			attemptHeldAction(elapsed, actionCallback);
-		}
+		bufferPressedAction();
+		bufferHeldAction(elapsed);
 		cleanupVariables();
 		
 		alreadyCalledThisFrame = true;
+	}
+	
+	/**
+	 * Uses the inputs stored in the first index of actionBuffer, and increments numInputsUsed.
+	 * 	numInputsUsed is used to remove the necessary indexes of actionBuffer at the end of the
+	 * 	frame.
+	 * 
+	 * @param	actionCallback	External function that uses the input info stored in actionBuffer.
+	 */
+	static public function useBufferedInput(actionCallback:Array<Bool>->Bool->Void):Void
+	{
+		if (numInputsUsed >= actionBuffer.length)
+		{
+			trace("ERROR: attempted to use an invalid index of actionBuffer.\n" +
+				"     Ensure that updateCycleFinished() is being called at end of State's update,\n" +
+				"     that bufferActions() is being called at the start of State's update, and \n" +
+				"     that no external object is calling useBufferedInput too many times.");
+		}
+		else
+		{
+			actionBuffer[numInputsUsed](actionCallback);
+			numInputsUsed++;
+		}
 	}
 	
 	/**
@@ -215,6 +248,9 @@ class ActionInputHandler
 	static public function updateCycleFinished():Void
 	{
 		alreadyCalledThisFrame = false;
+		
+		actionBuffer.splice(0, numInputsUsed);
+		numInputsUsed = 0;
 	}
 	
 	
@@ -228,12 +264,15 @@ class ActionInputHandler
 	 * 
 	 * @param	actionCallback	Function that should be called to attempt actions.
 	 */
-	static private function attemptPressedAction(actionCallback:Array<Bool>->Bool->Void):Void
+	static private function bufferPressedAction():Void
 	{
 		if (FlxG.keys.anyJustPressed(keyArray) || FlxG.keys.anyJustReleased(keyArray))
 		{
 			actionInputChanged = true;
-			actionCallback(findInputBools(FlxInputState.JUST_PRESSED), false);
+			if (FlxG.keys.anyJustPressed(keyArray))
+			{
+				actionBuffer.push(applyInputs.bind(findInputBools(FlxInputState.JUST_PRESSED), false, _));
+			}
 		}	
 	}
 	
@@ -253,7 +292,7 @@ class ActionInputHandler
 	 * @param	elapsed			Time elapsed since the last call to this in seconds.
 	 * @param	actionCallback	Function that should be called to attempt actions.
 	 */
-	static private function attemptHeldAction(elapsed:Float, actionCallback:Array<Bool>->Bool->Void):Void
+	static private function bufferHeldAction(elapsed:Float):Void
 	{
 		if (!actionInputChanged)
 		{
@@ -264,7 +303,7 @@ class ActionInputHandler
 			
 			if (timeMoveHeld > timeMoveHeldThreshold)
 			{
-				actionCallback(findInputBools(FlxInputState.PRESSED), true);
+				actionBuffer.push(applyInputs.bind(findInputBools(FlxInputState.PRESSED), true, _));
 			}
 		}
 		else
@@ -289,6 +328,23 @@ class ActionInputHandler
 		}
 		
 		return keyBools;
+	}
+	
+	/**
+	 * Function that applies input information to an external callback function.
+	 * 
+	 * Typically, inputBools and isHeldInput parameters will be bound to this function
+	 * 	during bufferActions() and the callbackFunction parameter will be passed in 
+	 * 	when this function is actually called, during 
+	 * 
+	 * @param	inputBools			Array of boolean values that indicate active inputs.
+	 * @param	isHeldInput			Indicates whether the inputs were held or pressed.
+	 * @param	callbackFunction	External function that uses the other parameters.
+	 */
+	static private function applyInputs(inputBools:Array<Bool>, isHeldInput:Bool, 
+		callbackFunction:Array<Bool>->Bool->Void):Void
+	{
+		callbackFunction(inputBools, isHeldInput);
 	}
 	
 	/**

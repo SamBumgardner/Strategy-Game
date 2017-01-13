@@ -5,6 +5,7 @@ import flixel.FlxBasic;
 import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
+import flixel.math.FlxPoint;
 import flixel.system.FlxSound;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
@@ -62,6 +63,13 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	private var y:Float;
 	
 	/**
+	 * The scroll factor to be used by all visual components of a menu.
+	 * Is set to zero because menus should always appear at the same point
+	 * 	on the screen regardless of camera position.
+	 */
+	private var menuScrollFactor(default, never):FlxPoint = new FlxPoint(0, 0);
+	
+	/**
 	 * FlxGroup that holds all HaxeFlixel-inheriting components used by this menu.
 	 */
 	public var totalFlxGrp(default, null):FlxGroup = new FlxGroup();
@@ -115,7 +123,7 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	private var framesLeftInMove:Int = 0;
 	
 	/**
-	 * Sound effect to be played upon cursor movement.
+	 * Sound effects to be played after cursor actions.
 	 */
 	private var moveSound:FlxSound;
 	private var confirmSound:FlxSound;
@@ -146,6 +154,31 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 		moveSound = FlxG.sound.load(AssetPaths.menu_move__wav);
 		confirmSound = FlxG.sound.load(AssetPaths.menu_confirm__wav);
 		cancelSound = FlxG.sound.load(AssetPaths.menu_cancel__wav);
+	}
+	
+	/**
+	 * Sets the scroll factors of all sprites in totalFlxGrp to (0,0).
+	 * Must be called by child classes during initalization after setting up all visual 
+	 * 	menu components.
+	 */
+	private function setScrollFactors():Void
+	{
+		totalFlxGrp.forEach(setSpriteScroll, true);
+	}
+	
+	/**
+	 * Helper function for setScrollFactors().
+	 * Determines if the targetSprite is an FlxSprite, and if so sets its scrollFactor
+	 * 	to match the menuScrollFactor, which is (0, 0).
+	 * 
+	 * @param	targetSprite	The FlxBasic object that is being operated upon.
+	 */
+	private function setSpriteScroll(targetSprite:FlxBasic):Void
+	{
+		if (Std.is(targetSprite, FlxSprite))
+		{
+			(cast targetSprite).scrollFactor = menuScrollFactor;
+		}
 	}
 	
 	
@@ -473,10 +506,6 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	 * 	notifying its observes that the event happened, and lets those observers take care
 	 * 	of manipulation of external objects.
 	 * 
-	 * Is not expecting to ever get a call with heldAction being true (because of its call
-	 * 	to ActionInputHandler, see below in the update function) but I set up the test at
-	 * 	the start of the function just in case.
-	 * 
 	 * Can (and probably should) be overridden by child classes of this, since different
 	 * 	menus may not need to notify PAINT, NEXT, or INFO events. If it is overridden with
 	 * 	the intent to replace this function, make sure to NOT call super.doCursorAction();
@@ -535,7 +564,12 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 		if (active)
 		{
 			MoveInputHandler.handleMovement(elapsed, moveCursor);
-			ActionInputHandler.handleActions(elapsed, doCursorAction, false);
+			
+			while (active && 
+				ActionInputHandler.actionBuffer.length > ActionInputHandler.numInputsUsed)
+			{
+				ActionInputHandler.useBufferedInput(doCursorAction);
+			}
 			moveCursorAnchors();
 		}
 	}
