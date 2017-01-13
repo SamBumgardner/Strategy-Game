@@ -340,7 +340,7 @@ class BoxCreator
 		
 		var targetPoint:Point = new Point();
 		
-		// Paint on the corner frame twice.
+		// Paint on the corner frame.
 		cornerFrame.paintRotatedAndFlipped(newSprite.pixels, targetPoint, 0, flipX, flipY);
 		
 		return newSprite;
