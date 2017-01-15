@@ -83,7 +83,7 @@ class StrategyOgmoLoader extends FlxOgmoLoader
 		// Tile #0 is never used in a level, so push a NONE terrain type first.
 		terrainTypesArray.push(TerrainTypes.NONE);
 		
-		for (i in 0...Std.parseInt(getProperty("number_of_terrain_types")))
+		for (i in 1...Std.parseInt(getProperty("number_of_terrain_types")) + 1)
 		{
 			terrainTypesArray.push(Std.parseInt(
 				getProperty("terrain_type_tile_" + Std.string(i))));
