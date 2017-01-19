@@ -12,6 +12,7 @@ import inputHandlers.ActionInputHandler;
 import inputHandlers.MoveInputHandler;
 import menus.BasicMenu;
 import menus.MenuTemplate;
+import menus.ResizeableBasicMenu;
 import missions.managers.MapCursorManager;
 import observerPattern.Observed;
 import observerPattern.Observer;
@@ -53,6 +54,8 @@ class MissionState extends FlxState implements Observer
 	
 	private var resizeableBox:ResizeableBox;
 	
+	private var resizeableMenu:ResizeableBasicMenu;
+	
 	private var updateableObjects:Array<UpdatingEntity> = new Array<UpdatingEntity>();
 	private var currentlyUpdatingIndex:Int = 0;
 
@@ -69,7 +72,7 @@ class MissionState extends FlxState implements Observer
 		
 		initManagers();
 		
-		resizeableBox = new ResizeableBox(300, 300, AssetPaths.box_test__png, 15, 15);
+		resizeableBox = new ResizeableBox(0, 0, 300, 300, AssetPaths.box_test__png, 15, 15);
 		add(resizeableBox.totalFlxGrp);
 		
 		menu = new BasicMenu(50, 100, ["Unit", "Status", "Options", "Suspend", "End"], 1);
@@ -88,10 +91,15 @@ class MissionState extends FlxState implements Observer
 		menu4.subject.addObserver(this);
 		add(menu4.totalFlxGrp);
 		
+		resizeableMenu = new ResizeableBasicMenu(480, 100, ["Smile", "Jump", "Wear Hat", "Nose", "Clap", "PSI Rockin'", "Stomp"], 5);
+		resizeableMenu.subject.addObserver(this);
+		add(resizeableMenu.totalFlxGrp);
+		
 		updateableObjects.push(menu);
 		updateableObjects.push(menu2);
 		updateableObjects.push(menu3);
 		updateableObjects.push(menu4);
+		updateableObjects.push(resizeableMenu);
 		
 		updateableObjects[currentlyUpdatingIndex].active = true;
 		
@@ -223,6 +231,14 @@ class MissionState extends FlxState implements Observer
 		if (FlxG.keys.justPressed.W)
 		{
 			resizeableBox.resize(resizeableBox.boxWidth + 30, resizeableBox.boxHeight + 30);
+		}
+		if (FlxG.keys.justPressed.E)
+		{
+			resizeableMenu.changeMenuOptions([true, true, false, false, true, false, true]);
+		}
+		if (FlxG.keys.justPressed.R)
+		{
+			resizeableMenu.changeMenuOptions([true, true, true, true, true, true, true]);
 		}
 		
 		ActionInputHandler.bufferActions(elapsed);
