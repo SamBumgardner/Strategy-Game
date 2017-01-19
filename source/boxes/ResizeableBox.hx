@@ -211,6 +211,13 @@ class ResizeableBox implements HideableEntity implements VarSizedBox
 	 * Will cause a broken/incorrect graphic if resized to values larger
 	 * 	than maxWidth or maxHeight.
 	 * 
+	 * NOTE:
+	 * 	cornerSize is subtracted from boxWidth and boxHeight when setting
+	 * 		clipping rectangle sizes so there is absolutely no overlap 
+	 * 		between any visible components. If overlap does occur, then
+	 * 		borders/corners with transparent components will reveal the
+	 * 		borders/body images that they are overlapping, which is bad.
+	 * 
 	 * @param	newWidth	The new width the box should have.
 	 * @param	newHeight	The new height the box should have.
 	 */
@@ -225,15 +232,15 @@ class ResizeableBox implements HideableEntity implements VarSizedBox
 		boxWidth = newWidth;
 		boxHeight = newHeight;
 		
-		boxClipRect.setSize(boxWidth, boxHeight);
+		boxClipRect.setSize(boxWidth - cornerSize, boxHeight - cornerSize);
 		boxSprite.clipRect = boxClipRect;
 		
 		bottomEdge.y = y + boxHeight - cornerSize;
-		bottomClipRect.setSize(boxWidth, cornerSize);
+		bottomClipRect.setSize(boxWidth - cornerSize, cornerSize);
 		bottomEdge.clipRect = bottomClipRect;
 		
 		rightEdge.x = x + boxWidth - cornerSize;
-		rightClipRect.setSize(cornerSize, boxHeight);
+		rightClipRect.setSize(cornerSize, boxHeight - cornerSize);
 		rightEdge.clipRect = rightClipRect;
 		
 		bottomRightCorner.x = x + boxWidth - cornerSize;
