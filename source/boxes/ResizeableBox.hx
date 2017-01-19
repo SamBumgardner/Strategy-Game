@@ -144,14 +144,16 @@ class ResizeableBox implements HideableEntity implements VarSizedBox
 	/**
 	 * Initializer.
 	 * 
+	 * @param	X			x-coordinate for the resizeable box.
+	 * @param	Y			y-coordinate for the resizeable box.
 	 * @param	maximumWidth	Maximum & initial width of the box.
 	 * @param	maximumHeight	Maximum & initial height of the box.
 	 * @param	spriteSheet		Spritesheet used to generate box graphic. See BoxCreator for specifications.
 	 * @param	cSize			Size of the corner/border sections of the box graphic.
 	 * @param	bgSize			Size of the background sections of the box graphic.
 	 */
-	public function new(maximumWidth:Int, maximumHeight:Int, spriteSheet:FlxGraphicAsset, 
-		cSize:Int, bgSize:Int) 
+	public function new(X:Float, Y:Float, maximumWidth:Int, maximumHeight:Int, 
+		spriteSheet:FlxGraphicAsset, cSize:Int, bgSize:Int) 
 	{
 		maxWidth = maximumWidth;
 		maxHeight = maximumHeight;
@@ -164,6 +166,8 @@ class ResizeableBox implements HideableEntity implements VarSizedBox
 		backgroundSize = bgSize;
 		
 		initBoxComponents();
+		
+		setPos(X, Y);
 	}
 	
 	/**
