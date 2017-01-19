@@ -67,7 +67,7 @@ class BasicMenu extends MenuTemplate implements VarSizedBox
 		
 		var maxTextWidth:Float = initMenuOptions(X, Y, labelTextArr);
 		initBgGraphics(maxTextWidth);
-		initVarSizedBox(X, Y, maxTextWidth);
+		initMenuBox(X, Y, maxTextWidth);
 		initBasicCursor();
 		setScrollFactors();
 		addAllFlxGrps();
@@ -147,7 +147,7 @@ class BasicMenu extends MenuTemplate implements VarSizedBox
 	 * 
 	 * @param	maxTextWidth	The width of the largest MenuOption's label.
 	 */
-	private function initVarSizedBox(X:Float, Y:Float, maxTextWidth:Float):Void
+	private function initMenuBox(X:Float, Y:Float, maxTextWidth:Float):Void
 	{
 		var lastLabel:FlxText = menuOptionArr[menuOptionArr.length - 1].label;
 		boxWidth = cast maxTextWidth + cornerSize * 2;
