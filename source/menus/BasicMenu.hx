@@ -39,7 +39,7 @@ class BasicMenu extends MenuTemplate implements VarSizedBox
 	/**
 	 * Variable for keeping track of the menu's background box FlxSprite.
 	 */
-	private var boxSprite:FlxSprite;
+	private var boxSpriteGrp:FlxGroup;
 
 	/**
 	 * Constant variables that define the font size of the labels and the vertical interval
@@ -70,6 +70,7 @@ class BasicMenu extends MenuTemplate implements VarSizedBox
 		initVarSizedBox(X, Y, maxTextWidth);
 		initBasicCursor();
 		setScrollFactors();
+		addAllFlxGrps();
 		
 		hide();
 	}
@@ -153,12 +154,29 @@ class BasicMenu extends MenuTemplate implements VarSizedBox
 		boxHeight = cast lastLabel.y + lastLabel.height + cornerSize - Y;
 		
 		BoxCreator.setBoxType(boxSpriteSheet, cornerSize, backgroundSize);
-		boxSprite = BoxCreator.createBox(boxWidth, boxHeight);
+		var boxSprite:FlxSprite = BoxCreator.createBox(boxWidth, boxHeight);
 		boxSprite.x = X;
 		boxSprite.y = Y;
-		totalFlxGrp.add(boxSprite);
 		
+		boxSpriteGrp = new FlxGroup();
+		boxSpriteGrp.add(boxSprite);
+	}
+	
+	/**
+	 * Adds all of the menu's different FlxGrps to its totalFlxGrp in the correct order.
+	 * The order matters because the first item added to totalFlxGrp will be drawn on the
+	 * 	bottom layer, the next is drawn one layer above it, and so on.
+	 * 
+	 * For this menu, boxSpriteGrp is added first so it sits behind the group of menu options.
+	 * 
+	 * MenuTemplate's definition of this function is empty, so no call to super.addAllFlxGrps()
+	 * 	is required.
+	 */
+	override private function addAllFlxGrps():Void
+	{
+		totalFlxGrp.add(boxSpriteGrp);
 		totalFlxGrp.add(optionFlxGrp);
+		totalFlxGrp.add(menuCursor);
 	}
 	
 	

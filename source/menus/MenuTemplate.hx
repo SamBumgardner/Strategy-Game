@@ -182,6 +182,18 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 		}
 	}
 	
+	/**
+	 * Adds all of the menu's different FlxGrps to its totalFlxGrp in the correct order.
+	 * The order matters because the first item added to totalFlxGrp will be drawn on the
+	 * 	bottom layer, the next is drawn one layer above it, and so on.
+	 * 
+	 * The body of this function is left empty, and is expected to be overloaded and used
+	 * 	by all child classes in whatever manner is appropriate for that particular menu.
+	 * 
+	 * See the BasicMenu class for an example implementation of this function.
+	 */
+	private function addAllFlxGrps():Void{}
+	
 	
 	///////////////////////////////////////
 	//         PUBLIC  INTERFACE         //
@@ -333,13 +345,13 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	
 	/**
 	 * Creates the cursor anchor sprite and sets up a tween for it using cursorBounceFunc().
+	 * menuCursor must still be added to totalFlxGrp after this function is finished, however.
 	 */
 	private function initBasicCursor():Void
 	{
 		menuCursor = new AnchoredSprite(0, 0, AssetPaths.menu_cursor_simple__png);
 		menuCursorTween = FlxTween.num(0, bounceDistance, .75, {ease: FlxEase.circInOut, 
 			type: FlxTween.LOOPING}, cursorBounceFunc.bind(menuCursor));
-		totalFlxGrp.add(menuCursor);
 	}
 	
 	/**
