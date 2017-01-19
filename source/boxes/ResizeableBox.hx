@@ -182,18 +182,18 @@ class ResizeableBox implements HideableEntity implements VarSizedBox
 		boxSprite.clipRect = boxClipRect;
 		
 		bottomEdge = BoxCreator.createBottomEdge(boxWidth);
-		bottomEdge.y = boxHeight - cornerSize;
+		bottomEdge.y = y + boxHeight - cornerSize;
 		bottomClipRect = new FlxRect(0, 0, boxWidth, cornerSize);
 		bottomEdge.clipRect = bottomClipRect;
 		
 		rightEdge = BoxCreator.createRightEdge(boxHeight);
-		rightEdge.x = boxWidth - cornerSize;
+		rightEdge.x = x + boxWidth - cornerSize;
 		rightClipRect = new FlxRect(0, 0, cornerSize, boxHeight);
 		rightEdge.clipRect = rightClipRect;
 		
 		bottomRightCorner = BoxCreator.createCorner(true, true);
-		bottomRightCorner.x = boxWidth - cornerSize;
-		bottomRightCorner.y = boxHeight - cornerSize;
+		bottomRightCorner.x = x + boxWidth - cornerSize;
+		bottomRightCorner.y = y + boxHeight - cornerSize;
 		
 		totalFlxGrp.add(boxSprite);
 		totalFlxGrp.add(bottomEdge);
@@ -228,16 +228,16 @@ class ResizeableBox implements HideableEntity implements VarSizedBox
 		boxClipRect.setSize(boxWidth, boxHeight);
 		boxSprite.clipRect = boxClipRect;
 		
-		bottomEdge.y = boxHeight - cornerSize;
+		bottomEdge.y = y + boxHeight - cornerSize;
 		bottomClipRect.setSize(boxWidth, cornerSize);
 		bottomEdge.clipRect = bottomClipRect;
 		
-		rightEdge.x = boxWidth - cornerSize;
+		rightEdge.x = x + boxWidth - cornerSize;
 		rightClipRect.setSize(cornerSize, boxHeight);
 		rightEdge.clipRect = rightClipRect;
 		
-		bottomRightCorner.x = boxWidth - cornerSize;
-		bottomRightCorner.y = boxHeight - cornerSize;
+		bottomRightCorner.x = x + boxWidth - cornerSize;
+		bottomRightCorner.y = y + boxHeight - cornerSize;
 	}
 	
 	/**
@@ -250,6 +250,10 @@ class ResizeableBox implements HideableEntity implements VarSizedBox
 	{
 		var xDiff:Float = newX - x;
 		var yDiff:Float = newY - y;
+		
+		x = newX;
+		y = newY;
+		
 		totalFlxGrp.forEach(moveObject.bind(_, xDiff, yDiff), true);
 	}
 	
