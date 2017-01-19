@@ -3,6 +3,7 @@ import flixel.FlxBasic;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
 import flixel.math.FlxPoint;
+import flixel.math.FlxRect;
 import flixel.text.FlxText;
 import utilities.HideableEntity;
 
@@ -189,6 +190,16 @@ class MenuOption implements HideableEntity
 			bgHighlight.active = false;
 			bgHighlight.visible = false;
 		}
+	}
+	
+	/**
+	 * Clips the bgHighlight graphic to the specified width.
+	 *
+	 * @param	newWidth	The desired width of the bgHighlight.
+	 */
+	public function clipBgHighlight(newWidth:Float):Void
+	{
+		bgHighlight.clipRect = new FlxRect(0, 0, newWidth, bgHighlight.height);
 	}
 	
 	/**
