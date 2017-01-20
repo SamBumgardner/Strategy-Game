@@ -158,9 +158,20 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	}
 	
 	/**
+	 * Adds all of the menu's different FlxGrps to its totalFlxGrp in the correct order.
+	 * The order matters because the first item added to totalFlxGrp will be drawn on the
+	 * 	bottom layer, the next is drawn one layer above it, and so on.
+	 * 
+	 * The body of this function is left empty, and is expected to be overloaded and used
+	 * 	by all child classes in whatever manner is appropriate for that particular menu.
+	 * 
+	 * See the BasicMenu class for an example implementation of this function.
+	 */
+	private function addAllFlxGrps():Void{}
+	
+	/**
 	 * Sets the scroll factors of all sprites in totalFlxGrp to (0,0).
-	 * Must be called by child classes during initalization after setting up all visual 
-	 * 	menu components.
+	 * Must be called by child classes during initalization after calling addAllFlxGrps().
 	 */
 	private function setScrollFactors():Void
 	{
@@ -181,18 +192,6 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 			(cast targetSprite).scrollFactor = menuScrollFactor;
 		}
 	}
-	
-	/**
-	 * Adds all of the menu's different FlxGrps to its totalFlxGrp in the correct order.
-	 * The order matters because the first item added to totalFlxGrp will be drawn on the
-	 * 	bottom layer, the next is drawn one layer above it, and so on.
-	 * 
-	 * The body of this function is left empty, and is expected to be overloaded and used
-	 * 	by all child classes in whatever manner is appropriate for that particular menu.
-	 * 
-	 * See the BasicMenu class for an example implementation of this function.
-	 */
-	private function addAllFlxGrps():Void{}
 	
 	
 	///////////////////////////////////////
