@@ -9,11 +9,11 @@ import flixel.system.FlxAssets.FlxGraphicAsset;
 import utilities.HideableEntity;
 
 /**
- * Resizeable boxes, used in a situation where a box's size should change depending different
+ * Resizable boxes, used in a situation where a box's size should change depending different
  * 	context-sensitive variables. Generating a bunch of boxes for every concievable situation
  * 	could work, but that would be a pretty wasteful solution by comparison.
  * 
- * To make and use a resizeable box, you specify the maximum dimensions of the box and a few
+ * To make and use a resizable box, you specify the maximum dimensions of the box and a few
  * 	other values to indicate what graphics the box should use. After the box is instantiated,
  * 	it can be resized, moved, and hidden at will via public-facing functions.
  * 
@@ -24,7 +24,7 @@ import utilities.HideableEntity;
  * 
  * @author Samuel Bumgardner
  */
-class ResizeableBox implements HideableEntity implements VarSizedBox
+class ResizableBox implements HideableEntity implements VarSizedBox
 {
 	///////////////////////////////////////
 	//         DATA  DECLARATION         //
@@ -122,19 +122,29 @@ class ResizeableBox implements HideableEntity implements VarSizedBox
 	
 	
 	/**
-	 * FlxGroup containing all FlxBasic-inheriting objects owned by this Resizeable box.
+	 * FlxGroup containing all FlxBasic-inheriting objects owned by this Resizable box.
 	 */
 	public var totalFlxGrp(default, null):FlxGroup = new FlxGroup();
 	
 	/**
 	 * x coordinate that all box components should be positioned relative to.
+	 * 
+	 * In most cases, you should use setPos() to change this value, since it'll
+	 * 	also update all resizable box components to match its position.
+	 * If the components have already moved, however, it's fine to change this
+	 * 	manually to match the box's new position.
 	 */
-	private var x:Float = 0;
+	public var x:Float = 0;
 	
 	/**
 	 * y coordinate that all box components should be positioned relative to.
+	 * 
+	 * In most cases, you should use setPos() to change this value, since it'll
+	 * 	also update all resizable box components to match its position.
+	 * If the components have already moved, however, it's fine to change this
+	 * 	manually to match the box's new position.
 	 */
-	private var y:Float = 0;
+	public var y:Float = 0;
 	
 	
 	///////////////////////////////////////
@@ -144,8 +154,8 @@ class ResizeableBox implements HideableEntity implements VarSizedBox
 	/**
 	 * Initializer.
 	 * 
-	 * @param	X			x-coordinate for the resizeable box.
-	 * @param	Y			y-coordinate for the resizeable box.
+	 * @param	X			x-coordinate for the resizable box.
+	 * @param	Y			y-coordinate for the resizable box.
 	 * @param	maximumWidth	Maximum & initial width of the box.
 	 * @param	maximumHeight	Maximum & initial height of the box.
 	 * @param	spriteSheet		Spritesheet used to generate box graphic. See BoxCreator for specifications.
@@ -225,7 +235,7 @@ class ResizeableBox implements HideableEntity implements VarSizedBox
 	{
 		if (newWidth > maxWidth || newHeight > maxHeight)
 		{
-			trace("ERROR: resizeable boxes are not allowed to change size to any dimensions " +
+			trace("ERROR: resizable boxes are not allowed to change size to any dimensions " +
 				"greater than their original size.");
 		}
 		

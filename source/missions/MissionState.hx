@@ -1,6 +1,6 @@
 package missions;
 
-import boxes.ResizeableBox;
+import boxes.ResizableBox;
 import cursors.MapCursor;
 import flixel.FlxG;
 import flixel.FlxState;
@@ -12,7 +12,7 @@ import inputHandlers.ActionInputHandler;
 import inputHandlers.MoveInputHandler;
 import menus.BasicMenu;
 import menus.MenuTemplate;
-import menus.ResizeableBasicMenu;
+import menus.ResizableBasicMenu;
 import missions.managers.MapCursorManager;
 import observerPattern.Observed;
 import observerPattern.Observer;
@@ -52,9 +52,9 @@ class MissionState extends FlxState implements Observer
 	private var menu3:BasicMenu;
 	private var menu4:BasicMenu;
 	
-	private var resizeableBox:ResizeableBox;
+	private var resizeableBox:ResizableBox;
 	
-	private var resizeableMenu:ResizeableBasicMenu;
+	private var resizeableMenu:ResizableBasicMenu;
 	
 	private var updateableObjects:Array<UpdatingEntity> = new Array<UpdatingEntity>();
 	private var currentlyUpdatingIndex:Int = 0;
@@ -72,7 +72,7 @@ class MissionState extends FlxState implements Observer
 		
 		initManagers();
 		
-		resizeableBox = new ResizeableBox(0, 0, 300, 300, AssetPaths.box_test__png, 15, 15);
+		resizeableBox = new ResizableBox(0, 0, 300, 300, AssetPaths.box_test__png, 15, 15);
 		add(resizeableBox.totalFlxGrp);
 		
 		menu = new BasicMenu(50, 100, ["Unit", "Status", "Options", "Suspend", "End"], 1);
@@ -91,7 +91,7 @@ class MissionState extends FlxState implements Observer
 		menu4.subject.addObserver(this);
 		add(menu4.totalFlxGrp);
 		
-		resizeableMenu = new ResizeableBasicMenu(480, 100, ["Smile", "Jump", "Wear Hat", "Nose", "Clap", "PSI Rockin'", "Stomp"], 5);
+		resizeableMenu = new ResizableBasicMenu(480, 100, ["Smile", "Jump", "Wear Hat", "Nose", "Clap", "PSI Rockin'", "Stomp"], 5);
 		resizeableMenu.subject.addObserver(this);
 		add(resizeableMenu.totalFlxGrp);
 		

@@ -1,6 +1,6 @@
 package menus;
 
-import boxes.ResizeableBox;
+import boxes.ResizableBox;
 import flixel.text.FlxText;
 import observerPattern.Observed;
 import utilities.HideableEntity;
@@ -13,15 +13,29 @@ import utilities.UpdatingEntity;
  * To use, specify all possible menu options at the start.
  * 
  * 
+ * After resizing, the visible menu options will have the same id that those menu options
+ * 	would have if all were visible. i.e. if the original un-resized menu had 3 options:
+ * 		[ "jump", "run", "fight"]
+ * 	and changeMenuOptions() was called with this array of boolean values:
+ * 		[ true, false, true]
+ * 	then the menu would only display the "jump" and "fight" options, using the first
+ * 	two MenuOption objects in menuOptionArr. However, the ids of those two menu options
+ * 	match the ids of the original "jump" and "fight" menu options (which in this case
+ * 	would be 0 and 2, respectively).
+ * 
+ * 	This is nice because when that example menu notifies events, we know that currMenuOption's
+ * 	id == 2 means that the "fight" option was selected, regardless of how many options are
+ * 	currently displayed in the menu.
+ * 
  * NOTE:
  * 	reveal() must be called after resizing for the menu to display itself properly.
  * 
  * @author Samuel Bumgardner
  */
-class ResizeableBasicMenu extends BasicMenu
+class ResizableBasicMenu extends BasicMenu
 {
 	/**
-	 * Array of label text values that may appear in the resizeable menu.
+	 * Array of label text values that may appear in the resizable menu.
 	 * Set during initialization, and shouldn't be altered afterward.
 	 */
 	public var possibleLabelText(default, null):Array<String>;
@@ -38,9 +52,11 @@ class ResizeableBasicMenu extends BasicMenu
 	public var numActiveLabels(default, null):Int;
 	
 	/**
-	 * 
+	 * Object that contains a set of sprites that can be used as a resizable box.
+	 * Call this object's public functions to do any resizing or interactions with
+	 * the box
 	 */
-	public var resizeableBox:ResizeableBox;
+	public var resizableBox:ResizableBox;
 	
 	///////////////////////////////////////
 	//          INITIALIZATION           //
@@ -61,6 +77,10 @@ class ResizeableBasicMenu extends BasicMenu
 		super(X, Y, labelTextArr, subjectID);
 	}
 	
+	/**
+	 * 
+	 * @param	labelTextArr
+	 */
 	private function initLabelArrays(labelTextArr:Array<String>):Void
 	{
 		possibleLabelText = labelTextArr.map(function(s:String){return s;});
@@ -73,7 +93,7 @@ class ResizeableBasicMenu extends BasicMenu
 	}
 	
 	/**
-	 * Overrides BasicMenu's initVarSizedBox to create a resizeable box instead
+	 * Overrides BasicMenu's initVarSizedBox to create a resizable box instead
 	 * 	of just an ordinary box. Otherwise follows the same steps and logical
 	 * 	structure.
 	 * 
@@ -87,10 +107,10 @@ class ResizeableBasicMenu extends BasicMenu
 		boxWidth = cast maxTextWidth + cornerSize * 2;
 		boxHeight = cast lastLabel.y + lastLabel.height + cornerSize - Y;
 		
-		resizeableBox = new ResizeableBox(X, Y, boxWidth, boxHeight, boxSpriteSheet, 
+		resizableBox = new ResizableBox(X, Y, boxWidth, boxHeight, boxSpriteSheet, 
 			cornerSize, backgroundSize);
 		
-		boxSpriteGrp = resizeableBox.totalFlxGrp;
+		boxSpriteGrp = resizableBox.totalFlxGrp;
 	}
 	
 	
@@ -118,6 +138,17 @@ class ResizeableBasicMenu extends BasicMenu
 	//       MENU TEMPLATE OVERRIDE      //
 	///////////////////////////////////////
 	
+	/**
+	 * Helper function for MenuTemplate's reveal().
+	 * Also is responsible for resetting the menu's variables and appearance back to their
+	 * 	starting states. This includes hiding the background higlight graphic of all menu
+	 * 	options that are not initally hovered over in the menu.
+	 * 
+	 * In ResizableBasicMenu, it must also hide all menuOptions that are not currently
+	 * 	active.
+	 * 
+	 * NOTE: Assumes that there is at least one entry in menuOptionArr.
+	 */
 	override private function resetMenu():Void
 	{
 		super.resetMenu();
@@ -126,6 +157,24 @@ class ResizeableBasicMenu extends BasicMenu
 		{
 			menuOptionArr[i].hide();
 		}
+	}
+	
+	/**
+	 * Public function for changing the position of the menu and all of its components.
+	 * 
+	 * This override adds code to update the ResizableBox's x & y variables too, which
+	 * 	would otherwise be ignored because ResizableBox itself is not in the totalFlxGrp.
+	 * ResizableBox uses those variables when positioning its components after resizing,
+	 * 	leaving them unchanged would lead to some serious problems.
+	 * 
+	 * @param	newX	The menu's new x value.
+	 * @param	newY	The menu's new y value.
+	 */
+	override public function setPos(newX:Float, newY:Float):Void
+	{
+		super.setPos(newX, newY);
+		resizableBox.x = newX;
+		resizableBox.y = newY;
 	}
 	
 	///////////////////////////////////////
@@ -171,6 +220,7 @@ class ResizeableBasicMenu extends BasicMenu
 			if (activeLabels[useLabelIndex])
 			{
 				menuOptionArr[menuOptionIndex].label.text = possibleLabelText[useLabelIndex];
+				menuOptionArr[menuOptionIndex].id = useLabelIndex;
 				
 				if (menuOptionArr[menuOptionIndex].label.width > maxTextWidth)
 				{
@@ -184,6 +234,9 @@ class ResizeableBasicMenu extends BasicMenu
 		return maxTextWidth;
 	}
 	
+	/**
+	 * 
+	 */
 	private function updateOptionNeighbors():Void
 	{
 		for (i in 0...numActiveLabels)
@@ -206,6 +259,9 @@ class ResizeableBasicMenu extends BasicMenu
 		}
 	}
 	
+	/**
+	 * 
+	 */
 	private function hideInactiveLabels():Void
 	{
 		for (i in numActiveLabels...menuOptionArr.length)
@@ -214,6 +270,10 @@ class ResizeableBasicMenu extends BasicMenu
 		}
 	}
 	
+	/**
+	 * 
+	 * @param	maxTextWidth
+	 */
 	private function resizeOptionBgHighlights(maxTextWidth:Float):Void
 	{
 		for (i in 0...numActiveLabels)
@@ -232,6 +292,6 @@ class ResizeableBasicMenu extends BasicMenu
 		boxWidth = cast maxTextWidth + cornerSize * 2;
 		boxHeight = cast lastActiveLabel.y + lastActiveLabel.height + cornerSize - y;
 		
-		resizeableBox.resize(boxWidth, boxHeight);
+		resizableBox.resize(boxWidth, boxHeight);
 	}
 }
