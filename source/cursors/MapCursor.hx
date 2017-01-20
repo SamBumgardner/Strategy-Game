@@ -728,8 +728,8 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	 */
 	private function updateCameraHitboxPos():Void
 	{
-		cameraHitbox.x = currCornerArr[CornerTypes.TOP_LEFT].getAnchorX() - currentAnchorTY;
-		cameraHitbox.y = currCornerArr[CornerTypes.TOP_LEFT].getAnchorY() - currentAnchorLX;
+		cameraHitbox.x = currCornerArr[CornerTypes.TOP_LEFT].getAnchorX() - currentAnchorLX;
+		cameraHitbox.y = currCornerArr[CornerTypes.TOP_LEFT].getAnchorY() - currentAnchorTY;
 	}
 	
 	/**
