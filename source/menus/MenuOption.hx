@@ -74,7 +74,7 @@ class MenuOption implements HideableEntity
 	/**
 	 * Number that can be used to identify this MenuOption.
 	 */
-	public var id(default, null):Int;
+	public var id:Int;
 	
 	/**
 	 * Set of references that describes how this menuOption is positioned relative to
