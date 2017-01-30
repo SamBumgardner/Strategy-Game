@@ -12,6 +12,9 @@ using observerPattern.eventSystem.EventExtender;
  * A component of MissionState that acts as a middleman between MissionState 
  * 	and MapCursor to reduce the complexity of MissionState's code.
  * 
+ * Responsible for managing the MissionState's MapCursor object.
+ * 	This includes detecting and responding to events from the mapCursor.
+ * 
  * @author Samuel Bumgardner
  */
 class MapCursorManager implements Observer
@@ -26,7 +29,10 @@ class MapCursorManager implements Observer
 	 * 	functions as needed to cause changes on the overall MissionState.
 	 */
 	public var parentState:MissionState;
-
+	
+	/**
+	 * The MapCursor that this manager is responsible for controlling.
+	 */
 	public var mapCursor:MapCursor;
 	
 	/**
@@ -77,7 +83,7 @@ class MapCursorManager implements Observer
 	 * Is used to respond to events sent out by the MapCursor, and shouldn't
 	 * 	recieve any notifications from anything else.
 	 * 
-	 * @param 	event		Object 
+	 * @param 	event		InputEvent object containing information about event type and sender.
 	 * @param	notifier	Reference to the object that caused the notification.
 	 */
 	public function onNotify(event:InputEvent, notifier:Observed):Void
@@ -98,7 +104,7 @@ class MapCursorManager implements Observer
 			}
 			else if (event.getType() == EventTypes.CANCEL)
 			{
-				
+				// Doesn't do anything right now.
 			}
 			else if (event.getType() == EventTypes.MOVE)
 			{
