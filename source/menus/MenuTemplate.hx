@@ -94,7 +94,7 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	/**
 	 * The menu option that the cursor is currently selecting/hovering over.
 	 */
-	private var currMenuOption:MenuOption;
+	public var currMenuOption(default, null):MenuOption;
 	
 	/**
 	 * The AnchoredSprite used as the menu's bouncing cursor.
