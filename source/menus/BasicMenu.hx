@@ -181,6 +181,38 @@ class BasicMenu extends MenuTemplate implements VarSizedBox
 	
 	
 	///////////////////////////////////////
+	//       MENU TEMPLATE OVERRIDE      //
+	///////////////////////////////////////
+	
+	/**
+	 * Public function for deactivating a menu.
+	 * Hides the menu's cursor in addition to default MenuTemplate behavior.
+	 * 
+	 * NOTE:
+	 * 	Does not hide the menu. Use hide() to make it totally invisible.
+	 */
+	override public function deactivate():Void
+	{
+		super.deactivate();
+		menuCursor.visible = false;
+	}
+	
+	/**
+	 * Public function for activating a menu.
+	 * Reveals the menu's cursor in addition to default MenuTemplate behavior.
+	 * 
+	 * NOTE:
+	 * 	Does not make the menu visible the menu. 
+	 * 	Use reveal() to make it visible.
+	 */
+	override public function activate():Void
+	{
+		super.activate();
+		menuCursor.visible = true;
+	}
+	
+	
+	///////////////////////////////////////
 	//          CURSOR ACTIONS           //
 	///////////////////////////////////////
 	
