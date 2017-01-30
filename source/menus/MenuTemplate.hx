@@ -208,7 +208,19 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	{
 		var xDiff:Float = newX - x;
 		var yDiff:Float = newY - y;
+		
+		// Move all HaxeFlixel-inheriting components.
 		totalFlxGrp.forEach(moveObject.bind(_, xDiff, yDiff), true);
+		
+		// Move cursor positions for all MenuOptions.
+		for (menuOption in menuOptionArr)
+		{
+			menuOption.moveCursorPos(xDiff, yDiff);
+		}
+		
+		// Set menu's logical x & y values.
+		x = newX;
+		y = newY;
 	}
 	
 	/**
