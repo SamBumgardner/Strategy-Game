@@ -147,6 +147,18 @@ class MenuOption implements HideableEntity
 	///////////////////////////////////////
 	
 	/**
+	 * Moves the option's cursor position by the specified amount.
+	 * 
+	 * @param	xDiff	amount to change x by.
+	 * @param	yDiff	amount to change y by.
+	 */
+	public function moveCursorPos(xDiff:Float, yDiff:Float):Void
+	{
+		cursorPos.x += xDiff;
+		cursorPos.y += yDiff;
+	}
+	
+	/**
 	 * Generates a background highlight for the currentMenuOption of the specified width.
 	 * Useful for MenuOptions that don't know how wide their field will be initially.
 	 * Could be given expanded functionality in the future.
