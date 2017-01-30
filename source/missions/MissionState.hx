@@ -33,7 +33,7 @@ using observerPattern.eventSystem.EventExtender;
  * 
  * @author Samuel Bumgardner
  */
-class MissionState extends FlxState implements Observer
+class MissionState extends FlxState
 {
 	///////////////////////////////////////
 	//         DATA  DECLARATION         //
@@ -66,20 +66,17 @@ class MissionState extends FlxState implements Observer
 	 */
 	private var mapCursorManager:MapCursorManager;
 	
+	
+	/**
+	 * Size of the map's tiles, measured in pixels.
+	 */
 	public var tileSize(default, never):Int = 64;
+	
+	/**
+	 * Number of tiles between the edge of the screen and the camera's dead zone.
+	 */
 	private var deadzoneBorderTiles(default, never) = 2;
 	
-	private var menu:BasicMenu;
-	private var menu2:BasicMenu;
-	private var menu3:BasicMenu;
-	private var menu4:BasicMenu;
-	
-	private var resizeableBox:ResizableBox;
-	
-	private var resizeableMenu:ResizableBasicMenu;
-	
-	private var updateableObjects:Array<UpdatingEntity> = new Array<UpdatingEntity>();
-	private var currentlyUpdatingIndex:Int = 0;
 
 	///////////////////////////////////////
 	//          INITIALIZATION           //
@@ -94,42 +91,11 @@ class MissionState extends FlxState implements Observer
 		ActionInputHandler.init([FlxKey.Z, FlxKey.X, FlxKey.C, FlxKey.S, FlxKey.D]);
 		
 		initMap();
-		initMapCursor();
 		
 		initCamera();
 		
 		initManagers();
 		
-		resizeableBox = new ResizableBox(0, 0, 300, 300, AssetPaths.box_test__png, 15, 15);
-		add(resizeableBox.totalFlxGrp);
-		
-		menu = new BasicMenu(50, 100, ["Unit", "Status", "Options", "Suspend", "End"], 1);
-		menu.subject.addObserver(this);
-		add(menu.totalFlxGrp);
-		
-		menu2 = new BasicMenu(200, 20, ["Item", "Trade", "Wait"], 2);
-		menu2.subject.addObserver(this);
-		add(menu2.totalFlxGrp);
-		
-		menu3 = new BasicMenu(200, 150, ["Equip", "Trade", "Discard", "This is a really long menu entry!"], 3);
-		menu3.subject.addObserver(this);
-		add(menu3.totalFlxGrp);
-		
-		menu4 = new BasicMenu(400, 30, ["Smile", "Jump", "Wear Hat", "Nose", "Clap", "PSI Rockin'", "Stomp"], 4);
-		menu4.subject.addObserver(this);
-		add(menu4.totalFlxGrp);
-		
-		resizeableMenu = new ResizableBasicMenu(480, 100, ["Smile", "Jump", "Wear Hat", "Nose", "Clap", "PSI Rockin'", "Stomp"], 5);
-		resizeableMenu.subject.addObserver(this);
-		add(resizeableMenu.totalFlxGrp);
-		
-		updateableObjects.push(menu);
-		updateableObjects.push(menu2);
-		updateableObjects.push(menu3);
-		updateableObjects.push(menu4);
-		updateableObjects.push(resizeableMenu);
-		
-		updateableObjects[currentlyUpdatingIndex].active = true;
 		
 		
 		super.create();
@@ -154,21 +120,7 @@ class MissionState extends FlxState implements Observer
 	}
 	
 	/**
-	 * Must be called after MapCursor has been created, which should happen in initMap().
 	 * 
-	 * This function is not included in the section of placeEntities that creates the 
-	 * 	MapCursor because we may not want to add the contents of its totalFlxGrp and
-	 * 	push it into updateable objects in the same order that objects are created in 
-	 * 	placeEntities.
-	 */
-	private function initMapCursor():Void
-	{
-		add(mapCursor.totalFlxGrp);
-		updateableObjects.push(mapCursor);
-	}
-	
-	/**
-	 * Must be called after mapCursor has been created, which should happen in initMap().
 	 */
 	private function initCamera():Void
 	{
@@ -199,7 +151,6 @@ class MissionState extends FlxState implements Observer
 		if (entityName == "map_cursor")
 		{
 			mapCursor = new MapCursor(map.width, map.height, 0);
-			mapCursor.subject.addObserver(this);
 			
 			var row:Int = Math.floor(y / tileSize);
 			var col:Int = Math.floor(x / tileSize);
@@ -221,49 +172,7 @@ class MissionState extends FlxState implements Observer
 	//         PUBLIC  INTERFACE         //
 	///////////////////////////////////////
 	
-	public function onNotify(event:InputEvent, notifier:Observed)
 	{
-		trace("Recieved an event with id", event.getID(), "and type", event.getType());
-		
-		if (event.getType() == EventTypes.CONFIRM)
-		{
-			if (Std.is(notifier, MenuTemplate))
-			{
-				trace("The selected MenuOption was: " + (cast notifier).currMenuOption.label.text);
-			}
-			
-			updateableObjects[currentlyUpdatingIndex].deactivate();
-			(cast updateableObjects[currentlyUpdatingIndex]).hide();
-			currentlyUpdatingIndex++;
-			
-			if (currentlyUpdatingIndex == updateableObjects.length)
-			{
-				mapCursor.changeInputModes(InputModes.FREE_MOVEMENT);
-				currentlyUpdatingIndex = 0;
-			}
-			else
-			{
-				mapCursor.changeInputModes(InputModes.DISABLED);
-			}
-			
-			updateableObjects[currentlyUpdatingIndex].activate();
-			(cast updateableObjects[currentlyUpdatingIndex]).reveal();
-			MoveInputHandler.resetNumVars();
-			ActionInputHandler.resetNumVars();
-		}
-		else if (event.getType() == EventTypes.CANCEL)
-		{
-			updateableObjects[currentlyUpdatingIndex].deactivate();
-			(cast updateableObjects[currentlyUpdatingIndex]).hide();
-			
-			mapCursor.changeInputModes(InputModes.FREE_MOVEMENT);
-			currentlyUpdatingIndex = 0;
-			
-			updateableObjects[currentlyUpdatingIndex].activate();
-			(cast updateableObjects[currentlyUpdatingIndex]).reveal();
-			MoveInputHandler.resetNumVars();
-			ActionInputHandler.resetNumVars();
-		}
 	}
 	
 	///////////////////////////////////////
@@ -279,26 +188,8 @@ class MissionState extends FlxState implements Observer
 	 */
 	override public function update(elapsed:Float):Void
 	{
-		if (FlxG.keys.justPressed.Q)
-		{
-			resizeableBox.resize(resizeableBox.boxWidth - 30, resizeableBox.boxHeight - 30);
-		}
-		if (FlxG.keys.justPressed.W)
-		{
-			resizeableBox.resize(resizeableBox.boxWidth + 30, resizeableBox.boxHeight + 30);
-		}
-		if (FlxG.keys.justPressed.E)
-		{
-			resizeableMenu.changeMenuOptions([true, true, false, false, true, false, true]);
-		}
-		if (FlxG.keys.justPressed.R)
-		{
-			resizeableMenu.changeMenuOptions([true, true, true, true, true, true, true]);
-		}
-		
 		ActionInputHandler.bufferActions(elapsed);
 		super.update(elapsed);
-		updateableObjects[currentlyUpdatingIndex].update(elapsed);
 		MoveInputHandler.updateCycleFinished();
 		ActionInputHandler.updateCycleFinished();
 	}
