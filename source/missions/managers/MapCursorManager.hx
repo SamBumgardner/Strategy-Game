@@ -1,6 +1,7 @@
 package missions.managers;
 
 import cursors.MapCursor;
+import flixel.FlxG;
 import observerPattern.Observed;
 import observerPattern.Observer;
 import observerPattern.eventSystem.EventTypes;
@@ -36,6 +37,16 @@ class MapCursorManager implements Observer
 	public var mapCursor:MapCursor;
 	
 	/**
+	 * Tracks if cursor is on the left side or right side of the screen.
+	 */
+	public var cursorOnLeft(default, null):Bool;
+	
+	/**
+	 * Tracks if cursor is in the top half or bottom half of the screen.
+	 */
+	public var cursorOnTop(default, null):Bool;
+	
+	/**
 	 * Initializer.
 	 * 
 	 * @param	parent	Object responsible for creating this manager.
@@ -45,8 +56,25 @@ class MapCursorManager implements Observer
 		parentState = parent;
 		mapCursor = parentState.mapCursor;
 		mapCursor.subject.addObserver(this);
+		
+		updateCursorSide();
 	}
 	
+	
+	///////////////////////////////////////
+	//        INTERNAL  FUNCTIONS        //
+	///////////////////////////////////////
+	
+	/**
+	 * Updates cursorOnLeft & cursorOnTop variables based on cursor position.
+	 */
+	private function updateCursorSide():Void
+	{
+		cursorOnLeft = mapCursor.col * parentState.tileSize - FlxG.camera.scroll.x < 
+			FlxG.width / 2;
+		cursorOnTop = mapCursor.row * parentState.tileSize - FlxG.camera.scroll.y < 
+			FlxG.height / 2;
+	}
 	
 	///////////////////////////////////////
 	//         PUBLIC  INTERFACE         //
@@ -107,7 +135,9 @@ class MapCursorManager implements Observer
 				// Doesn't do anything right now.
 			}
 			else if (event.getType() == EventTypes.MOVE)
-			{
+			{	
+				updateCursorSide();
+				
 				var terrainStr:String = "";
 				// Get type of terrain tile is at the cursor's position.
 				var terrainType:Int = parentState.terrainArray[mapCursor.row][mapCursor.col];
