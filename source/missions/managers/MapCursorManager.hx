@@ -128,7 +128,7 @@ class MapCursorManager implements Observer
 			
 			if (event.getType() == EventTypes.CONFIRM)
 			{
-				
+				parentState.mapCursorConfirmPressed();
 			}
 			else if (event.getType() == EventTypes.CANCEL)
 			{
