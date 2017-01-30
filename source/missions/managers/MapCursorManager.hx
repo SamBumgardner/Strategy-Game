@@ -47,6 +47,32 @@ class MapCursorManager implements Observer
 	///////////////////////////////////////
 	
 	/**
+	 * Publicly accessible method for activating the map cursor.
+	 * 
+	 * Makes the map cursor visible, active, get updated by the MissionState, and
+	 * 	react normally to input.
+	 */
+	public function activateMapCursor():Void
+	{
+		mapCursor.activate();
+		mapCursor.reveal();
+		mapCursor.changeInputModes(InputModes.FREE_MOVEMENT);
+		parentState.changeCurrUpdatingObj(mapCursor);
+	}
+	
+	/**
+	 * Publicly accessible method for deactivating the menuCursor.
+	 * 
+	 * Deactivates and hides the MapCursor and disables its input.
+	 */
+	public function deactivateMapCursor():Void
+	{
+		mapCursor.deactivate();
+		mapCursor.hide();
+		mapCursor.changeInputModes(InputModes.DISABLED);
+	}
+	
+	/**
 	 * Function to satisfy the Observer interface.
 	 * Is used to respond to events sent out by the MapCursor, and shouldn't
 	 * 	recieve any notifications from anything else.
