@@ -35,13 +35,35 @@ using observerPattern.eventSystem.EventExtender;
  */
 class MissionState extends FlxState implements Observer
 {
+	///////////////////////////////////////
+	//         DATA  DECLARATION         //
+	///////////////////////////////////////
 	
+	/**
+	 * Used to load level & terrain data from .oel file.
+	 */
 	private var map:StrategyOgmoLoader;
+	
+	/**
+	 * Tilemap of the map background. Generated from the level's "visual" tilemap data.
+	 */
 	private var terrainTiles:FlxTilemap;
 	
+	/**
+	 * 2-D array that represents the map's tactical terrain info.
+	 * Its values correspond entries in the TerrainTypes enum.
+	 */
 	public var terrainArray:Array<Array<Int>>;
+	
+	/**
+	 * The cursor used to select player controlled units and do pretty much all gameplay
+	 * 	outside of menus.
+	 */
 	public var mapCursor:MapCursor;
 	
+	/**
+	 * Manages the mapCursor and respond to its events.
+	 */
 	private var mapCursorManager:MapCursorManager;
 	
 	public var tileSize(default, never):Int = 64;
@@ -59,7 +81,13 @@ class MissionState extends FlxState implements Observer
 	private var updateableObjects:Array<UpdatingEntity> = new Array<UpdatingEntity>();
 	private var currentlyUpdatingIndex:Int = 0;
 
+	///////////////////////////////////////
+	//          INITIALIZATION           //
+	///////////////////////////////////////
 	
+	/**
+	 * Initializer (more or less).
+	 */
 	override public function create():Void
 	{	
 		MoveInputHandler.init(FlxKey.UP, FlxKey.DOWN, FlxKey.LEFT, FlxKey.RIGHT);
@@ -107,6 +135,12 @@ class MissionState extends FlxState implements Observer
 		super.create();
 	}
 	
+	/**
+	 * Initializes map, which includes the following:
+	 * 	Generates visual tilemap.
+	 * 	Generates 2-D array of tactical terrain info.
+	 * 	Generates all entities specified in the mission's .oel file. 
+	 */
 	private function initMap():Void
 	{
 		map = new StrategyOgmoLoader(AssetPaths.forest_1__oel);
@@ -152,6 +186,12 @@ class MissionState extends FlxState implements Observer
 		}
 	}
 	
+	/**
+	 * Generates all objects specified in the mission's .oel file.
+	 * 
+	 * @param	entityName	The name of the entity from the .oel file.
+	 * @param	entityData	Any accompanying data for that entity from the .oel file.
+	 */
 	private function placeEntitites(entityName:String, entityData:Xml):Void
 	{
 		var x:Int = Std.parseInt(entityData.get("x"));
@@ -167,15 +207,19 @@ class MissionState extends FlxState implements Observer
 		}
 	}
 	
+	/**
+	 * Initializes all manager-type objects.
+	 */
 	private function initManagers():Void
 	{
 		mapCursorManager = new MapCursorManager(this);
 	}
 	
 	
-	/* INTERFACE observerPattern.Observer */
 	
-	// Not final code for MissionState. Just here for ease of testing at the moment.
+	///////////////////////////////////////
+	//         PUBLIC  INTERFACE         //
+	///////////////////////////////////////
 	
 	public function onNotify(event:InputEvent, notifier:Observed)
 	{
@@ -222,6 +266,17 @@ class MissionState extends FlxState implements Observer
 		}
 	}
 	
+	///////////////////////////////////////
+	//         UPDATE FUNCTIONS          //
+	///////////////////////////////////////
+	
+	/**
+	 * Updates all entities in the scene.
+	 * Additionally, it calls update functions for any objects that aren't automatically
+	 * 	updated during super.update(), i.e. input handlers and the currentlyUpdating object.
+	 * 
+	 * @param	elapsed	Time passed since last call to update, in seconds.
+	 */
 	override public function update(elapsed:Float):Void
 	{
 		if (FlxG.keys.justPressed.Q)
