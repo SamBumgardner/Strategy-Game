@@ -16,8 +16,10 @@ import utilities.UpdatingEntity;
  * After resizing, the visible menu options will have the same id that those menu options
  * 	would have if all were visible. i.e. if the original un-resized menu had 3 options:
  * 		[ "jump", "run", "fight"]
+ * 
  * 	and changeMenuOptions() was called with this array of boolean values:
  * 		[ true, false, true]
+ * 
  * 	then the menu would only display the "jump" and "fight" options, using the first
  * 	two MenuOption objects in menuOptionArr. However, the ids of those two menu options
  * 	match the ids of the original "jump" and "fight" menu options (which in this case
@@ -78,8 +80,15 @@ class ResizableBasicMenu extends BasicMenu
 	}
 	
 	/**
+	 * Initializes possibleLabelText and activeLabels arrays.
 	 * 
-	 * @param	labelTextArr
+	 * possibleLabelText becomes a deep copy of the passed-in labelTextArr.
+	 * 
+	 * activeLabels becomes an array of boolean values.
+	 * 	Its length is equal to the length of possibleLabelText.
+	 * 	All indexes are initially set to true.
+	 * 
+	 * @param	labelTextArr	Array of strings copied to create possibleLabelText.
 	 */
 	private function initLabelArrays(labelTextArr:Array<String>):Void
 	{
@@ -119,9 +128,16 @@ class ResizableBasicMenu extends BasicMenu
 	///////////////////////////////////////
 	
 	/**
+	 * Public-facing function used to change the menu's active labels.
 	 * 
+	 * The provided boolean array should match the layout of the possibleLabelText,
+	 * 	so an array with values [true, false, true] means that there are two active
+	 * 	labels. 
 	 * 
-	 * @param	newBoolArray
+	 * They will use the text content from the 0 & 2 indexes of 
+	 * 	possibleLabelText and have ids 0 & 2.
+	 * 
+	 * @param	newBoolArray	Specifies which menu options should be active.
 	 */
 	public function changeMenuOptions(newBoolArray:Array<Bool>):Void
 	{
@@ -182,8 +198,10 @@ class ResizableBasicMenu extends BasicMenu
 	///////////////////////////////////////
 	
 	/**
+	 * Changes contents of activeLabels array to match the contents of the provided
+	 * 	array of booleans.
 	 * 
-	 * @param	newBoolArray
+	 * @param	newBoolArray	Array of boolean values that activeLabels should match.
 	 */
 	private function setActiveLabels(newBoolArray:Array<Bool>):Void
 	{
@@ -208,8 +226,15 @@ class ResizableBasicMenu extends BasicMenu
 	}
 	
 	/**
+	 * Changes the menu's visible options based on the contents of the activeLabelsArray.
 	 * 
-	 * @return	
+	 * To accomplish this, the first numActiveLabels MenuOptions change text and ids to 
+	 * 	match the labels that are set to be "true" in the activeLabels array. 
+	 * 
+	 * The MenuOptions not needed to represent the active menu entries are left unchanged,
+	 * 	and will not be displayed when the menu is made visible.
+	 * 
+	 * @return	The width of the widest active label. Needed when resizing the menu box.
 	 */
 	private function updateOptionLabelText():Float
 	{
@@ -235,7 +260,9 @@ class ResizableBasicMenu extends BasicMenu
 	}
 	
 	/**
-	 * 
+	 * Changes the MenuOptions' neighbor variables so that all active MenuOptions
+	 * 	are linked together in the BasicMenu style: vertically, with the bottom
+	 * 	and top options connecting as "wrapped" neighbors.
 	 */
 	private function updateOptionNeighbors():Void
 	{
@@ -260,7 +287,7 @@ class ResizableBasicMenu extends BasicMenu
 	}
 	
 	/**
-	 * 
+	 * Hides all inactive labels in the menu.
 	 */
 	private function hideInactiveLabels():Void
 	{
@@ -271,8 +298,10 @@ class ResizableBasicMenu extends BasicMenu
 	}
 	
 	/**
+	 * Applies clipping rectangle to all active MenuOption bgHightlights,
+	 * 	resizing them to match the width of the widest active label text.
 	 * 
-	 * @param	maxTextWidth
+	 * @param	maxTextWidth	The width of the menu's widest active label.
 	 */
 	private function resizeOptionBgHighlights(maxTextWidth:Float):Void
 	{
@@ -283,8 +312,11 @@ class ResizableBasicMenu extends BasicMenu
 	}
 	
 	/**
+	 * Resizes the background menu box, selecting height and width values
+	 * 	based on the collective hieght of the MenuOptions and the width of the
+	 * 	widest MenuOption.
 	 * 
-	 * @param	maxTextWidth
+	 * @param	maxTextWidth	Width of widest label text in the menu.
 	 */
 	private function resizeMenuBox(maxTextWidth:Float):Void
 	{
