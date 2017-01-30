@@ -18,6 +18,13 @@ import utilities.UpdatingEntity;
  * A basic menu class that uses an array of strings (provided as a parameter upon instantiation)
  * 	to create a basic vertical menu. 
  * 
+ * NOTE:
+ * 	boxSpriteGrp begins initialization as a null value, and must somehow be set up before
+ * 		attempting to call its .add() function.
+ * 	In this class, that responsiblity is handled by initMenuBox(), but if any child class
+ * 		chooses to override that function, they must check that boxSpriteGrp has been 
+ * 		initialized before trying to access it.
+ * 
  * @author Samuel Bumgardner
  */
 class BasicMenu extends MenuTemplate implements VarSizedBox 
@@ -145,6 +152,10 @@ class BasicMenu extends MenuTemplate implements VarSizedBox
 	 * Creates variable sized box sprite that sits behind the MenuOptions.
 	 * Has to be created after the menu options so it knows how wide and tall it should be.
 	 * 
+	 * Is also responsible for creating and populating the boxSpriteGrp FlxGroup.
+	 * 
+	 * @param	X				The desired x position of the menu.
+	 * @param	Y				The desired y position of the menu.
 	 * @param	maxTextWidth	The width of the largest MenuOption's label.
 	 */
 	private function initMenuBox(X:Float, Y:Float, maxTextWidth:Float):Void
