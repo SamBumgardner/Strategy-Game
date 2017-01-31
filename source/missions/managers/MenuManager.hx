@@ -639,6 +639,7 @@ class MenuManager implements Observer
 	private function itemEquipConfirm():Void
 	{
 		trace("Changing equipped item!");
+		popMenuStack();
 	}
 	
 	/**
