@@ -26,7 +26,6 @@
   <ExportCameraPosition>false</ExportCameraPosition>
   <LevelValueDefinitions>
     <ValueDefinition xsi:type="IntValueDefinition" Name="number_of_terrain_types" Default="1" Min="1" Max="100" ShowSlider="false" />
-    <ValueDefinition xsi:type="IntValueDefinition" Name="terrain_type_tile_0" Default="-1" Min="-1" Max="100" ShowSlider="false" />
     <ValueDefinition xsi:type="IntValueDefinition" Name="terrain_type_tile_1" Default="-1" Min="-1" Max="100" ShowSlider="false" />
     <ValueDefinition xsi:type="IntValueDefinition" Name="terrain_type_tile_2" Default="-1" Min="-1" Max="100" ShowSlider="false" />
     <ValueDefinition xsi:type="IntValueDefinition" Name="terrain_type_tile_3" Default="-1" Min="-1" Max="100" ShowSlider="false" />

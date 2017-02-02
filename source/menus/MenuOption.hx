@@ -1,8 +1,11 @@
 package menus;
+import flixel.FlxBasic;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
 import flixel.math.FlxPoint;
+import flixel.math.FlxRect;
 import flixel.text.FlxText;
+import utilities.HideableEntity;
 
 /**
  * The basic building block of any menu-type object.
@@ -27,7 +30,7 @@ import flixel.text.FlxText;
  * 		
  * @author Samuel Bumgardner
  */
-class MenuOption
+class MenuOption implements HideableEntity
 {
 	///////////////////////////////////////
 	//         DATA  DECLARATION         //
@@ -71,7 +74,7 @@ class MenuOption
 	/**
 	 * Number that can be used to identify this MenuOption.
 	 */
-	public var id(default, null):Int;
+	public var id:Int;
 	
 	/**
 	 * Set of references that describes how this menuOption is positioned relative to
@@ -144,6 +147,18 @@ class MenuOption
 	///////////////////////////////////////
 	
 	/**
+	 * Moves the option's cursor position by the specified amount.
+	 * 
+	 * @param	xDiff	amount to change x by.
+	 * @param	yDiff	amount to change y by.
+	 */
+	public function moveCursorPos(xDiff:Float, yDiff:Float):Void
+	{
+		cursorPos.x += xDiff;
+		cursorPos.y += yDiff;
+	}
+	
+	/**
 	 * Generates a background highlight for the currentMenuOption of the specified width.
 	 * Useful for MenuOptions that don't know how wide their field will be initially.
 	 * Could be given expanded functionality in the future.
@@ -186,6 +201,75 @@ class MenuOption
 		{
 			bgHighlight.active = false;
 			bgHighlight.visible = false;
+		}
+	}
+	
+	/**
+	 * Clips the bgHighlight graphic to the specified width.
+	 *
+	 * @param	newWidth	The desired width of the bgHighlight.
+	 */
+	public function clipBgHighlight(newWidth:Float):Void
+	{
+		bgHighlight.clipRect = new FlxRect(0, 0, newWidth, bgHighlight.height);
+	}
+	
+	/**
+	 * Function to satisify HideableEntity interface.
+	 * Is used to make all visual components within the menuOption's totalFlxGrp 
+	 * 	invisible and inactive.
+	 */
+	public function hide():Void
+	{
+		totalFlxGrp.forEach(hideSprite, true);
+	}
+	
+	/**
+	 * Helper function used by hide().
+	 * Takes an FlxBasic as a parameter, determines if it is an FlxSprite, and if it is
+	 * 	it makes it invisible and inactive.
+	 * It is necessary to check if the targetSprite is an FlxSprite because the FlxGroup
+	 * 	it is used on is only guaranteed to have FlxBasic objects, which may or may not be
+	 * 	sprites that need to be hidden.
+	 * 
+	 * @param	targetSprite	The FlxBasic object that is being operated upon.
+	 */
+	private function hideSprite(targetSprite:FlxBasic):Void
+	{
+		if (Std.is(targetSprite, FlxSprite))
+		{
+			(cast targetSprite).visible = false;
+			(cast targetSprite).active = false;
+		}
+	}
+	
+	/**
+	 * Function to satisify HideableEntity interface.
+	 * Is used to make all visual components within the menuOption's totalFlxGrp 
+	 * 	invisible and inactive.
+	 */
+	public function reveal():Void
+	{
+		totalFlxGrp.forEach(revealSprite, true);
+	}
+	
+	
+	/**
+	 * Helper function for reveal().
+	 * Takes an FlxBasic as a parameter, determines if it is an FlxSprite, and if it is
+	 * 	it makes it visible and active.
+	 * It is necessary to check if the targetSprite is an FlxSprite because the FlxGroup
+	 * 	it is used on is only guaranteed to have FlxBasic objects, which may or may not be
+	 * 	sprites that need to be hidden.
+	 * 
+	 * @param	targetSprite	
+	 */
+	private function revealSprite(targetSprite:FlxBasic):Void
+	{
+		if (Std.is(targetSprite, FlxSprite))
+		{
+			(cast targetSprite).visible = true;
+			(cast targetSprite).active = true;
 		}
 	}
 }

@@ -1,6 +1,7 @@
 package missions.managers;
 
 import cursors.MapCursor;
+import flixel.FlxG;
 import observerPattern.Observed;
 import observerPattern.Observer;
 import observerPattern.eventSystem.EventTypes;
@@ -11,6 +12,9 @@ using observerPattern.eventSystem.EventExtender;
 /**
  * A component of MissionState that acts as a middleman between MissionState 
  * 	and MapCursor to reduce the complexity of MissionState's code.
+ * 
+ * Responsible for managing the MissionState's MapCursor object.
+ * 	This includes detecting and responding to events from the mapCursor.
  * 
  * @author Samuel Bumgardner
  */
@@ -26,8 +30,21 @@ class MapCursorManager implements Observer
 	 * 	functions as needed to cause changes on the overall MissionState.
 	 */
 	public var parentState:MissionState;
-
+	
+	/**
+	 * The MapCursor that this manager is responsible for controlling.
+	 */
 	public var mapCursor:MapCursor;
+	
+	/**
+	 * Tracks if cursor is on the left side or right side of the screen.
+	 */
+	public var cursorOnLeft(default, null):Bool;
+	
+	/**
+	 * Tracks if cursor is in the top half or bottom half of the screen.
+	 */
+	public var cursorOnTop(default, null):Bool;
 	
 	/**
 	 * Initializer.
@@ -39,19 +56,62 @@ class MapCursorManager implements Observer
 		parentState = parent;
 		mapCursor = parentState.mapCursor;
 		mapCursor.subject.addObserver(this);
+		
+		updateCursorSide();
 	}
 	
+	
+	///////////////////////////////////////
+	//        INTERNAL  FUNCTIONS        //
+	///////////////////////////////////////
+	
+	/**
+	 * Updates cursorOnLeft & cursorOnTop variables based on cursor position.
+	 */
+	private function updateCursorSide():Void
+	{
+		cursorOnLeft = mapCursor.col * parentState.tileSize - FlxG.camera.scroll.x < 
+			FlxG.width / 2;
+		cursorOnTop = mapCursor.row * parentState.tileSize - FlxG.camera.scroll.y < 
+			FlxG.height / 2;
+	}
 	
 	///////////////////////////////////////
 	//         PUBLIC  INTERFACE         //
 	///////////////////////////////////////
 	
 	/**
+	 * Publicly accessible method for activating the map cursor.
+	 * 
+	 * Makes the map cursor visible, active, get updated by the MissionState, and
+	 * 	react normally to input.
+	 */
+	public function activateMapCursor():Void
+	{
+		mapCursor.activate();
+		mapCursor.reveal();
+		mapCursor.changeInputModes(InputModes.FREE_MOVEMENT);
+		parentState.changeCurrUpdatingObj(mapCursor);
+	}
+	
+	/**
+	 * Publicly accessible method for deactivating the menuCursor.
+	 * 
+	 * Deactivates and hides the MapCursor and disables its input.
+	 */
+	public function deactivateMapCursor():Void
+	{
+		mapCursor.deactivate();
+		mapCursor.hide();
+		mapCursor.changeInputModes(InputModes.DISABLED);
+	}
+	
+	/**
 	 * Function to satisfy the Observer interface.
 	 * Is used to respond to events sent out by the MapCursor, and shouldn't
 	 * 	recieve any notifications from anything else.
 	 * 
-	 * @param 	event		Object 
+	 * @param 	event		InputEvent object containing information about event type and sender.
 	 * @param	notifier	Reference to the object that caused the notification.
 	 */
 	public function onNotify(event:InputEvent, notifier:Observed):Void
@@ -68,14 +128,16 @@ class MapCursorManager implements Observer
 			
 			if (event.getType() == EventTypes.CONFIRM)
 			{
-				
+				parentState.mapCursorConfirmPressed();
 			}
 			else if (event.getType() == EventTypes.CANCEL)
 			{
-				
+				// Doesn't do anything right now.
 			}
 			else if (event.getType() == EventTypes.MOVE)
-			{
+			{	
+				updateCursorSide();
+				
 				var terrainStr:String = "";
 				// Get type of terrain tile is at the cursor's position.
 				var terrainType:Int = parentState.terrainArray[mapCursor.row][mapCursor.col];

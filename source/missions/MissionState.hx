@@ -1,5 +1,6 @@
 package missions;
 
+import boxes.ResizableBox;
 import cursors.MapCursor;
 import flixel.FlxG;
 import flixel.FlxState;
@@ -11,7 +12,10 @@ import inputHandlers.ActionInputHandler;
 import inputHandlers.MoveInputHandler;
 import menus.BasicMenu;
 import menus.MenuTemplate;
+import menus.MissionMenuTypes;
+import menus.ResizableBasicMenu;
 import missions.managers.MapCursorManager;
+import missions.managers.MenuManager;
 import observerPattern.Observed;
 import observerPattern.Observer;
 import observerPattern.eventSystem.EventTypes;
@@ -31,68 +35,91 @@ using observerPattern.eventSystem.EventExtender;
  * 
  * @author Samuel Bumgardner
  */
-class MissionState extends FlxState implements Observer
+class MissionState extends FlxState
 {
+	///////////////////////////////////////
+	//         DATA  DECLARATION         //
+	///////////////////////////////////////
 	
+	/**
+	 * Used to load level & terrain data from .oel file.
+	 */
 	private var map:StrategyOgmoLoader;
+	
+	/**
+	 * Tilemap of the map background. Generated from the level's "visual" tilemap data.
+	 */
 	private var terrainTiles:FlxTilemap;
 	
+	/**
+	 * 2-D array that represents the map's tactical terrain info.
+	 * Its values correspond entries in the TerrainTypes enum.
+	 */
 	public var terrainArray:Array<Array<Int>>;
+	
+	/**
+	 * The cursor used to select player controlled units and do pretty much all gameplay
+	 * 	outside of menus.
+	 */
 	public var mapCursor:MapCursor;
 	
+	/**
+	 * Manages the mapCursor and respond to its events.
+	 */
 	private var mapCursorManager:MapCursorManager;
 	
+	/**
+	 * Manages all menus and responds to their events.
+	 */
+	private var menuManager:MenuManager;
+	
+	/**
+	 * Size of the map's tiles, measured in pixels.
+	 */
 	public var tileSize(default, never):Int = 64;
+	
+	/**
+	 * Number of tiles between the edge of the screen and the camera's dead zone.
+	 */
 	private var deadzoneBorderTiles(default, never) = 2;
 	
-	private var menu:BasicMenu;
-	private var menu2:BasicMenu;
-	private var menu3:BasicMenu;
-	private var menu4:BasicMenu;
-	
-	private var updateableObjects:Array<UpdatingEntity> = new Array<UpdatingEntity>();
-	private var currentlyUpdatingIndex:Int = 0;
+	/**
+	 * Non-HaxeFlixel inherting, input-consuming object that is currently updating. 
+	 * Usually is the component of the game that the player is currently interacting with.
+	 */
+	private var currentlyUpdatingObject:UpdatingEntity;
 
+	///////////////////////////////////////
+	//          INITIALIZATION           //
+	///////////////////////////////////////
 	
+	/**
+	 * Initializer (more or less).
+	 */
 	override public function create():Void
 	{	
 		MoveInputHandler.init(FlxKey.UP, FlxKey.DOWN, FlxKey.LEFT, FlxKey.RIGHT);
 		ActionInputHandler.init([FlxKey.Z, FlxKey.X, FlxKey.C, FlxKey.S, FlxKey.D]);
 		
 		initMap();
-		initMapCursor();
 		
 		initCamera();
 		
 		initManagers();
 		
-		menu = new BasicMenu(50, 100, ["Unit", "Status", "Options", "Suspend", "End"], 1);
-		menu.subject.addObserver(this);
-		add(menu.totalFlxGrp);
+		addAllFlxObjects();
 		
-		menu2 = new BasicMenu(200, 20, ["Item", "Trade", "Wait"], 2);
-		menu2.subject.addObserver(this);
-		add(menu2.totalFlxGrp);
-		
-		menu3 = new BasicMenu(200, 150, ["Equip", "Trade", "Discard", "This is a really long menu entry!"], 3);
-		menu3.subject.addObserver(this);
-		add(menu3.totalFlxGrp);
-		
-		menu4 = new BasicMenu(400, 30, ["Smile", "Jump", "Wear Hat", "Nose", "Clap", "PSI Rockin'", "Stomp"], 4);
-		menu4.subject.addObserver(this);
-		add(menu4.totalFlxGrp);
-		
-		updateableObjects.push(menu);
-		updateableObjects.push(menu2);
-		updateableObjects.push(menu3);
-		updateableObjects.push(menu4);
-		
-		updateableObjects[currentlyUpdatingIndex].active = true;
-		
+		mapCursorManager.activateMapCursor();
 		
 		super.create();
 	}
 	
+	/**
+	 * Initializes map, which includes the following:
+	 * 	Generates visual tilemap.
+	 * 	Generates 2-D array of tactical terrain info.
+	 * 	Generates all entities specified in the mission's .oel file. 
+	 */
 	private function initMap():Void
 	{
 		map = new StrategyOgmoLoader(AssetPaths.forest_1__oel);
@@ -106,21 +133,14 @@ class MissionState extends FlxState implements Observer
 	}
 	
 	/**
-	 * Must be called after MapCursor has been created, which should happen in initMap().
+	 * Initializes the mission's camera, which involves the following:
+	 * 	Sets the camera to follow the mapCursor.
+	 * 	Creates camera deadzone in the middle of the screen.
+	 * 		The size of the border around the deadzone area is determined by deadzoneBorderTiles.
 	 * 
-	 * This function is not included in the section of placeEntities that creates the 
-	 * 	MapCursor because we may not want to add the contents of its totalFlxGrp and
-	 * 	push it into updateable objects in the same order that objects are created in 
-	 * 	placeEntities.
-	 */
-	private function initMapCursor():Void
-	{
-		add(mapCursor.totalFlxGrp);
-		updateableObjects.push(mapCursor);
-	}
-	
-	/**
-	 * Must be called after mapCursor has been created, which should happen in initMap().
+	 * NOTE:
+	 * 	Must be called after mapCursor has been created, which should happen in initMap().
+	 * 	Otherwise, the camera won't be able to follow mapCursor's cameraHitbox.
 	 */
 	private function initCamera():Void
 	{
@@ -138,6 +158,12 @@ class MissionState extends FlxState implements Observer
 		}
 	}
 	
+	/**
+	 * Generates all objects specified in the mission's .oel file.
+	 * 
+	 * @param	entityName	The name of the entity from the .oel file.
+	 * @param	entityData	Any accompanying data for that entity from the .oel file.
+	 */
 	private function placeEntitites(entityName:String, entityData:Xml):Void
 	{
 		var x:Int = Std.parseInt(entityData.get("x"));
@@ -145,7 +171,6 @@ class MissionState extends FlxState implements Observer
 		if (entityName == "map_cursor")
 		{
 			mapCursor = new MapCursor(map.width, map.height, 0);
-			mapCursor.subject.addObserver(this);
 			
 			var row:Int = Math.floor(y / tileSize);
 			var col:Int = Math.floor(x / tileSize);
@@ -153,66 +178,100 @@ class MissionState extends FlxState implements Observer
 		}
 	}
 	
+	/**
+	 * Initializes all manager-type objects.
+	 */
 	private function initManagers():Void
 	{
 		mapCursorManager = new MapCursorManager(this);
+		menuManager = new MenuManager(this);
 	}
 	
-	
-	/* INTERFACE observerPattern.Observer */
-	
-	// Not final code for MissionState. Just here for ease of testing at the moment.
-	
-	public function onNotify(event:InputEvent, notifier:Observed)
+	/**
+	 * Adds all HaxeFlixel-inheriting object to the scene in the correct order.
+	 * Since all of these objects will be controlled some sort of manager, this function just
+	 * 	has to add the totalFlxGrps of all if the state's manager objects.
+	 */
+	private function addAllFlxObjects():Void
 	{
-		trace("Recieved an event with id", event.getID(), "and type", event.getType());
-		
-		if (event.getType() == EventTypes.CONFIRM)
-		{
-			if (Std.is(notifier, MenuTemplate))
-			{
-				trace("The selected MenuOption was: " + (cast notifier).currMenuOption.label.text);
-			}
-			
-			updateableObjects[currentlyUpdatingIndex].deactivate();
-			(cast updateableObjects[currentlyUpdatingIndex]).hide();
-			currentlyUpdatingIndex++;
-			
-			if (currentlyUpdatingIndex == updateableObjects.length)
-			{
-				mapCursor.changeInputModes(InputModes.FREE_MOVEMENT);
-				currentlyUpdatingIndex = 0;
-			}
-			else
-			{
-				mapCursor.changeInputModes(InputModes.DISABLED);
-			}
-			
-			updateableObjects[currentlyUpdatingIndex].activate();
-			(cast updateableObjects[currentlyUpdatingIndex]).reveal();
-			MoveInputHandler.resetNumVars();
-			ActionInputHandler.resetNumVars();
-		}
-		else if (event.getType() == EventTypes.CANCEL)
-		{
-			updateableObjects[currentlyUpdatingIndex].deactivate();
-			(cast updateableObjects[currentlyUpdatingIndex]).hide();
-			
-			mapCursor.changeInputModes(InputModes.FREE_MOVEMENT);
-			currentlyUpdatingIndex = 0;
-			
-			updateableObjects[currentlyUpdatingIndex].activate();
-			(cast updateableObjects[currentlyUpdatingIndex]).reveal();
-			MoveInputHandler.resetNumVars();
-			ActionInputHandler.resetNumVars();
-		}
+		add(mapCursor.totalFlxGrp);
+		add(menuManager.totalFlxGrp);
 	}
 	
+	
+	///////////////////////////////////////
+	//         PUBLIC  INTERFACE         //
+	///////////////////////////////////////
+	
+	/**
+	 * Uses manager objects to identify how to respond to the input, then call the 
+	 * 	appropriate manager functions to carry out that response.
+	 * 
+	 * If the cursor is over a player unit, the unit action menu should open.
+	 * If the cursor is over an enemy unit, the enemy's attack range should be displayed.
+	 * If the cursor is over no unit, then the map action menu should open.
+	 */
+	public function mapCursorConfirmPressed():Void
+	{
+		menuManager.openTopLevelMenu(MissionMenuTypes.UNIT_ACTION);
+	}
+	
+	/**
+	 * Calls any manager functions necessary to transition from all menus being closed
+	 * 	to at least one being open.
+	 * 
+	 * @param	newMenu	The menu that was opened.
+	 */
+	public function firstMenuOpened(newMenu:MenuTemplate):Void
+	{
+		mapCursorManager.deactivateMapCursor();
+		menuManager.changeMenuXPositions(!mapCursorManager.cursorOnLeft);
+	}
+	
+	/**
+	 * Calls any manager functions necessary to transition from menus being open to
+	 * 	all menus being closed.
+	 * 
+	 * At the moment, that just involves activating the mapCursor.
+	 * 
+	 * NOTE:
+	 * 	May need to have special behavior when the unit menu was closed.
+	 * 	Shouldn't go back to just free map cursor, should go back to unit being selected
+	 * 	(or special behavior for a move-again type character).
+	 */
+	public function allMenusClosed():Void
+	{
+		mapCursorManager.activateMapCursor();
+	}
+	
+	/**
+	 * Changes the object currentlyUpdatingObject references & calls the input handlers'
+	 * 	reset functions.
+	 * @param	newObj
+	 */
+	public function changeCurrUpdatingObj(newObj:UpdatingEntity):Void
+	{
+		currentlyUpdatingObject = newObj;
+		ActionInputHandler.resetNumVars();
+		MoveInputHandler.resetNumVars();
+	}
+	
+	///////////////////////////////////////
+	//         UPDATE FUNCTIONS          //
+	///////////////////////////////////////
+	
+	/**
+	 * Updates all entities in the scene.
+	 * Additionally, it calls update functions for any objects that aren't automatically
+	 * 	updated during super.update(), i.e. input handlers and the currentlyUpdating object.
+	 * 
+	 * @param	elapsed	Time passed since last call to update, in seconds.
+	 */
 	override public function update(elapsed:Float):Void
 	{
 		ActionInputHandler.bufferActions(elapsed);
 		super.update(elapsed);
-		updateableObjects[currentlyUpdatingIndex].update(elapsed);
+		currentlyUpdatingObject.update(elapsed);
 		MoveInputHandler.updateCycleFinished();
 		ActionInputHandler.updateCycleFinished();
 	}

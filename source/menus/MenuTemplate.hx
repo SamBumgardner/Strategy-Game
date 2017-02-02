@@ -3,6 +3,7 @@ package menus;
 import cursors.AnchoredSprite;
 import flixel.FlxBasic;
 import flixel.FlxG;
+import flixel.FlxObject;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
 import flixel.math.FlxPoint;
@@ -57,7 +58,7 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	
 	/**
 	 * x & y coordinates that all menu components should be positioned relative to.
-	 * Can be changed by external entities using setX() and setY().
+	 * Can be changed by external entities using setPos().
 	 */
 	private var x:Float;
 	private var y:Float;
@@ -93,7 +94,7 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	/**
 	 * The menu option that the cursor is currently selecting/hovering over.
 	 */
-	private var currMenuOption:MenuOption;
+	public var currMenuOption(default, null):MenuOption;
 	
 	/**
 	 * The AnchoredSprite used as the menu's bouncing cursor.
@@ -157,9 +158,20 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	}
 	
 	/**
+	 * Adds all of the menu's different FlxGrps to its totalFlxGrp in the correct order.
+	 * The order matters because the first item added to totalFlxGrp will be drawn on the
+	 * 	bottom layer, the next is drawn one layer above it, and so on.
+	 * 
+	 * The body of this function is left empty, and is expected to be overloaded and used
+	 * 	by all child classes in whatever manner is appropriate for that particular menu.
+	 * 
+	 * See the BasicMenu class for an example implementation of this function.
+	 */
+	private function addAllFlxGrps():Void{}
+	
+	/**
 	 * Sets the scroll factors of all sprites in totalFlxGrp to (0,0).
-	 * Must be called by child classes during initalization after setting up all visual 
-	 * 	menu components.
+	 * Must be called by child classes during initalization after calling addAllFlxGrps().
 	 */
 	private function setScrollFactors():Void
 	{
@@ -187,85 +199,50 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	///////////////////////////////////////
 	
 	/**
-	 * Public function for changing the x position of the menu and all of its components.
+	 * Public function for changing the position of the menu and all of its components.
 	 * 
 	 * @param	newX	The menu's new x value.
-	 * @return	The menu's new x value.
+	 * @param	newY	The menu's new y value.
 	 */
-	public function setX(newX:Float):Float
+	public function setPos(newX:Float, newY:Float):Void
 	{
 		var xDiff:Float = newX - x;
-		totalFlxGrp.forEach(moveSpriteX.bind(_, xDiff), true);
+		var yDiff:Float = newY - y;
 		
+		// Move all HaxeFlixel-inheriting components.
+		totalFlxGrp.forEach(moveObject.bind(_, xDiff, yDiff), true);
+		
+		// Move cursor positions for all MenuOptions.
 		for (menuOption in menuOptionArr)
 		{
-			menuOption.labelPos.add(xDiff, 0);
-			menuOption.cursorPos.add(xDiff, 0);
+			menuOption.moveCursorPos(xDiff, yDiff);
 		}
-		menuCursor.moveAnchor(xDiff, 0);
 		
-		return x = newX;
+		// Set menu's logical x & y values.
+		x = newX;
+		y = newY;
 	}
 	
 	/**
-	 * Helper function used by setX().
+	 * Helper function used by setPos().
 	 * Is passed as the argument into an FlxGroup's forEach() to change the x values of all
 	 * 	sprites in the menu's totalFlxGrp. 
 	 * Because totalFlxGroup holds objects of type FlxBasic, the function has to test that the 
-	 * 	"targetSprite" FlxBasic object is actually an FlxSprite (or something that inherits 
-	 * 	from it) so it has an x component to change.
+	 * 	"targetSprite" FlxBasic object is actually an FlxObject (or something that inherits 
+	 * 	from it) so it has an x & y component to change.
 	 * 
 	 * @param	targetSprite	The FlxBasic object that is being operated upon.
-	 * @param	dX				The amount the targetSprite's x should change by.
+	 * @param	dX				The amount the targetObject's x should change by.
+	 * @param	dY				The amount the targetObject's y should change by.
 	 */
-	private function moveSpriteX(targetSprite:FlxBasic, dX:Float):Void
+	private function moveObject(targetObject:FlxBasic, dX:Float, dY:Float):Void
 	{
-		if (Std.is(targetSprite, FlxSprite))
+		if (Std.is(targetObject, FlxObject))
 		{
-			(cast targetSprite).x += dX;
+			(cast targetObject).x += dX;
+			(cast targetObject).y += dY;
 		}
 	}
-	
-	/**
-	 * Public function for changing the y position of the menu and all of its components.
-	 * 
-	 * @param	newY	The menu's new y value.
-	 * @return	The menu's new y value.
-	 */
-	public function setY(newY:Float):Float
-	{
-		var yDiff = newY - y;
-		totalFlxGrp.forEach(moveSpriteY.bind(_, yDiff), true);
-		
-		for (menuOption in menuOptionArr)
-		{
-			menuOption.labelPos.add(0, yDiff);
-			menuOption.cursorPos.add(0, yDiff);
-		}
-		menuCursor.moveAnchor(0, yDiff);
-		
-		return y = newY;
-	}
-	
-	/**
-	 * Helper function used by setY().
-	 * Is passed as the argument into an FlxGroup's forEach() to change the y values of all
-	 * 	sprites in the menu's totalFlxGrp.
-	 * Because totalFlxGroup holds objects of type FlxBasic, the function has to test that the 
-	 * 	"targetSprite" FlxBasic object is actually an FlxSprite (or something that inherits 
-	 * 	from it) so it has an y component to change.
-	 * 
-	 * @param	targetSprite	The FlxBasic object that is being operated upon.
-	 * @param	dY				The amount that targetSprite's y should change by.
-	 */
-	private function moveSpriteY(targetSprite:FlxBasic, dY:Float):Void
-	{
-		if (Std.is(targetSprite, FlxSprite))
-		{
-			(cast targetSprite).y += dY;
-		}
-	}
-	
 	
 	/**
 	 * Function to satisify HideableEntity interface.
@@ -379,13 +356,13 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	
 	/**
 	 * Creates the cursor anchor sprite and sets up a tween for it using cursorBounceFunc().
+	 * menuCursor must still be added to totalFlxGrp after this function is finished, however.
 	 */
 	private function initBasicCursor():Void
 	{
 		menuCursor = new AnchoredSprite(0, 0, AssetPaths.menu_cursor_simple__png);
 		menuCursorTween = FlxTween.num(0, bounceDistance, .75, {ease: FlxEase.circInOut, 
 			type: FlxTween.LOOPING}, cursorBounceFunc.bind(menuCursor));
-		totalFlxGrp.add(menuCursor);
 	}
 	
 	/**
