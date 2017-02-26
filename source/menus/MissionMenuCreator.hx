@@ -76,7 +76,7 @@ class MissionMenuCreator
 	
 	/**
 	 * Temporary placeholder, actual inventory menu will need to have functionality
-	 * beyond a normal resizable menu.
+	 *  beyond a normal resizable menu.
 	 * 
 	 * @param	X	The desired X position of the newly created menu.
 	 * @param	Y	The desired Y position of the newly created menu.
@@ -110,7 +110,7 @@ class MissionMenuCreator
 	
 	/**
 	 * Temporary placeholder, target menus should involve a cursor highlighting the 
-	 * unit on the map rather than a normal menu structure.
+	 *  unit on the map rather than a normal menu structure.
 	 * 
 	 * @param	X	The desired X position of the newly created menu.
 	 * @param	Y	The desired Y position of the newly created menu.
@@ -124,8 +124,8 @@ class MissionMenuCreator
 	}
 	
 	/**
-	 * Temporary placeholder, should display both characters inventory and allow
-	 * movement between each.
+	 * Temporary placeholder, should display both characters' inventories and allow
+	 *  movement between each.
 	 * 
 	 * @param	X	The desired X position of the newly created menu.
 	 * @param	Y	The desired Y position of the newly created menu.
@@ -139,7 +139,7 @@ class MissionMenuCreator
 	}
 	
 	/**
-	 * Temporary palceholder, should be an inventory-type menu that only displays weapons.
+	 * Temporary placeholder, should be an inventory-type menu that only displays weapons.
 	 * Still functions in a menu-like way outside of that, though.
 	 * 
 	 * @param	X	The desired X position of the newly created menu.
@@ -155,7 +155,7 @@ class MissionMenuCreator
 	
 	/**
 	 * Temporary placeholder, target menus should involve a cursor highlighting the 
-	 * unit on the map rather than a normal menu structure.
+	 *  unit on the map rather than a normal menu structure.
 	 * 
 	 * @param	X	The desired X position of the newly created menu.
 	 * @param	Y	The desired Y position of the newly created menu.
@@ -170,7 +170,7 @@ class MissionMenuCreator
 	
 	/**
 	 * Temporary placeholder, target menus should involve a cursor highlighting the 
-	 * unit on the map rather than a normal menu structure.
+	 *  unit on the map rather than a normal menu structure.
 	 * 
 	 * @param	X	The desired X position of the newly created menu.
 	 * @param	Y	The desired Y position of the newly created menu.
@@ -185,7 +185,7 @@ class MissionMenuCreator
 	
 	/**
 	 * Temporary placeholder, target menus should involve a cursor highlighting the 
-	 * unit on the map rather than a normal menu structure.
+	 *  unit on the map rather than a normal menu structure.
 	 * 
 	 * @param	X	The desired X position of the newly created menu.
 	 * @param	Y	The desired Y position of the newly created menu.
@@ -200,7 +200,7 @@ class MissionMenuCreator
 	
 	/**
 	 * Temporary placeholder, target menus should involve a cursor highlighting the 
-	 * unit on the map rather than a normal menu structure.
+	 *  unit on the map rather than a normal menu structure.
 	 * 
 	 * @param	X	The desired X position of the newly created menu.
 	 * @param	Y	The desired Y position of the newly created menu.
@@ -215,7 +215,7 @@ class MissionMenuCreator
 	
 	/**
 	 * Temporary placeholder, target menus should involve a cursor highlighting the 
-	 * unit on the map rather than a normal menu structure.
+	 *  unit on the map rather than a normal menu structure.
 	 * 
 	 * @param	X	The desired X position of the newly created menu.
 	 * @param	Y	The desired Y position of the newly created menu.

@@ -88,10 +88,10 @@ class MenuOption implements HideableEntity
 	
 	/**
 	 * Set of boolean variables that tell if an adjacent option is actually on the other side
-	 * of the menu, so any cursor movement to that option will "wrap" around the menu.
+	 *  of the menu, so any cursor movement to that option will "wrap" around the menu.
 	 * 
 	 * This is good to know when moving the cursor between menuOptions, because most 
-	 * (if not all) menus will stop the cursor at the end of a menu during held movement.
+	 *  (if not all) menus will stop the cursor at the end of a menu during held movement.
 	 * To wrap the cursor around to the other side of the menu, a new input is required.
 	 */
 	public var upIsWrap:Bool = false;
@@ -108,8 +108,8 @@ class MenuOption implements HideableEntity
 	 * Initializer.
 	 * 
 	 * @param	labelX			X position for the label.
-	 * @param	labelY			Y position for the label
-	 * @param	ID				Integer ID that can be used to distinguish between MenuOptions
+	 * @param	labelY			Y position for the label.
+	 * @param	ID				Integer ID that can be used to distinguish between MenuOptions.
 	 * @param	labelWidth		Width of the label text field.
 	 * @param	labelText		String to be displayed in the label.
 	 * @param	labelSize		Font size used in the label.
@@ -163,7 +163,7 @@ class MenuOption implements HideableEntity
 	 * Useful for MenuOptions that don't know how wide their field will be initially.
 	 * Could be given expanded functionality in the future.
 	 * 
-	 * @param	width	The desired width of the new BgHighlight  graphic.
+	 * @param	width	The desired width of the new BgHighlight graphic.
 	 */
 	public function addBgHighlightGraphic(width:Float):Void
 	{
@@ -260,7 +260,7 @@ class MenuOption implements HideableEntity
 	 * 	it makes it visible and active.
 	 * It is necessary to check if the targetSprite is an FlxSprite because the FlxGroup
 	 * 	it is used on is only guaranteed to have FlxBasic objects, which may or may not be
-	 * 	sprites that need to be hidden.
+	 * 	sprites that need to be revealed.
 	 * 
 	 * @param	targetSprite	
 	 */

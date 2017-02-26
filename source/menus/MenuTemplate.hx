@@ -82,12 +82,12 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	
 	/**
 	 * Array of menuOption objects. At the moment, this is just used to find the
-	 * first menu option whenever the menu is re-opened (so the cursor always starts
-	 * at the same position every time). 
+	 *  first menu option whenever the menu is re-opened (so the cursor always starts
+	 *  at the same position every time). 
 	 * 
 	 * If it ends up not being used for anything else in this template, then it will
-	 * be removed from here and added to any child classes that specifically need this
-	 * functionality.
+	 *  be removed from here and added to any child classes that specifically need this
+	 *  functionality.
 	 */
 	private var menuOptionArr:Array<MenuOption> = new Array<MenuOption>();
 	
@@ -170,7 +170,7 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	private function addAllFlxGrps():Void{}
 	
 	/**
-	 * Sets the scroll factors of all sprites in totalFlxGrp to (0,0).
+	 * Sets the scroll factors of all sprites in totalFlxGrp to (0, 0).
 	 * Must be called by child classes during initalization after calling addAllFlxGrps().
 	 */
 	private function setScrollFactors():Void
@@ -290,8 +290,8 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	/**
 	 * Helper function for reveal().
 	 * Also is responsible for resetting the menu's variables and appearance back to their
-	 * 	starting states. This includes hiding the background higlight graphic of all menu
-	 * 	options that are not initally hovered over in the menu.
+	 * 	starting states. This includes hiding the background highlight graphic of all menu
+	 * 	options that are not initially hovered over in the menu.
 	 * 
 	 * NOTE: Assumes that there is at least one entry in menuOptionArr.
 	 */
@@ -369,10 +369,10 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	 * Tween function for use in a NumTween created in initBasicCursor().
 	 * 
 	 * Because HaxeFlixel doesn't allow looping chained tweens, I had to do a bit of a hacky
-	 * function here to make the whole movement in a single tween. Basically, when the bounce
-	 * is half over (offsetValue > corner.width /2) offsetValue is changed so it counts back to
-	 * zero, making the first half move the cursor to the right, and the second half expand it
-	 * again.
+	 *  function here to make the whole movement in a single tween. Basically, when the bounce
+	 *  is half over (offsetValue > corner.width /2) offsetValue is changed so it counts back to
+	 *  zero, making the first half move the cursor to the right, and the second half expand it
+	 *  again.
 	 * 
 	 * @param	cursor		The cursor object that is being tweened.
 	 * @param	offsetValue	How far the cursor should be offset from its anchor.
@@ -480,8 +480,8 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	/**
 	 * Recieves an array of boolean values that correspond to certain types of input, then
 	 * 	determines what actions to take as a result of that input. This often involves
-	 * 	notifying its observes that the event happened, and lets those observers take care
-	 * 	of manipulation of external objects.
+	 * 	notifying its observers that the event happened, and then lets
+	 * 	those observers take care of manipulation of external objects.
 	 * 
 	 * Can (and probably should) be overridden by child classes of this, since different
 	 * 	menus may not need to notify PAINT, NEXT, or INFO events. If it is overridden with
