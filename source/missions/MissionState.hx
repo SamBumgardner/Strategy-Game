@@ -123,7 +123,8 @@ class MissionState extends FlxState
 	private function initMap():Void
 	{
 		map = new StrategyOgmoLoader(AssetPaths.forest_1__oel);
-		terrainTiles = map.loadTilemap(AssetPaths.terrain_forest__png, 64, 64, "terrain_visual");
+		terrainTiles = map.loadTilemap(AssetPaths.terrain_forest__png,
+			tileSize, tileSize, "terrain_visual");
 		terrainTiles.follow();
 		add(terrainTiles);
 		
@@ -151,10 +152,11 @@ class MissionState extends FlxState
 		}
 		else
 		{
-		FlxG.camera.follow(mapCursor.cameraHitbox, 1);
-		FlxG.camera.deadzone = new FlxRect (tileSize * deadzoneBorderTiles, 
-			tileSize * deadzoneBorderTiles, FlxG.width - deadzoneBorderTiles * tileSize * 2,
-			FlxG.height - deadzoneBorderTiles * tileSize * 2);
+			var deadzoneWidth:Int = tileSize * deadzoneBorderTiles;
+			FlxG.camera.follow(mapCursor.cameraHitbox, 1);
+			FlxG.camera.deadzone = new FlxRect (deadzoneWidth, deadzoneWidth,
+				FlxG.width - deadzoneWidth * 2,
+				FlxG.height - deadzoneWidth * 2);
 		}
 	}
 	
