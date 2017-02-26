@@ -191,8 +191,8 @@ class MissionState extends FlxState
 	
 	/**
 	 * Adds all HaxeFlixel-inheriting object to the scene in the correct order.
-	 * Since all of these objects will be controlled some sort of manager, this function just
-	 * 	has to add the totalFlxGrps of all if the state's manager objects.
+	 * Since all of these objects will be controlled by some sort of manager, this function just
+	 * 	has to add the totalFlxGrps of all of the state's manager objects.
 	 */
 	private function addAllFlxObjects():Void
 	{
