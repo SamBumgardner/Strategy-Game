@@ -148,6 +148,16 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	private var tileSize:Int = 64;
 	
 	/**
+	 * Number of frames the MapCursor takes to complete a single move between tiles.
+	 */
+	private var framesPerMove(default, never):Int = 6;
+	
+	/**
+	 * Tracks the number of frames left in the current move.
+	 */
+	private var framesLeftInMove:Int = 0;
+	
+	/**
 	 * Integers that track the x/y offset that corners will have, relative to the 
 	 * "position" of the MapCursor. The L, R, T, & B stand for left, right, top, and bottom,
 	 * respectively.
@@ -673,6 +683,7 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 		{
 			row += vertMove;
 			col += horizMove;
+			framesLeftInMove = framesPerMove;
 			isMoving = true;
 			moveSound.play(true);
 			subject.notify(EventTypes.MOVE);
@@ -684,40 +695,27 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	 */
 	private function moveCornerAnchors():Void
 	{
-		var xPos:Float = col * tileSize;
-		var yPos:Float = row * tileSize;
-		
-		var horizMove:Int	= 0;
-		var vertMove:Int	= 0;
-		
-		var framesPerMove:Int = 4;
-		
-		if (currCornerArr[0].getAnchorX() > xPos + currentAnchorLX)
+		if (framesLeftInMove > 0)
 		{
-			horizMove--;
-		}
-		else if (currCornerArr[0].getAnchorX() < xPos + currentAnchorLX)
-		{
-			horizMove++;
-		}
-		if (currCornerArr[0].getAnchorY() > yPos + currentAnchorTY)
-		{
-			vertMove--;
-		}
-		else if (currCornerArr[0].getAnchorY() < yPos + currentAnchorTY)
-		{
-			vertMove++;
-		}
-		
-		for (corner in currCornerArr)
-		{
-			corner.setAnchor(corner.getAnchorX() + (tileSize / framesPerMove * horizMove),
-				corner.getAnchorY() + (tileSize / framesPerMove * vertMove));
-		}
-		if (currCornerArr[0].getAnchorX() == xPos + currentAnchorLX &&
-			currCornerArr[0].getAnchorY() == yPos + currentAnchorTY)
-		{
-			isMoving = false;
+			var xPos:Float = col * tileSize;
+			var yPos:Float = row * tileSize;
+			
+			var remainingX:Float = xPos + currentAnchorLX - currCornerArr[0].getAnchorX();
+			var remainingY:Float = yPos + currentAnchorTY - currCornerArr[0].getAnchorY();
+			
+			for (corner in currCornerArr)
+			{
+				corner.setAnchor(corner.getAnchorX() + remainingX / framesLeftInMove, 
+					corner.getAnchorY() + remainingY / framesLeftInMove);
+			}
+			
+			framesLeftInMove--;
+			
+			if (currCornerArr[0].getAnchorX() == xPos + currentAnchorLX &&
+				currCornerArr[0].getAnchorY() == yPos + currentAnchorTY)
+			{
+				isMoving = false;
+			}
 		}
 	}
 	
