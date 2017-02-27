@@ -181,7 +181,7 @@ class MenuManager implements Observer
 		
 		initPossiblePos();
 		initMenus();
-		addToTotalGrp();
+		fillTotalFlxGrp();
 		
 		initFunctionArrays();
 	}
@@ -264,7 +264,7 @@ class MenuManager implements Observer
 	 * 
 	 * May also try rewriting this if I store all of the menu objects in an array later.
 	 */
-	private function addToTotalGrp():Void
+	private function fillTotalFlxGrp():Void
 	{
 		totalFlxGrp.add(mapActionMenu.totalFlxGrp);
 		totalFlxGrp.add(unitActionMenu.totalFlxGrp);
