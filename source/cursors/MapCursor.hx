@@ -838,47 +838,6 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	{
 		if (active)
 		{
-			// NOTE: This section is temporary, and will likely be replaced by game logic later.
-			
-			if (currMoveMode != MoveModes.EXPANDED_STILL && FlxG.keys.pressed.ALT)
-			{
-				expandedStill();
-			}
-			else if (currMoveMode != MoveModes.BOUNCE_IN_OUT && !FlxG.keys.pressed.ALT)
-			{
-				bounceInOut();
-			}
-			
-			// Compare [0] index of arrays as a shortcut to see if they contain the same elements.
-			if (currCornerArr[0] != targetCornerArr[0] && FlxG.keys.pressed.CONTROL)
-			{
-				changeCurrCornerArr(targetCornerArr);
-				if (currMoveMode == MoveModes.EXPANDED_STILL)
-				{
-					expandedStill();
-				}
-				else
-				{
-					bounceInOut();
-				}
-			}
-			else if (currCornerArr[0] != normCornerArr[0] && !FlxG.keys.pressed.CONTROL)
-			{
-				changeCurrCornerArr(normCornerArr);
-				if (currMoveMode == MoveModes.EXPANDED_STILL)
-				{
-					expandedStill();
-				}
-				else
-				{
-					bounceInOut();
-				}
-			}
-			
-			// NOTE: end of likely-to-be-replaced section.
-			
-			
-			
 			// Actions should remain buffered until movement ends.
 			if (!isMoving)
 			{
