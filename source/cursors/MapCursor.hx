@@ -146,6 +146,15 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	private var maxRow:Int;
 	
 	/**
+	 * Map of MoveIDs to PossibleMove values that marks a set of "selected" row/column
+	 * 	locations. When the input move is PLAYER_UNIT, is used to constrain held
+	 * 	cursor movement from selected locations to unselected locations.
+	 * 
+	 * Will generally be a reference to the selected unit's moveTiles property.
+	 */
+	public var selectedLocations:Map<MoveID, PossibleMove>;
+	
+	/**
 	 * Integer that holds the size of tiles used on the map, measured in pixels.
 	 * Changing this value will alter the movement of this cursor significantly!
 	 */
@@ -660,6 +669,9 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	 * After checking that the attempted movement is valid, changes col and row variables 
 	 * 	of the cursor & plays movement sound effect.
 	 * 
+	 * If movement is held, cursor is in PLAYER_UNIT input mode, and cursor is currently in a
+	 * 	"selected" location, it is not allowed to move to a non-selected location.
+	 * 
 	 * @param	colRowChanges	A point with contents (column change amount, row change amount)
 	 */
 	private function moveCursorPos(vertMove:Int, horizMove:Int, heldMove:Bool):Void
@@ -679,11 +691,18 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 		var xPos:Int = col * tileSize;
 		var yPos:Int = row * tileSize;
 		
+		var currentMoveID:MoveID = MoveIDExtender.newMoveID(row, col);
+		
 		if (// If at least one of the movement directions was valid...
 			(vertMove != 0 || horizMove != 0) &&
 			// If the movement is "held", then only move if not currently moving.
-			(!heldMove || !isMoving)
-			)
+			(!heldMove || !isMoving) &&
+			// If input mode is PLAYER_UNIT, movement is held, and...
+			((currInputMode != InputModes.PLAYER_UNIT || !heldMove || 
+			// The cursor's current position is in the selected locations, then only move if
+			!selectedLocations.exists(currentMoveID)) ||
+			// the targeted location is also in the map of selected locations
+			selectedLocations.exists(currentMoveID.getOtherByOffset(vertMove, horizMove))))
 		{
 			row += vertMove;
 			col += horizMove;
