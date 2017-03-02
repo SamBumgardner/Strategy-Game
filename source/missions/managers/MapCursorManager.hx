@@ -53,6 +53,12 @@ class MapCursorManager implements Observer
 	public var prevCursorPos(default, null):MoveID;
 	
 	/**
+	 * Tracks mapCursor's current input mode even when cursor is deactivated.
+	 * Used to return mapCursor to the proper state when reactivated.
+	 */
+	public var cursorState:Int;
+	
+	/**
 	 * Tracks if cursor is on the left side or right side of the screen.
 	 */
 	public var cursorOnLeft(default, null):Bool;
@@ -149,13 +155,14 @@ class MapCursorManager implements Observer
 	 * Publicly accessible method for activating the map cursor.
 	 * 
 	 * Makes the map cursor visible, active, get updated by the MissionState, and
-	 * 	react normally to input.
+	 * 	return to whatever input mode the cursor had before being deactivated.
 	 */
 	public function activateMapCursor():Void
 	{
 		mapCursor.activate();
 		mapCursor.reveal();
-		mapCursor.changeInputModes(InputModes.FREE_MOVEMENT);
+		
+		mapCursor.changeInputModes(cursorState);
 		
 		updateHoveredUnitType();
 		
@@ -166,11 +173,15 @@ class MapCursorManager implements Observer
 	 * Publicly accessible method for deactivating the menuCursor.
 	 * 
 	 * Deactivates and hides the MapCursor and disables its input.
+	 * Also stores the cursor's old input mode so it may be reapplied later. 
 	 */
 	public function deactivateMapCursor():Void
 	{
 		mapCursor.deactivate();
 		mapCursor.hide();
+		
+		cursorState = mapCursor.currInputMode;
+		
 		mapCursor.changeInputModes(InputModes.DISABLED);
 	}
 	
