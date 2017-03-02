@@ -6,6 +6,7 @@ import observerPattern.Observed;
 import observerPattern.Observer;
 import observerPattern.eventSystem.EventTypes;
 import observerPattern.eventSystem.InputEvent;
+import units.Unit;
 
 using observerPattern.eventSystem.EventExtender;
 
@@ -51,6 +52,13 @@ class MapCursorManager implements Observer
 	 * Should be updated whenever the mapCursor moves.
 	 */
 	public var hoveredUnitType:MapCursorUnitTypes = NONE;
+	
+	/**
+	 * The Unit object that is currently selected by the mapCursor.
+	 * If no unit is selected, should be null.
+	 */
+	private var selectedUnit:Unit = null;
+	
 	
 	/**
 	 * Initializer.
@@ -145,6 +153,42 @@ class MapCursorManager implements Observer
 		mapCursor.deactivate();
 		mapCursor.hide();
 		mapCursor.changeInputModes(InputModes.DISABLED);
+	}
+	
+	/**
+	 * 
+	 */
+	public function unitSelected(unit:Unit):Void
+	{
+		if (unit.team == TeamType.PLAYER)
+		{
+			mapCursor.changeInputModes(InputModes.PLAYER_UNIT);
+		}
+		else
+		{
+			mapCursor.changeInputModes(InputModes.OTHER_UNIT);
+		}
+		selectedUnit = unit;
+		
+		mapCursor.changeMovementModes(MoveModes.BOUNCE_IN_OUT);
+		
+		mapCursor.selectedLocations = unit.moveTiles;
+	}
+	
+	/**
+	 * 
+	 */
+	public function unitUnselected():Void
+	{
+		mapCursor.changeInputModes(InputModes.FREE_MOVEMENT);
+		
+		if (selectedUnit.team == TeamType.PLAYER)
+		{
+			mapCursor.jumpToPosition(selectedUnit.mapRow, selectedUnit.mapCol);
+		}
+		
+		selectedUnit = null;
+		mapCursor.selectedLocations = null;
 	}
 	
 	/**
