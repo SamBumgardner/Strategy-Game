@@ -111,8 +111,8 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	 * Integers that track information about the cursor's current state, using 
 	 * enums described below this class.
 	 */
-	private var currMoveMode:Int = MoveModes.NONE;
-	private var currInputMode:Int = InputModes.FREE_MOVEMENT;
+	public var currMoveMode(default, null):Int = MoveModes.NONE;
+	public var currInputMode(default, null):Int = InputModes.FREE_MOVEMENT;
 	/**
 	 * FlxGroup containing all sprites under this object's supervision. Rather than
 	 * directly adding MapCursor to the FlxState, this FlxGroup will be added.
@@ -890,5 +890,6 @@ class InputModes
 {
 	public static var DISABLED		(default, never) = 0;
 	public static var FREE_MOVEMENT	(default, never) = 1;
-	public static var UNIT_SELECTED	(default, never) = 2;
+	public static var PLAYER_UNIT	(default, never) = 2;
+	public static var OTHER_UNIT	(default, never) = 3;
 }
