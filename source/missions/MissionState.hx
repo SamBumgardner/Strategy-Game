@@ -300,6 +300,51 @@ class MissionState extends FlxState
 				mapCursorManager.prevCursorPos.getOtherByOffset(verticalMove, horizontalMove));
 		}
 	}
+	
+	public function mapCursorConfirm()
+	{
+		if (controlState == PlayerControlStates.FREE_MOVE)
+		{
+			if (mapCursorManager.hoveredUnitType == PLAYER_ACTIVE)
+			{
+				controlState = PlayerControlStates.PLAYER_UNIT;
+				mapCursorManager.unitSelected(unitManager.hoveredUnit);
+				unitManager.unitSelected(unitManager.hoveredUnit);
+			}
+			else if (mapCursorManager.hoveredUnitType == NOT_PLAYER)
+			{
+				controlState = PlayerControlStates.OTHER_UNIT;
+				mapCursorManager.unitSelected(unitManager.hoveredUnit);
+				unitManager.unitSelected(unitManager.hoveredUnit);
+			}
+			else
+			{
+				controlState = PlayerControlStates.MAP_MENU;
+				openTopLevelMenu(MissionMenuTypes.MAP_ACTION);
+			}
+		}
+		else if (controlState == PlayerControlStates.OTHER_UNIT)
+		{
+			controlState = PlayerControlStates.FREE_MOVE;
+			mapCursorManager.unitUnselected();
+			unitManager.unitUnselected();
+		}
+		
+	}
+	
+	/**
+	 * Order that unitUnselecteds are called matters.
+	 */
+	public function mapCursorCancel()
+	{
+		if (controlState == PlayerControlStates.PLAYER_UNIT || 
+			controlState == PlayerControlStates.OTHER_UNIT)
+		{
+			controlState = PlayerControlStates.FREE_MOVE;
+			unitManager.unitUnselected();
+			mapCursorManager.unitUnselected();
+		}
+	}
 	}
 	
 	/**
