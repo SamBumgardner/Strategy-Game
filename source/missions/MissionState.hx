@@ -235,8 +235,45 @@ class MissionState extends FlxState
 	 * If the cursor is over no unit, then the map action menu should open.
 	 */
 	public function mapCursorConfirmPressed():Void
+	public function isMapCursorOverUnit():MapCursorUnitTypes
 	{
 		menuManager.openTopLevelMenu(MissionMenuTypes.UNIT_ACTION);
+		var targetRow:Int = mapCursorManager.mapCursor.row;
+		var targetCol:Int = mapCursorManager.mapCursor.col;
+		
+		var targetUnit:Unit = unitManager.getUnitAtLoc(targetRow, targetCol);
+		
+		// Update the unitManager's hovered unit variable.
+		unitManager.changeHoveredUnit(targetUnit);
+		
+		var targetUnitType:MapCursorUnitTypes;
+		
+		if (targetUnit != null)
+		{
+			if(targetUnit.team == TeamType.PLAYER)
+			{
+				if (targetUnit.canAct == true)
+				{
+					// Need to set some variable so game knows which unit is active.
+					targetUnitType = MapCursorUnitTypes.PLAYER_ACTIVE;
+				}
+				else
+				{
+					targetUnitType = MapCursorUnitTypes.PLAYER_INACTIVE;
+				}
+			}
+			else // target unit is on neutral or enemy team
+			{
+				targetUnitType = MapCursorUnitTypes.NOT_PLAYER;
+			}
+		}
+		else
+		{
+			targetUnitType = MapCursorUnitTypes.NONE;
+		}
+		
+		return targetUnitType;
+	}
 	}
 	
 	/**
