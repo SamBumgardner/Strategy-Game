@@ -274,6 +274,32 @@ class MissionState extends FlxState
 		
 		return targetUnitType;
 	}
+	
+	/**
+	 * 
+	 */
+	public function calculateNewMoveArrow()
+	{
+		var verticalMove:Int = 
+			mapCursorManager.currCursorPos.getRow() - mapCursorManager.prevCursorPos.getRow();
+		
+		var horizontalMove:Int = 
+			mapCursorManager.currCursorPos.getCol() - mapCursorManager.prevCursorPos.getCol();
+		
+		if (Math.abs(verticalMove + horizontalMove) == 1)
+		{
+			unitManager.updateMoveArrow(mapCursorManager.currCursorPos);
+		}
+		else
+		{
+			// The cursor moved diagonally, so do 2 separate updateMoveArrow calls.
+			unitManager.updateMoveArrow(
+				mapCursorManager.prevCursorPos.getOtherByOffset(verticalMove, 0));
+			
+			unitManager.updateMoveArrow(
+				mapCursorManager.prevCursorPos.getOtherByOffset(verticalMove, horizontalMove));
+		}
+	}
 	}
 	
 	/**
