@@ -15,13 +15,18 @@ import menus.MissionMenuTypes;
 import menus.ResizableBasicMenu;
 import missions.managers.MapCursorManager;
 import missions.managers.MenuManager;
+import missions.managers.UnitManager;
 import observerPattern.Observer;
 import observerPattern.eventSystem.EventTypes;
 import observerPattern.eventSystem.InputEvent;
+import units.MapCursorUnitTypes;
+import units.MoveID;
+import units.Unit;
 import utilities.StrategyOgmoLoader;
 import utilities.UpdatingEntity;
 
 using observerPattern.eventSystem.EventExtender;
+using units.MoveIDExtender;
 
 /**
  * Instantiates and coordinates all of the game components of the
@@ -70,6 +75,11 @@ class MissionState extends FlxState
 	 * Manages all menus and responds to their events.
 	 */
 	private var menuManager:MenuManager;
+	
+	/**
+	 * Manages all units and responds to their events.
+	 */
+	private var unitManager:UnitManager;
 	
 	/**
 	 * Size of the map's tiles, measured in pixels.
@@ -126,8 +136,15 @@ class MissionState extends FlxState
 		add(terrainTiles);
 		
 		terrainArray = map.loadTerrainArray("terrain_strategic", tileSize);
+		initMoveIDExtender();
 		
 		map.loadEntities(placeEntitites, "entities");
+	}
+	
+	private function initMoveIDExtender():Void
+	{
+		MoveIDExtender.numRows = terrainArray.length;
+		MoveIDExtender.numCols = terrainArray[0].length;
 	}
 	
 	/**
@@ -183,6 +200,7 @@ class MissionState extends FlxState
 	{
 		mapCursorManager = new MapCursorManager(this);
 		menuManager = new MenuManager(this);
+		unitManager = new UnitManager(this);
 	}
 	
 	/**
@@ -192,6 +210,7 @@ class MissionState extends FlxState
 	 */
 	private function addAllFlxObjects():Void
 	{
+		add(unitManager.totalFlxGrp);
 		add(mapCursor.totalFlxGrp);
 		add(menuManager.totalFlxGrp);
 	}
