@@ -230,14 +230,13 @@ class MissionState extends FlxState
 	 * Uses manager objects to identify how to respond to the input, then call the 
 	 * 	appropriate manager functions to carry out that response.
 	 * 
-	 * If the cursor is over a player unit, the unit action menu should open.
+	 * If the cursor is over an active player unit, the unit action menu should open.
+	 * If the cursor is over an inactive player unit, then the map action menu should open.
 	 * If the cursor is over an enemy unit, the enemy's attack range should be displayed.
 	 * If the cursor is over no unit, then the map action menu should open.
 	 */
-	public function mapCursorConfirmPressed():Void
 	public function isMapCursorOverUnit():MapCursorUnitTypes
 	{
-		menuManager.openTopLevelMenu(MissionMenuTypes.UNIT_ACTION);
 		var targetRow:Int = mapCursorManager.mapCursor.row;
 		var targetCol:Int = mapCursorManager.mapCursor.col;
 		
@@ -345,6 +344,13 @@ class MissionState extends FlxState
 			mapCursorManager.unitUnselected();
 		}
 	}
+	
+	/**
+	 * Public interface that allows external classes to request that a top-level menu be opened.
+	 */
+	public function openTopLevelMenu(menuType:Int):Void
+	{
+		menuManager.openTopLevelMenu(menuType);
 	}
 	
 	/**
