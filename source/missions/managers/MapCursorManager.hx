@@ -47,6 +47,12 @@ class MapCursorManager implements Observer
 	public var cursorOnTop(default, null):Bool;
 	
 	/**
+	 * Tracks what kind of unit the mapCursor is currently hovered over.
+	 * Should be updated whenever the mapCursor moves.
+	 */
+	public var hoveredUnitType:MapCursorUnitTypes = NONE;
+	
+	/**
 	 * Initializer.
 	 * 
 	 * @param	parent	Object responsible for creating this manager.
@@ -76,6 +82,38 @@ class MapCursorManager implements Observer
 			FlxG.height / 2;
 	}
 	
+	/**
+	 * Determines if the mapCursor has begun hovering over a unit or not after
+	 * 	its most recently notified move event.
+	 * If the mapCursor leaves a player-controled unit, it should return to its bouncing 
+	 * 	movemode, but if it enters a player-controlled unit's space, it should change to
+	 * 	its expanded still moveMode.
+	 * Uses the MissionState function isMapCursorOverUnit() to identify what the mapCursor 
+	 * 	is over, since this manager doesn't have the necessary info to determine that.
+	 * 
+	 * Called inside onNotify().
+	 */
+	private function updateHoveredUnitType():Void
+	{
+		if (mapCursor.currInputMode == InputModes.FREE_MOVEMENT)
+		{
+			if (hoveredUnitType == PLAYER_ACTIVE)
+			{
+				mapCursor.changeMovementModes(MoveModes.BOUNCE_IN_OUT);
+			}
+		}
+		
+		hoveredUnitType = parentState.isMapCursorOverUnit();
+		
+		if (mapCursor.currInputMode == InputModes.FREE_MOVEMENT)
+		{
+			if (hoveredUnitType == PLAYER_ACTIVE)
+			{
+				mapCursor.changeMovementModes(MoveModes.EXPANDED_STILL);
+			}
+		}
+	}
+	
 	///////////////////////////////////////
 	//         PUBLIC  INTERFACE         //
 	///////////////////////////////////////
@@ -91,6 +129,9 @@ class MapCursorManager implements Observer
 		mapCursor.activate();
 		mapCursor.reveal();
 		mapCursor.changeInputModes(InputModes.FREE_MOVEMENT);
+		
+		updateHoveredUnitType();
+		
 		parentState.changeCurrUpdatingObj(mapCursor);
 	}
 	
