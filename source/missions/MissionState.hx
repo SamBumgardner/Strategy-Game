@@ -96,6 +96,12 @@ class MissionState extends FlxState
 	 * Usually is the component of the game that the player is currently interacting with.
 	 */
 	private var currentlyUpdatingObject:UpdatingEntity;
+	
+	/**
+	 * Tracks the state of the Mission. Determines what should be displayed and how
+	 * 	input should be interpreted.
+	 */
+	public var controlState(default, null):PlayerControlStates = PlayerControlStates.FREE_MOVE;
 
 	///////////////////////////////////////
 	//          INITIALIZATION           //
