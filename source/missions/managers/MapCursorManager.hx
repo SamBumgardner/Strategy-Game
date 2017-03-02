@@ -238,17 +238,16 @@ class MapCursorManager implements Observer
 		}
 		else
 		{
-			trace("MapCursorManager recieved an event with id", event.getID(), 
-				"and type", event.getType());
-			
 			if (event.getType() == EventTypes.CONFIRM)
 			{
-				parentState.mapCursorConfirmPressed();
+				parentState.mapCursorConfirm();
 			}
+			
 			else if (event.getType() == EventTypes.CANCEL)
 			{
-				// Doesn't do anything right now.
+				parentState.mapCursorCancel();
 			}
+			
 			else if (event.getType() == EventTypes.MOVE)
 			{	
 				prevCursorPos = currCursorPos;
@@ -256,24 +255,16 @@ class MapCursorManager implements Observer
 				
 				updateCursorSide();
 				
-				var terrainStr:String = "";
-				// Get type of terrain tile is at the cursor's position.
-				var terrainType:Int = parentState.terrainArray[mapCursor.row][mapCursor.col];
 				updateHoveredUnitType();
 				
-				switch(terrainType)
+				// If a player unit is curently selected...
+				if (parentState.controlState == PlayerControlStates.PLAYER_UNIT)
 				{
-					case TerrainTypes.PLAINS:
-						terrainStr = "plains";
-					case TerrainTypes.FOREST:
-						terrainStr = "forest";
-					case TerrainTypes.RUBBLE:
-						terrainStr = "rubble";
-					default:
-						terrainStr = "mysterious";
+					parentState.calculateNewMoveArrow();
 				}
 				
-				trace("MapCursor is now over a " + terrainStr + " tile.");
+				// Get type of terrain tile is at the cursor's position.
+				var terrainType:Int = parentState.terrainArray[mapCursor.row][mapCursor.col];
 			}
 		}
 	}
