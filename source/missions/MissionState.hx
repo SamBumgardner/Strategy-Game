@@ -378,6 +378,7 @@ class MissionState extends FlxState
 	 */
 	public function allMenusClosed():Void
 	{
+		controlState = PlayerControlStates.FREE_MOVE;
 		mapCursorManager.activateMapCursor();
 	}
 	
