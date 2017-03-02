@@ -610,6 +610,9 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 			
 			cornerTweenArr.push(newTween);
 			
+			// Call the tween's helper function to set initial position.
+			bounceFunc(corner, cornerType, 0);
+			
 			cornerType++;
 		}
 		
@@ -653,8 +656,10 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 		{	
 			// Set up new tweens
 			newTween = FlxTween.num(0, 1, 1, {type: FlxTween.LOOPING}, stillFunc.bind(corner));
-			
 			cornerTweenArr.push(newTween);
+			
+			// Call the tween's helper function to set initial position.
+			stillFunc(corner, 0);
 		}
 		
 		currMoveMode = MoveModes.EXPANDED_STILL;
@@ -871,7 +876,6 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 					ActionInputHandler.useBufferedInput(doCursorAction);
 				}
 			}
-			
 			
 			if (currInputMode != InputModes.DISABLED)
 			{
