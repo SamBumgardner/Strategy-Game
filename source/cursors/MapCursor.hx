@@ -778,6 +778,8 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 		// Change cameraHitbox position.
 		cameraHitbox.x += xDifference;
 		cameraHitbox.y += yDifference;
+		
+		subject.notify(EventTypes.MOVE);
 	}
 	
 	
