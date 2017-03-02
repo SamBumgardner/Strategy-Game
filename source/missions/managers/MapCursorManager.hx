@@ -6,9 +6,12 @@ import observerPattern.Observed;
 import observerPattern.Observer;
 import observerPattern.eventSystem.EventTypes;
 import observerPattern.eventSystem.InputEvent;
+import units.MapCursorUnitTypes;
+import units.MoveID;
 import units.Unit;
 
 using observerPattern.eventSystem.EventExtender;
+using units.MoveIDExtender;
 
 /**
  * A component of MissionState that acts as a middleman between MissionState 
@@ -36,6 +39,18 @@ class MapCursorManager implements Observer
 	 * The MapCursor that this manager is responsible for controlling.
 	 */
 	public var mapCursor:MapCursor;
+	
+	/**
+	 * Tracks the cursor's current position.
+	 * Updated after each detected move event.
+	 */
+	public var currCursorPos(default, null):MoveID;
+	 
+	/**
+	 * Remembers the cursor's position before its most recent move.
+	 * Updated after each detected move event.
+	 */
+	public var prevCursorPos(default, null):MoveID;
 	
 	/**
 	 * Tracks if cursor is on the left side or right side of the screen.
@@ -70,6 +85,10 @@ class MapCursorManager implements Observer
 		parentState = parent;
 		mapCursor = parentState.mapCursor;
 		mapCursor.subject.addObserver(this);
+		
+		currCursorPos = MoveIDExtender.newMoveID(mapCursor.row, mapCursor.col);
+		
+		cursorState = mapCursor.currInputMode;
 		
 		updateCursorSide();
 	}
@@ -221,11 +240,15 @@ class MapCursorManager implements Observer
 			}
 			else if (event.getType() == EventTypes.MOVE)
 			{	
+				prevCursorPos = currCursorPos;
+				currCursorPos = MoveIDExtender.newMoveID(mapCursor.row, mapCursor.col);
+				
 				updateCursorSide();
 				
 				var terrainStr:String = "";
 				// Get type of terrain tile is at the cursor's position.
 				var terrainType:Int = parentState.terrainArray[mapCursor.row][mapCursor.col];
+				updateHoveredUnitType();
 				
 				switch(terrainType)
 				{
