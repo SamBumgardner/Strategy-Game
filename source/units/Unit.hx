@@ -118,8 +118,8 @@ class Unit extends FlxSprite implements Observed
 	
 	//
 	
-	public var mapRow(default, null):Int;
-	public var mapCol(default, null):Int;
+	public var mapRow:Int;
+	public var mapCol:Int;
 	
 	
 	//
