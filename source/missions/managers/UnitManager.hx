@@ -1712,4 +1712,15 @@ class UnitManager implements Observer
 		selectedUnit.x += horizMod * moveDist;
 		selectedUnit.y += vertMod * moveDist;
 	}
+	
+	/**
+	 * 
+	 */
+	public function undoUnitMove():Void
+	{
+		selectedUnit.x = selectedUnit.mapCol * parentState.tileSize;
+		selectedUnit.y = selectedUnit.mapRow * parentState.tileSize;
+		// Or play whatever default move direction the character should use.
+		selectedUnit.animation.play("down");
+	}
 }
