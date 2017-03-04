@@ -1608,6 +1608,22 @@ class UnitManager implements Observer
 	// UNIT MOVEMENT //
 	///////////////////
 	
+	/**
+	 * 
+	 */
+	public function initiateUnitMovement():Void
+	{
+		if (movePath.length != 0 || neighborPath == null)
+		{
+			hideAllRangeTiles();
+			hideAllArrowTiles();
+			currMoveFunction = pickMoveViaMovePath;
+		}
+		else
+		{
+			currMoveFunction = pickMoveViaNeighborPath;
+		}
+	}
 	
 	/**
 	 * 
