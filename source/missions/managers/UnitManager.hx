@@ -431,6 +431,36 @@ class UnitManager implements Observer
 	}
 	
 	/**
+	 * Depends on a unit already existing on the map.
+	 * May need rewriting later to handle units getting
+	 * dropped after being rescued.
+	 * 
+	 * @param	unit
+	 * @param	row
+	 * @param	col
+	 */
+	public function updateUnitPos(unit:Unit, row:Int, col:Int):Void
+	{
+		var oldMoveID:MoveID = MoveIDExtender.newMoveID(unit.mapRow, unit.mapCol);
+		var newMoveID:MoveID = MoveIDExtender.newMoveID(row, col);
+		
+		unitMap[unit.mapRow][unit.mapCol] = -1;
+		teamMap[unit.mapRow][unit.mapCol] = TeamID.NONE;
+		tileChanges.push(new TileChange(oldMoveID, true, unit.teamID));
+		
+		unitMap[row][col] = unit.subject.ID;
+		teamMap[row][col] = unit.teamID;
+		tileChanges.push(new TileChange(newMoveID, false, unit.teamID));
+		
+		unit.mapRow = row;
+		unit.mapCol = col;
+		
+		// TEMP CODE: Remove later
+		unitTerrainArr = normTerrainMap;
+		findMoveAndAttackRange(unit);
+	}
+	
+	/**
 	 * Function to satisfy the Observer interface.
 	 * Recieves & responds to notifications from Unit-type objects.
 	 * 
