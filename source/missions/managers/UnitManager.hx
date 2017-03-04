@@ -1665,4 +1665,35 @@ class UnitManager implements Observer
 		
 		return finishedMoving;
 	}
+	
+	/**
+	 * 
+	 */
+	private function moveUnit():Void
+	{
+		var vertMod:Int = 0;
+		var horizMod:Int = 0;
+		
+		switch(currMoveDir)
+		{
+			case "up":
+				vertMod = -1;
+			case "down":
+				vertMod = 1;
+			case "left":
+				horizMod = -1;
+			case "right":
+				horizMod = 1;
+			default:
+				trace("ERROR: currMoveDir was not a string representation of a direction.");
+		}
+		
+		var moveDist:Float = remainingMoveDist / framesLeftInMove;
+		
+		remainingMoveDist -= moveDist;
+		framesLeftInMove--;
+		
+		selectedUnit.x += horizMod * moveDist;
+		selectedUnit.y += vertMod * moveDist;
+	}
 }
