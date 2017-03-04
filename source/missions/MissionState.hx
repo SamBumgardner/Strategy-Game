@@ -442,6 +442,7 @@ class MissionState extends FlxState
 		ActionInputHandler.bufferActions(elapsed);
 		super.update(elapsed);
 		currentlyUpdatingObject.update(elapsed);
+		unitManager.update(elapsed);
 		MoveInputHandler.updateCycleFinished();
 		ActionInputHandler.updateCycleFinished();
 	}
