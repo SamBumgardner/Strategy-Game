@@ -1723,4 +1723,30 @@ class UnitManager implements Observer
 		// Or play whatever default move direction the character should use.
 		selectedUnit.animation.play("down");
 	}
+	
+	/////////////////////
+	// UPDATE FUNCTION //
+	/////////////////////
+	
+	public function update(elapsed:Float)
+	{
+		var finishedMoving:Bool = false;
+		
+		if (currMoveFunction != null && framesLeftInMove == 0)
+		{
+			finishedMoving = currMoveFunction();
+		}
+		
+		if (framesLeftInMove > 0)
+		{
+			moveUnit();
+		}
+		
+		if (finishedMoving)
+		{
+			clearMovePath();
+			parentState.unitMovementFinished();
+		}
+	}
+	
 }
