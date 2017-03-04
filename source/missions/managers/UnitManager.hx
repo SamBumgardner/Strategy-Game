@@ -115,6 +115,15 @@ class UnitManager implements Observer
 	private var movePath:Array<ArrowTile> = new Array<ArrowTile>();
 	
 	/**
+	 * Array that contains a series of NeighborDirections that describe the path between
+	 * 	a unit and a valid destination. 
+	 * 
+	 * Used to determine how a unit should move when a movePath has not been constructed
+	 * 	for the unit to follow. i.e. non-player controlled units.
+	 */
+	private var neighborPath:Array<NeighborDirections> = null;
+	
+	/**
 	 * The total cost of the currently displayed movement path. 
 	 * Is used to determine whether the drawn movement path should continue to follow the
 	 * 	path the user has drawn out with the map cursor, or if it should recalculate the
@@ -1346,6 +1355,48 @@ class UnitManager implements Observer
 		var dirToTile:NeighborDirections = arrowTile.moveID.getDirFromOther(prevMoveID);
 		
 		return orthDirToString(dirToTile) + "_" + orthDirToString(dirFromTile);
+	}
+	
+	/**
+	 * Finds array of NeighborDirections charting path from selectedUnit to moveID.
+	 * Can be used to find an optimal movement path from a unit to a moveID.
+	 * Used by enemy units that don't draw an arrow path prior to movement.
+	 * 
+	 * @param	targetMoveID
+	 * @return
+	 */
+	private function findNeighborPathToTarget(targetMoveID:MoveID):
+		Array<NeighborDirections>
+	{
+		var orderOfMoves:Array<NeighborDirections> = new Array<NeighborDirections>();
+		var moveTile:PossibleMove = selectedUnit.moveTiles.get(targetMoveID);
+		
+		while (moveTile.direction != START)
+		{
+			orderOfMoves.push(moveTile.direction);
+			var rowOffset:Int = 0;
+			var colOffset:Int = 0;
+			
+			switch (moveTile.direction) 
+			{
+				case UP:
+					rowOffset = 1;
+				case DOWN:
+					rowOffset = -1;
+				case LEFT:
+					colOffset = 1;
+				case RIGHT:
+					colOffset = -1;
+				default:
+					trace("ERROR: Non-orthagonal move provided to updateMoveArrow.");
+			}
+			
+			var newMoveID:MoveID = moveTile.moveID.getOtherByOffset(rowOffset, colOffset);
+			moveTile = selectedUnit.moveTiles.get(newMoveID);
+		} 
+		
+		orderOfMoves.reverse();
+		return orderOfMoves;
 	}
 	
 	/**
