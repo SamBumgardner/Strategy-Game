@@ -219,6 +219,10 @@ class MapCursorManager implements Observer
 		{
 			mapCursor.jumpToPosition(selectedUnit.mapRow, selectedUnit.mapCol);
 		}
+		else
+		{
+			updateHoveredUnitType();
+		}
 		
 		selectedUnit = null;
 		mapCursor.selectedLocations = null;
