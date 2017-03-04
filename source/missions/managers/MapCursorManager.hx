@@ -217,7 +217,7 @@ class MapCursorManager implements Observer
 		
 		if (selectedUnit.team == TeamType.PLAYER)
 		{
-			mapCursor.jumpToPosition(selectedUnit.mapRow, selectedUnit.mapCol);
+			jumpToUnit(selectedUnit);
 		}
 		else
 		{
@@ -226,6 +226,15 @@ class MapCursorManager implements Observer
 		
 		selectedUnit = null;
 		mapCursor.selectedLocations = null;
+	}
+	
+	/**
+	 * 
+	 * @param	unit
+	 */
+	public function jumpToUnit(unit:Unit):Void
+	{
+		mapCursor.jumpToPosition(unit.mapRow, unit.mapCol);
 	}
 	
 	/**
