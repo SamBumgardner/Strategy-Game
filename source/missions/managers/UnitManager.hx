@@ -425,6 +425,7 @@ class UnitManager implements Observer
 	{
 		hideAllRangeTiles();
 		hideAllArrowTiles();
+		clearMovePath();
 		selectedUnit.animation.play("idle", false, false, globalIdleFrame);
 		selectedUnit = null;
 		unitTerrainArr = null;
@@ -1277,6 +1278,10 @@ class UnitManager implements Observer
 	private function hideAllArrowTiles():Void
 	{
 		arrowTilePool.forEachAlive(function(arrowTile:FlxBasic){arrowTile.kill(); });
+	}
+	
+	private function clearMovePath():Void
+	{
 		movePath = movePath.splice(0, -1);
 		totalPathCost = 0;
 	}
@@ -1341,6 +1346,7 @@ class UnitManager implements Observer
 		{
 			// Cursor returned to starting space, clear the array and path cost.
 			hideAllArrowTiles();
+			clearMovePath();
 		}
 		else
 		{
@@ -1440,6 +1446,7 @@ class UnitManager implements Observer
 					// Update totalPathCost to match the optimal cost
 					
 					hideAllArrowTiles();
+					clearMovePath();
 					var orderOfMoves:Array<PossibleMove> = new Array<PossibleMove>();
 					var moveTile:PossibleMove = selectedUnit.moveTiles.get(newMoveID);
 					
