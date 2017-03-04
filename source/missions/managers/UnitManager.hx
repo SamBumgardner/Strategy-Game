@@ -1604,8 +1604,65 @@ class UnitManager implements Observer
 		}
 	}
 	
+	///////////////////
+	// UNIT MOVEMENT //
+	///////////////////
 	
 	
-
+	/**
+	 * 
+	 * @return
+	 */
+	private function pickMoveViaMovePath():Bool
+	{
+		var finishedMoving:Bool = false;
+		
+		if (unitMovementIndex < movePath.length - 1)
+		{
+			unitMovementIndex++;
+			var arrowAnim:String = movePath[unitMovementIndex].animation.name;
+			selectedUnit.animation.play(arrowAnim.split("_")[0]);
+			currMoveDir = selectedUnit.animation.name;
+			framesLeftInMove = framesPerMove;
+			remainingMoveDist = parentState.tileSize;
+		}
+		else
+		{
+			unitMovementIndex = -1;
+			finishedMoving = true;
+			currMoveFunction = null;
+			currMoveDir = null;
+			remainingMoveDist = 0;
+		}
+		
+		return finishedMoving;
+	}
 	
+	/**
+	 * 
+	 * @return
+	 */
+	private function pickMoveViaNeighborPath():Bool
+	{
+		var finishedMoving:Bool = false;
+		
+		if (unitMovementIndex < neighborPath.length - 1)
+		{
+			unitMovementIndex++;
+			selectedUnit.animation.play(orthDirToString(neighborPath[unitMovementIndex]));
+			currMoveDir = selectedUnit.animation.name;
+			framesLeftInMove = framesPerMove;
+			remainingMoveDist = parentState.tileSize;
+		}
+		else
+		{
+			unitMovementIndex = -1;
+			finishedMoving = true;
+			currMoveFunction = null;
+			currMoveDir = null;
+			remainingMoveDist = 0;
+		}
+		
+		return finishedMoving;
+	}
 }
