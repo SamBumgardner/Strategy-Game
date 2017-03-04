@@ -136,7 +136,7 @@ class UnitManager implements Observer
 	public var hoveredUnit:Unit = null;
 	
 	/**
-	 * Reference tot he unit that the MissionState's currently selected unit when in the
+	 * Reference to the unit that the MissionState's currently selected unit when in the
 	 * 	PLAYER_UNIT and OTHER_UNIT states.
 	 */
 	public var selectedUnit:Unit = null;
@@ -402,7 +402,7 @@ class UnitManager implements Observer
 		// Set up unitTerrainArr to match the unit's movement type's terrain array.
 		unitTerrainArr = normTerrainMap;
 		
-		recalcMoveAndAtttack(unit);
+		recalcMoveAndAttack(unit);
 		displayUnitMoveAttackRange(unit);
 		
 		selectedUnit = unit;
@@ -654,7 +654,7 @@ class UnitManager implements Observer
 	 * To know what to recalculate, 
 	 * @param	unit
 	 */
-	public function recalcMoveAndAtttack(unit:Unit):Void
+	public function recalcMoveAndAttack(unit:Unit):Void
 	{
 		// Use unit's id to find out what index they need to recalculate from.
 		var startIndex = unitHasProcessedArr[unit.subject.ID];
