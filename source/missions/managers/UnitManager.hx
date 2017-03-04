@@ -667,9 +667,10 @@ class UnitManager implements Observer
 			for (i in startIndex...tileChanges.length)
 			{
 				var tileChange:TileChange = tileChanges[i];
-				// Check that the move actually happened within the character's move range and
-				//	that the move was done by a non-friendly unit (which can block movement)
-				if (unit.moveTiles.exists(tileChange.moveID) && 
+				// If the change was a blocking move, then it should only be considered if the
+				// 	move happened within this unit's moveTiles area. Regardless, only consider
+				//	moves done by a non-friendly unit (which can block movement)
+				if ((tileChange.wasOpened || unit.moveTiles.exists(tileChange.moveID)) && 
 					unit.teamID != tileChange.causedBy)
 				{
 					// Push the tile change's move ID into the map that matches what kind of change
