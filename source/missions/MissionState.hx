@@ -328,6 +328,20 @@ class MissionState extends FlxState
 			mapCursorManager.unitUnselected();
 			unitManager.unitUnselected();
 		}
+		else if (controlState == PlayerControlStates.PLAYER_UNIT)
+		{
+			// A move is valid if the tile is empty or contains the selected unit and...
+			//	the tile is within the selected unit's movement range.
+			if ((mapCursorManager.hoveredUnitType == MapCursorUnitTypes.NONE ||
+				unitManager.hoveredUnit == unitManager.selectedUnit) &&
+				mapCursor.selectedLocations.exists(mapCursorManager.currCursorPos))
+			{
+				controlState = PlayerControlStates.UNIT_MENU;
+				unitManager.initiateUnitMovement();
+				mapCursorManager.deactivateMapCursor();
+				// waits to open unit menu until player unit finishes moving.
+			}
+		}
 		
 	}
 	
