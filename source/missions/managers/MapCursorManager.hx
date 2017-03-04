@@ -180,7 +180,10 @@ class MapCursorManager implements Observer
 		mapCursor.deactivate();
 		mapCursor.hide();
 		
-		cursorState = mapCursor.currInputMode;
+		if (mapCursor.currInputMode != InputModes.DISABLED)
+		{
+			cursorState = mapCursor.currInputMode;
+		}
 		
 		mapCursor.changeInputModes(InputModes.DISABLED);
 	}
