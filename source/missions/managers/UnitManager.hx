@@ -124,6 +124,42 @@ class UnitManager implements Observer
 	private var neighborPath:Array<NeighborDirections> = null;
 	
 	/**
+	 * Tracks which index of the movePath/neighborPath the currently moving unit is moving
+	 * 	through.
+	 * 
+	 * -1 acts as the default "not crrently moving" index.
+	 */
+	private var unitMovementIndex:Int = -1;
+	
+	/**
+	 * 
+	 */
+	private var framesPerMove(default, never):Int = 6;
+	
+	/**
+	 * 
+	 */
+	private var framesLeftInMove:Int = 0;
+	
+	/**
+	 * 
+	 */
+	private var remainingMoveDist:Float = 0;
+	
+	/**
+	 * Describes the current direction of unit movement.
+	 * Used a string instead of the NeighborDirections enum because I'm already getting the 
+	 * 	string representation of direction to set the unit's animation, so I might as well
+	 * 	use the same value.
+	 */
+	private var currMoveDir:String = null;
+	
+	/**
+	 * 
+	 */
+	private var currMoveFunction:Void->Bool;
+	
+	/**
 	 * The total cost of the currently displayed movement path. 
 	 * Is used to determine whether the drawn movement path should continue to follow the
 	 * 	path the user has drawn out with the map cursor, or if it should recalculate the
