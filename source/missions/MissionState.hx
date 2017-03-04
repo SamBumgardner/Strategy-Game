@@ -345,6 +345,14 @@ class MissionState extends FlxState
 		}
 	}
 	
+	public function unitMovementFinished():Void
+	{
+		if (unitManager.selectedUnit.team == TeamType.PLAYER)
+		{
+			menuManager.openTopLevelMenu(MissionMenuTypes.UNIT_ACTION);
+		}
+	}
+	
 	/**
 	 * Public interface that allows external classes to request that a top-level menu be opened.
 	 */
