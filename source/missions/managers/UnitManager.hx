@@ -884,10 +884,18 @@ class UnitManager implements Observer
 	 * 
 	 * When checking for validity, ensures that the following criteria are met:
 	 * 	neighborID is a key for a valid move in the unit's moveTiles map.
-	 * 	The PossibleMove obj identified by neighborID does not have direction START.
 	 * 	The PossibleMove obj identified by neighborID does not point directly away from 
 	 * 		the origin tile. Checked by ensuring that direction != dirFromOrigin.
 	 * 	
+	 * NOTE: In a previous version of this function, PossibleMoves with direction START
+	 * 	were treated as invalid. That behavior was incorrect; START-Direction tiles are
+	 * 	valid neighbors to get move costs & direction from.
+	 * 
+	 * 	My original reasoning for treating it as invalid was because the START tile should 
+	 * 	never be put through the logic within the tileBlockedRecalcMove()'s test, which is
+	 * 	a process that all "valid" tiles are supposed to be put through. It turns out that
+	 * 	I'd already prevented the START-direction tile from being processed, but I hadn't
+	 * 	fixed the logic in this function to treat the START-direction tile as a valid neighbor.
 	 * 
 	 * @param	unit			
 	 * @param	fromOrigin		
@@ -911,7 +919,7 @@ class UnitManager implements Observer
 		{
 			fromOrigin.push(neighborMove);
 		}
-		else if (neighborMove.direction != START)
+		else
 		{
 			isValid = true;
 		}
