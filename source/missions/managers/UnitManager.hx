@@ -1162,8 +1162,11 @@ class UnitManager implements Observer
 						{
 							unit.moveTiles.set(neighborMoveID, neighborTile);
 							
-							neighborTile.numTimesInBfQueue++;
-							tilesToProcess.push(neighborMoveID);
+							if (neighborTile.moveCost < unit.move)
+							{
+								neighborTile.numTimesInBfQueue++;
+								tilesToProcess.push(neighborMoveID);
+							}
 						}
 					}
 				}
