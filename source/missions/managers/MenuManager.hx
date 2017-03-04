@@ -380,7 +380,8 @@ class MenuManager implements Observer
 		}
 		else
 		{
-			parentState.allMenusClosed();
+			// May need to adjust parameters later.
+			parentState.allMenusClosed(true);
 		}
 	}
 	
@@ -411,7 +412,8 @@ class MenuManager implements Observer
 		}
 		else
 		{
-			parentState.allMenusClosed();
+			// may need to adjust parameter later.
+			parentState.allMenusClosed(false);
 		}
 	}
 	
@@ -426,7 +428,8 @@ class MenuManager implements Observer
 			menuToDeactivate.deactivate();
 			menuToDeactivate.hide();
 		}
-		parentState.allMenusClosed();
+		// may need to adjust parameters later.
+		parentState.allMenusClosed(false);
 	}
 	
 	/**
@@ -555,7 +558,7 @@ class MenuManager implements Observer
 	private function talkConfirm():Void
 	{
 		trace("Talk!");
-		popMenuStack();
+		clearMenuStack();
 	}
 	
 	/**
@@ -614,7 +617,8 @@ class MenuManager implements Observer
 	private function waitConfirm():Void
 	{
 		trace("Wait!");
-		popMenuStack();
+		// TEMP code, may go back to pop later.
+		clearMenuStack();
 	}
 	
 	

@@ -376,10 +376,34 @@ class MissionState extends FlxState
 	 * 	Shouldn't go back to just free map cursor, should go back to unit being selected
 	 * 	(or special behavior for a move-again type character).
 	 */
-	public function allMenusClosed():Void
+	public function allMenusClosed(closedByCancel:Bool):Void
 	{
-		controlState = PlayerControlStates.FREE_MOVE;
-		mapCursorManager.activateMapCursor();
+		if (controlState == PlayerControlStates.MAP_MENU)
+		{
+			controlState = PlayerControlStates.FREE_MOVE;
+			mapCursorManager.activateMapCursor();
+		}
+		if (controlState == PlayerControlStates.UNIT_MENU) 
+		{
+			if (closedByCancel)
+			{
+				controlState = PlayerControlStates.PLAYER_UNIT;
+				unitManager.undoUnitMove();
+				mapCursorManager.activateMapCursor();
+				mapCursorManager.jumpToUnit(unitManager.selectedUnit);
+				
+				mapCursorManager.unitSelected(unitManager.hoveredUnit);
+				unitManager.unitSelected(unitManager.hoveredUnit);
+			}
+			else
+			{
+				controlState = PlayerControlStates.FREE_MOVE;
+				mapCursorManager.activateMapCursor();
+				unitManager.updateUnitPos(unitManager.selectedUnit, mapCursor.row, mapCursor.col);
+				unitManager.unitUnselected();
+				mapCursorManager.unitUnselected();
+			}
+		}
 	}
 	
 	/**
