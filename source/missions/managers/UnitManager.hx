@@ -132,17 +132,17 @@ class UnitManager implements Observer
 	private var unitMovementIndex:Int = -1;
 	
 	/**
-	 * 
+	 * Number of frames it takes for a unit to move across a single tile.
 	 */
 	private var framesPerMove(default, never):Int = 6;
 	
 	/**
-	 * 
+	 * Frames remaining in the unit's current move.
 	 */
 	private var framesLeftInMove:Int = 0;
 	
 	/**
-	 * 
+	 * The distance remaining in the unit's current move (in pixels).
 	 */
 	private var remainingMoveDist:Float = 0;
 	
@@ -155,7 +155,9 @@ class UnitManager implements Observer
 	private var currMoveDir:String = null;
 	
 	/**
-	 * 
+	 * Reference to the function used in the current unit movement.
+	 * Should either be pickMoveViaMovePath() or pickMoveViaNeighborPath().
+	 * Called inside update().
 	 */
 	private var currMoveFunction:Void->Bool;
 	
@@ -167,6 +169,8 @@ class UnitManager implements Observer
 	 * 	movement.
 	 */
 	private var totalPathCost:Int = 0;
+	
+	
 	
 	/**
 	 * Publicly-accessible FlxGroup that contains all Flx-inheriting objects under the
@@ -507,6 +511,23 @@ class UnitManager implements Observer
 	}
 	
 	/**
+	 * Begins movement for the selected unit.
+	 */
+	public function initiateUnitMovement():Void
+	{
+		if (movePath.length != 0 || neighborPath == null)
+		{
+			hideAllRangeTiles();
+			hideAllArrowTiles();
+			currMoveFunction = pickMoveViaMovePath;
+		}
+		else
+		{
+			currMoveFunction = pickMoveViaNeighborPath;
+		}
+	}
+	
+	/**
 	 * Function to satisfy the Observer interface.
 	 * Recieves & responds to notifications from Unit-type objects.
 	 * 
@@ -522,6 +543,23 @@ class UnitManager implements Observer
 		
 	}
 	
+	
+	///////////////////////////////////////
+	//      MISC. HELPER FUNCTIONS       //
+	///////////////////////////////////////
+	
+	/**
+	 * Takes a unit and a moveID and looks up the corresponding PossibleMove
+	 * 	from that unit's MoveTiles.
+	 * 
+	 * @param	unit	The unit whose moveTiles should be used for lookup.
+	 * @param	moveID	The moveID of the tile to look up.
+	 * @return	The PossibleMove from the unit's MoveTiles.
+	 */
+	private function convertIDsToMoves(unit:Unit, moveID:MoveID):PossibleMove
+	{
+		return unit.moveTiles.get(moveID);
+	}
 	
 	///////////////////////////////////////
 	//  MOVEMENT AND ATTACK RANGE FUNC.  //
@@ -573,107 +611,19 @@ class UnitManager implements Observer
 	}
 	
 	/**
-	 * Removes entries from the tileChangesArr that are no longer needed.
+	 * Clears a unit's existing move and attack range information, then calculates the
+	 * 	unit's move and attack range based on its current position and the environment
+	 * 	and other units around it.
 	 * 
-	 * Finds which entries of the tileChangesArr have been processed by all units,
-	 * 	removes those entries from tileChangesArr, then updates all entries of the
-	 * 	unitHasProcessed array so they still point to the same entry in tileChanges
-	 * 	that they did before.
-	 */
-	private function reduceTileChangesArr():Void
-	{
-		var minIndex = unitHasProcessedArr[0];
-		
-		for (i in 1...unitHasProcessedArr.length)
-		{
-			if (minIndex < unitHasProcessedArr[i])
-			{
-				minIndex = unitHasProcessedArr[i];
-				
-				if (minIndex == 0)
-				{
-					// No changes need to be made, function should end.
-					return;
-				}
-			}
-		}
-		
-		tileChanges.splice(0, minIndex);
-		
-		// Update unitHasProcessed indexes to match the new array.
-		for (i in 0...unitHasProcessedArr.length)
-		{
-			unitHasProcessedArr[i] -= minIndex;
-		}
-	}
-	
-	/**
+	 * Calls bfCalcMoveTiles() to determine the entirety of the unit's move range from its
+	 * 	starting space, and then takes the unit's whole set of reachable tiles and uses
+	 * 	it to calculate all tiles within the unit's attack range.
 	 * 
-	 * @param	unit
-	 * @param	moveID
-	 * @return
-	 */
-	private function convertIDsToMoves(unit:Unit, moveID:MoveID):PossibleMove
-	{
-		return unit.moveTiles.get(moveID);
-	}
-	
-	/**
-	 * Plan:
+	 * Is also responsible for updating the unit's entry in the unitHasProcessedArr 
+	 * 	so the unit knows that it is up-to-date with the most recent tile opened/closed
+	 * 	changes on the map.
 	 * 
-	 * Get unit position.
-	 * Get unit movement type.
-	 * Get access to 2-D array of integer costs for this unit's movement type.
-	 * 
-	 * If hard recalculation, (happens after unit finishes moving)
-	 * 	Reset all direction values in 2-D array of possible moves to NONE.
-	 * 	Set PossibleMove at the unit's current position to have direction START and moveCost 0.
-	 * 	Call breadthFirstCalculate, passing in a single-element array containing the start pos.
-	 * 	
-	 * If recalculating after spot was opened, call breadthFirstCalculate, passing in all non-
-	 * 	None-Direction tiles adjacent to the newly opened spot. They'll correctly fill in the cost 
-	 * 	to reach the new space and propogate those changes across the whole movement range.
-	 * 
-	 * If recalculating because spot was closed off, must check all (non-START direction) tiles 
-	 * 	adjacent to the closed space. For each of those tiles, do the following:
-	 * 		Find lowest-cost adjacent tile that does not point directly away from this tile. 
-	 * 			Calculate new self value based on movement from the selected tile as normal.
-	 * 			If self moveCost increased (or direction became NONE due to distance)
-	 * 				then all adjacent tiles that point directly away from this tile need 
-	 * 				to be pushed onto the list.
-	 * 			If there are any tiles adjacent to this one that are direction NONE and this tile
-	 * 				isn't at the movement cap, add this tile to a list of tiles that will be run
-	 * 				through the breadth-first calculation.
-	 * 		If there is no adjacent tile that does not point directly away from this tile, then
-	 * 			set this tile's direction to NONE and add those adjacent tiles to the list of 
-	 * 			tiles to be processed.
-	 * 		
-	 * 		
-	 * Here's how breadthFirstCalculate will work:
-	 * 	while (curr_index < len(list_of_tiles_to_check))
-	 * 		grab tile at curr_index.
-	 * 		decrement tile's numTimesInQueue.
-	 * 		If numTimesInQueue == 0:
-	 * 			for each adjacent tile...
-	 * 				calculate cost to move to other tile (self cost + move to other tile cost)
-	 * 				if adj tile direction == NONE or adj tile's moveCost < calculated cost:
-	 * 					set adj tile moveCost to calculated cost
-	 * 					set adj tile direction to point directly away from this tile
-	 * 					add adj tile to list_of_tiles_to_check.
-	 * 					increase adj tile's numTimesInQueue by 1.
-	 * 		else if numTimesInQueue < 0:
-	 * 			Some sort of error occurred. Shouldn't have happened.
-	 * 		(otherwise it is going to come up in the queue later, so just skip it)
-	 * 		
-	 * 		increment curr_index.
-	 * 
-	 * NOTE: (not relevant for this function, but I didn't want to forget it)
-	 * 	When placing colored tiles, always place blue where unit could move, regardless of whether
-	 * 		space is currently taken by an ally. However, only place red where the unit can attack
-	 * 		based on the spaces that are currently open.
-	 * 
-	 * @param	unit
-	 * @return
+	 * @param	unit The unit whose move and attack range should be calculated.
 	 */
 	public function findMoveAndAttackRange(unit:Unit):Void
 	{
@@ -696,8 +646,14 @@ class UnitManager implements Observer
 	}
 	
 	/**
-	 * To know what to recalculate, 
-	 * @param	unit
+	 * Identifies what tiles were opened and closed by the opposing team since the unit last 
+	 * 	caluclated its movement range, then calls move & attack tile recalculation functions
+	 * 	with the appropriate parameters.
+	 * 
+	 * Blocked tiles should be passed into tilesBlockedRecalc(), while opened tiles should
+	 * 	be passed into tilesOpenedRecalc().
+	 * 
+	 * @param	unit	The unit whose move & attack range is being recalculated.
 	 */
 	public function recalcMoveAndAttack(unit:Unit):Void
 	{
@@ -744,7 +700,6 @@ class UnitManager implements Observer
 			{
 				blockedTilesArr.push(key);
 			}
-			
 			tilesBlockedRecalc(unit, blockedTilesArr);
 			
 			// Recalculate move range based on opened tiles.
@@ -759,7 +714,8 @@ class UnitManager implements Observer
 	
 	/**
 	 * Helper function for various movement-range calculating functions. Runs a provided
-	 * 	testing function on each of the neighbors of a provided tile
+	 * 	testing function on each of the neighbors of a provided tile, and returns an array
+	 * 	of all neighbor tiles that returned "true" when run through the testing function.
 	 * 
 	 * @param	startTile		The MoveID whose neighbors need to be checked with the testFunc.
 	 * @param	rangesToCheck	An array of neighbor distances to check. [1] means only check
@@ -856,14 +812,18 @@ class UnitManager implements Observer
 	}
 	
 	/**
-	 * If recalculating after spot was opened, call breadthFirstCalculate, passing in all 
-	 * 	tiles adjacent to the newly opened spot that are already in the unit's movement range. 
-	 * 	They'll correctly fill in the cost to reach the new space and propogate those changes 
-	 * 	across the whole movement range where they are needed.
+	 * Calls bfCalcMoveTiles(), passing in all tiles that are both in the unit's movement 
+	 * 	range and are adjacent one of the tiles in the "openedTiles" array that is passed into 
+	 * 	this function.
 	 * 
-	 * @param	unit
-	 * @param	openedRow
-	 * @param	openedCol
+	 * They'll correctly fill in the cost to reach the newly opened tiles and propogate those 
+	 * 	changes across the whole movement range as needed.
+	 * 
+	 * Also calls calculateAttackTiles() to update the unit's attack range to match.
+	 * 
+	 * @param	unit		The unit whose movement/attack range is being recalculated.
+	 * @param	openedTiles	Array of MoveIDs of newly opened tiles. Used to determine what tiles 
+	 * 						should be passed into the call to bfCalcMoveTiles.
 	 */
 	public function tilesOpenedRecalc(unit:Unit, openedTiles:Array<MoveID>):Void
 	{
@@ -887,10 +847,12 @@ class UnitManager implements Observer
 	}
 	
 	/**
+	 * Removes all blocked tiles from the unit's movement range, then calls 
+	 * 	tileBlockedRecalcMove(), passing in all tiles that were both in the
+	 * 	unit's movement range and adjacent to the blocked tiles.
 	 * 
-	 * @param	unit
-	 * @param	blockedRow
-	 * @param	blockedCol
+	 * @param	unit			The unit whose move range is being recalculated.
+	 * @param	blockedTiles	Array of blocked tile locations.
 	 */
 	public function tilesBlockedRecalc(unit:Unit, blockedTiles:Array<MoveID>):Void
 	{
@@ -943,11 +905,12 @@ class UnitManager implements Observer
 	 * 	I'd already prevented the START-direction tile from being processed, but I hadn't
 	 * 	fixed the logic in this function to treat the START-direction tile as a valid neighbor.
 	 * 
-	 * @param	unit			
-	 * @param	fromOrigin		
-	 * @param	notInMoveRange	
-	 * @param	neighborID		
-	 * @param	dirFromOrigin	Direction moved from originID to reach neighborID
+	 * @param	unit			The unit whose move range is being recalculated.
+	 * @param	fromOrigin		Array of neighbor tiles that point away from the origin tile.
+	 * @param	notInMoveRange	Array of neighbor tiles that are not currently within the unit's 
+	 * 							moveTiles
+	 * @param	neighborID		MoveID of the neighbor tile.
+	 * @param	dirFromOrigin	Direction moved between the "origin" tile and the neighbor
 	 */
 	private function tileBlockedTestFunc(unit:Unit, fromOrigin:Array<PossibleMove>, 
 		notInMoveRange:Array<MoveID>, neighborID:MoveID, 
@@ -974,12 +937,18 @@ class UnitManager implements Observer
 	}
 	
 	/**
+	 * Identifies changes that should happen to a unit's moveTiles map as a result of tile(s)
+	 * 	within their movement range being blocked. 
+	 * 
+	 * The algorithm's strategy is as follows:
 	 * 
 	 * If recalculating because spot was closed off, must check all (non-START direction) tiles 
 	 * 	adjacent to the closed space. For each of those tiles, do the following:
 	 * 		Find lowest-cost adjacent tile that does not point directly away from this tile. 
 	 * 			Calculate new self value based on movement from the selected tile as normal.
-	 * 			If self moveCost increased (or direction became NONE due to distance)
+	 * 			If the new self value is larger than the unit's move range, remove it from the
+	 * 				unit's moveTiles map.
+	 * 			If self moveCost increased (or tile's could no longer be reached due to distance)
 	 * 				then all adjacent tiles that point directly away from this tile need 
 	 * 				to be pushed onto the list.
 	 * 			If there are any tiles adjacent to this one that are direction NONE and this tile
@@ -990,9 +959,8 @@ class UnitManager implements Observer
 	 * 			tiles to be processed.
 	 * 
 	 * 
-	 * @param	unit
-	 * @param	blockedRow
-	 * @param	blockedCol
+	 * @param	unit				The unit whose movement range is being recalculated.
+	 * @param	moveIDsToProcess	Array of all tiles that were adjacent to the blocked tiles.
 	 */
 	public function tileBlockedRecalcMove(unit:Unit, moveIDsToProcess:Array<MoveID>):Array<MoveID>
 	{
@@ -1101,8 +1069,8 @@ class UnitManager implements Observer
 			// Increment i for next time through loop.
 			i++;
 		}
-		
-		// Not very efficient way to do set difference, can fix later.
+		// Not very efficient way to do set difference. May be better to sort arrays and comapre
+		//	in linear time?
 		for (tile in bfCalcMoveTiles(unit, tilesToBfCalcFrom))
 		{
 			removedTiles.remove(tile);
@@ -1112,11 +1080,15 @@ class UnitManager implements Observer
 	}
 	
 	/**
+	 * Helper function used by bfCalcMoveTiles as its "test function" argument to 
+	 * 	getValidNeighbors(). Considers a neighbor tile valid as long as the tile contains
+	 * 	an allied unit (or is empty).
 	 * 
-	 * @param	unit
-	 * @param	neighborID
-	 * @param	dirFromOrigin
-	 * @return
+	 * @param	unit			The unit whose movement range is being calculated.
+	 * @param	neighborID		The MoveID of the currently inspected neighbor tile.
+	 * @param	dirFromOrigin	The direction between the "origin tile" given to 
+	 * 							getValidNeighbors() and the currently checked neighbor tile.
+	 * @return	Boolean value indicating whether the neighbor tile should be considered valid.
 	 */
 	public function bfCalcTestFunc(unit:Unit, neighborID:MoveID, 
 		dirFromOrigin:NeighborDirections):Bool
@@ -1127,14 +1099,20 @@ class UnitManager implements Observer
 	
 	
 	/**
-	 * Performs a breadth-first style traversal of the 2-D terrain array to find the movement
-	 * 	range of a unit.
+	 * Performs a breadth-first style traversal of the 2-D terrain array beginning at the unit's
+	 * 	current position to find what tiles are within the unit's movement range.
 	 * 
-	 * Here's how breadthFirstCalculate will work:
+	 * Every tile that is valid to move to is added to the unit's moveTiles map and contains
+	 * 	data about the location of the tile, the direction of movement used to reach it from
+	 * 	the previous tile (when following an optimal path) and the optimal movement cost to 
+	 * 	reach this tile.
+	 * 
+	 * The algorithm's strategy to do this is as follows:
+	 * 
 	 * 	while (curr_index < len(list_of_tiles_to_check))
 	 * 		grab tile at curr_index.
 	 * 		decrement tile's numTimesInQueue.
-	 * 		If numTimesInQueue == 0:
+	 * 		If numTimesInQueue == 0: (if it's > 0, then it'll come up again later in the queue)
 	 * 			for each adjacent tile...
 	 * 				calculate cost to move to other tile (self cost + move to other tile cost)
 	 * 				if adj tile direction == NONE or adj tile's moveCost < calculated cost:
@@ -1144,12 +1122,13 @@ class UnitManager implements Observer
 	 * 					increase adj tile's numTimesInQueue by 1.
 	 * 		else if numTimesInQueue < 0:
 	 * 			Some sort of error occurred. Shouldn't have happened.
-	 * 		(otherwise it is going to come up in the queue later, so just skip it)
 	 * 		
 	 * 		increment curr_index.
 	 * 
-	 * @param	unit
-	 * @param	tilesToProcess
+	 * @param	unit			The unit whose range is being recalculated.
+	 * @param	tilesToProcess	Initial array of tiles for the algorithm's processing queue.
+	 * @return	Array of all tiles that were added to the unit's movement range over the 
+	 * 			course of the breadth-first traversal.
 	 */
 	public function bfCalcMoveTiles(unit:Unit, tilesToProcess:Array<MoveID>):Array<MoveID>
 	{	
@@ -1230,11 +1209,15 @@ class UnitManager implements Observer
 	
 	/**
 	 * Calculates the set of tiles a unit can attack based on the contents of their moveTiles
-	 * 	map.
+	 * 	map. The procedure is straightforward: for each tile in the validMoves array, find all
+	 * 	tiles within that unit's attack range by using getValidNeighbors. Then add those tiles
+	 * 	to the unit's attackTiles map.
 	 * 
-	 * Isn't as nicely optimized as the functions that recalculate movement tiles.
-	 * I can't quite think how to 
-	 * @param	unit
+	 * Isn't as nicely optimized as the functions that recalculate movement tiles. One attack
+	 * 	tile will likely be visited many times over the course of the function.
+	 * 
+	 * @param	unit		The unit whose attack tiles are being calculated.
+	 * @param	validMoves	The array of tiles that the attack ranges should be calculated from?
 	 */
 	public function calculateAttackTiles(unit:Unit, validMoves:Array<MoveID>):Void
 	{
@@ -1251,6 +1234,35 @@ class UnitManager implements Observer
 	}
 	
 	/**
+	 * Helper function used by tileBlockedRecalc() as its "test function" argument to 
+	 * 	getValidNeighbors(). Considers the neighbor valid as long as it is within the
+	 * 	unit's moveTiles.
+	 * 
+	 * Is used to identify that a the origin tile (an attack tile) is within the range
+	 * 	of some valid movement tile.
+	 * 
+	 * @param	unit			The unit whose attack range is being recalculated.
+	 * @param	neighborID		The tile that is checked to be within the unit's moveTiles.
+	 * @param	dirFromOrigin	Not relevant for this function.
+	 * @return	Whether the neighbor tile existed in unit's moveTiles.
+	 */
+	public function attackTileBlockedTest(unit:Unit, neighborID:MoveID, 
+		dirFromOrigin:NeighborDirections):Bool
+	{
+		var result:Bool = false;
+		
+		if (unit.moveTiles.exists(neighborID))
+			result = true;
+		
+		return result;
+	}
+	
+	/**
+	 * Recalculates a unit's valid attack tiles after some of the unit's move tiles become 
+	 * 	blocked. To achieve this, all attack tiles that are within range of a removed movement
+	 * 	tile search to see if there is another valid movement tile that is within range of them.
+	 * 	If so, they can be retained, and if not they are removed.
+	 * 
 	 * Is only really efficient if range of attacks is smaller than unit's movement
 	 * 	range. Which should pretty much always be the case.
 	 * 
@@ -1283,8 +1295,8 @@ class UnitManager implements Observer
 	 * 			very small, so doing this sort of worst-case analysis is kinda silly. At runtime,
 	 * 			both of these solutions are likely to run very, very fast. 
 	 * 
-	 * @param	unit
-	 * @param	blockedMoves
+	 * @param	unit			The unit whose attack range is being recalculated.
+	 * @param	blockedMoves	Array of tiles that were blocked from the unit's MoveTiles map.
 	 */
 	public function tileBlockedRecalcAttack(unit:Unit, blockedMoves:Array<MoveID>):Void
 	{
@@ -1313,17 +1325,6 @@ class UnitManager implements Observer
 		}
 	}
 	
-	public function attackTileBlockedTest(unit:Unit, neighborID:MoveID, 
-		dirFromOrigin:NeighborDirections)
-	{
-		var result:Bool = false;
-		
-		if (unit.moveTiles.exists(neighborID))
-			result = true;
-		
-		return result;
-	}
-	
 	
 	///////////////////////////////////////
 	//      MOVEMENT PATH FUNCTIONS      //
@@ -1337,6 +1338,12 @@ class UnitManager implements Observer
 		arrowTilePool.forEachAlive(function(arrowTile:FlxBasic){arrowTile.kill(); });
 	}
 	
+	/**
+	 * Clears the logical component of a unit's arrow/movePath.
+	 * Separated from hideArrowTiles() because in some cases the arrow needs to be
+	 * 	hidden while the path it represented needs to be remembered.
+	 * 	e.g. during unit movement.
+	 */
 	private function clearMovePath():Void
 	{
 		movePath = movePath.splice(0, -1);
@@ -1344,10 +1351,13 @@ class UnitManager implements Observer
 	}
 	
 	/**
+	 * Converts an orthagonal neighborDirection (UP, DOWN, LEFT, RIGHT) to an equivalent string,
+	 * 	all lower-case.
 	 * 
-	 * @param	dir
+	 * @param	dir	Orthagonal direction from NeighborDirections to be converted into string.
+	 * @return	String representation of the passed-in neighbor direction.
 	 */
-	private function orthDirToString(dir:NeighborDirections)
+	private function orthDirToString(dir:NeighborDirections):String
 	{
 		var result:String;
 		switch (dir) 
@@ -1368,21 +1378,27 @@ class UnitManager implements Observer
 	}
 	
 	/**
+	 * Finds the animation that should be played by an arrow tile if it is acting as the 
+	 * 	arrowhead.
 	 * 
-	 * @param	arrowTile
-	 * @param	prevMoveID
+	 * @param	arrowTile	arrowTile that needs its arrowhead animation.
+	 * @param	prevMoveID	The moveID that came before arrowTile in the overall movePath.
+	 * @return	String that identifies the correct animation the arrowTile should use.
 	 */
-	private function findMoveArrowAnim(arrowTile:ArrowTile, prevMoveID:MoveID)
+	private function findMoveArrowAnim(arrowTile:ArrowTile, prevMoveID:MoveID):String
 	{
 		var dir:NeighborDirections = arrowTile.moveID.getDirFromOther(prevMoveID);
 		return orthDirToString(dir);
 	}
 	
 	/**
+	 * Finds the animation that should be played by an arrow tile that is NOT acting as an
+	 * 	arrowhead.
 	 * 
-	 * @param	arrowTile
-	 * @param	nextMoveID
-	 * @param	prevMoveID
+	 * @param	arrowTile	arrowTile that needs its segment animation.
+	 * @param	nextMoveID	the moveID that comes after arrowTile in the overall movePath.
+	 * @param	prevMoveID	The moveID that came before arrowTile in the overall movePath.
+	 * @return	String that identifies the correct animation the arrowTile should use.
 	 */
 	private function findMoveSegmentAnim(arrowTile:ArrowTile, nextMoveID:MoveID, 
 		prevMoveID:MoveID)
@@ -1398,8 +1414,9 @@ class UnitManager implements Observer
 	 * Can be used to find an optimal movement path from a unit to a moveID.
 	 * Used by enemy units that don't draw an arrow path prior to movement.
 	 * 
-	 * @param	targetMoveID
-	 * @return
+	 * @param	targetMoveID	The moveID the selectedUnit is attempting to reach.
+	 * @return	Array of NeighborDirections that describes the series of moves needed to reach
+	 * 			the destination.
 	 */
 	private function findNeighborPathToTarget(targetMoveID:MoveID):
 		Array<NeighborDirections>
@@ -1436,7 +1453,12 @@ class UnitManager implements Observer
 	}
 	
 	/**
+	 * Updates the contents of the current movePath to draw an arrow from the selected unit
+	 * 	to the passed-in ID.
 	 * 
+	 * See in-line documentation for implementation details.
+	 * 
+	 * @param	newMoveID	The MoveID that the arrow should extend/change to point at.
 	 */
 	public function updateMoveArrow(newMoveID:MoveID):Void
 	{
@@ -1609,25 +1631,13 @@ class UnitManager implements Observer
 	///////////////////
 	
 	/**
+	 * Identifies if the selected unit has finished traversing the path set out by its
+	 * 	movePath. 
 	 * 
-	 */
-	public function initiateUnitMovement():Void
-	{
-		if (movePath.length != 0 || neighborPath == null)
-		{
-			hideAllRangeTiles();
-			hideAllArrowTiles();
-			currMoveFunction = pickMoveViaMovePath;
-		}
-		else
-		{
-			currMoveFunction = pickMoveViaNeighborPath;
-		}
-	}
-	
-	/**
+	 * If it hasn't, this sets movement variables so later calls to moveUnit()
+	 * 	will move the unit through the next segment of its overall move.
 	 * 
-	 * @return
+	 * @return Whether the unit has finished moving or not.
 	 */
 	private function pickMoveViaMovePath():Bool
 	{
@@ -1655,8 +1665,13 @@ class UnitManager implements Observer
 	}
 	
 	/**
+	 * Identifies if the selected unit has finished traversing the path set out by its
+	 * 	neighborPath. 
 	 * 
-	 * @return
+	 * If it hasn't, this sets movement variables so later calls to moveUnit()
+	 * 	will move the unit through the next segment of its overall move.
+	 * 
+	 * @return Whether the unit has finished moving or not.
 	 */
 	private function pickMoveViaNeighborPath():Bool
 	{
@@ -1683,7 +1698,8 @@ class UnitManager implements Observer
 	}
 	
 	/**
-	 * 
+	 * Incrementally moves a unit based on this object's current set of movement-related 
+	 * 	variables.
 	 */
 	private function moveUnit():Void
 	{
@@ -1714,7 +1730,13 @@ class UnitManager implements Observer
 	}
 	
 	/**
+	 * Resets the selected unit's x & y values to match its logical row/col position and
+	 * 	changes its animation back to "down".
 	 * 
+	 * Used to cancel a unit's movement and let the player go back to deciding a different
+	 * 	destination for the unit.
+	 * 
+	 * Won't be used for non-player controlled units.
 	 */
 	public function undoUnitMove():Void
 	{
@@ -1728,6 +1750,12 @@ class UnitManager implements Observer
 	// UPDATE FUNCTION //
 	/////////////////////
 	
+	/**
+	 * Should be called each frame inside the MissionState's update function.
+	 * Is responsible for doing incremental changes during unit movement.
+	 * 
+	 * @param	elapsed	Time (in seconds) since the last call to update().
+	 */
 	public function update(elapsed:Float)
 	{
 		var finishedMoving:Bool = false;
