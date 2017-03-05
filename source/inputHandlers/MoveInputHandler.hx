@@ -66,7 +66,7 @@ class MoveInputHandler
 	/**
 	 * The minimum amount of time the button must be held to start continuously moving.
 	 */
-	static private var timeMoveHeldThreshold(default, null):Float = .25;
+	static private var timeMoveHeldThreshold(default, null):Float = .2;
 
 	/**
 	 * Set of keys that are used as directional inputs for movement. 

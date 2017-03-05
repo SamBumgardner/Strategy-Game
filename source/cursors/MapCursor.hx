@@ -13,10 +13,14 @@ import flixel.tweens.misc.NumTween;
 import inputHandlers.ActionInputHandler;
 import inputHandlers.MoveInputHandler;
 import observerPattern.eventSystem.EventTypes;
+import units.movement.MoveID;
+import units.movement.PossibleMove;
 import utilities.HideableEntity;
 import observerPattern.Observed;
 import observerPattern.Subject;
 import utilities.UpdatingEntity;
+
+using units.movement.MoveIDExtender;
 
 /**
  * The cursor that the player moves around the map to direct their characters.
@@ -111,8 +115,8 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	 * Integers that track information about the cursor's current state, using 
 	 * enums described below this class.
 	 */
-	private var currMoveMode:Int = MoveModes.NONE;
-	private var currInputMode:Int = InputModes.FREE_MOVEMENT;
+	public var currMoveMode(default, null):Int = MoveModes.NONE;
+	public var currInputMode(default, null):Int = InputModes.FREE_MOVEMENT;
 	/**
 	 * FlxGroup containing all sprites under this object's supervision. Rather than
 	 * directly adding MapCursor to the FlxState, this FlxGroup will be added.
@@ -142,10 +146,29 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	private var maxRow:Int;
 	
 	/**
+	 * Map of MoveIDs to PossibleMove values that marks a set of "selected" row/column
+	 * 	locations. When the input move is PLAYER_UNIT, is used to constrain held
+	 * 	cursor movement from selected locations to unselected locations.
+	 * 
+	 * Will generally be a reference to the selected unit's moveTiles property.
+	 */
+	public var selectedLocations:Map<MoveID, PossibleMove>;
+	
+	/**
 	 * Integer that holds the size of tiles used on the map, measured in pixels.
 	 * Changing this value will alter the movement of this cursor significantly!
 	 */
 	private var tileSize:Int = 64;
+	
+	/**
+	 * Number of frames the MapCursor takes to complete a single move between tiles.
+	 */
+	private var framesPerMove(default, never):Int = 6;
+	
+	/**
+	 * Tracks the number of frames left in the current move.
+	 */
+	private var framesLeftInMove:Int = 0;
 	
 	/**
 	 * Integers that track the x/y offset that corners will have, relative to the 
@@ -587,6 +610,9 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 			
 			cornerTweenArr.push(newTween);
 			
+			// Call the tween's helper function to set initial position.
+			bounceFunc(corner, cornerType, 0);
+			
 			cornerType++;
 		}
 		
@@ -630,8 +656,10 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 		{	
 			// Set up new tweens
 			newTween = FlxTween.num(0, 1, 1, {type: FlxTween.LOOPING}, stillFunc.bind(corner));
-			
 			cornerTweenArr.push(newTween);
+			
+			// Call the tween's helper function to set initial position.
+			stillFunc(corner, 0);
 		}
 		
 		currMoveMode = MoveModes.EXPANDED_STILL;
@@ -645,6 +673,9 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	/**
 	 * After checking that the attempted movement is valid, changes col and row variables 
 	 * 	of the cursor & plays movement sound effect.
+	 * 
+	 * If movement is held, cursor is in PLAYER_UNIT input mode, and cursor is currently in a
+	 * 	"selected" location, it is not allowed to move to a non-selected location.
 	 * 
 	 * @param	colRowChanges	A point with contents (column change amount, row change amount)
 	 */
@@ -665,14 +696,22 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 		var xPos:Int = col * tileSize;
 		var yPos:Int = row * tileSize;
 		
+		var currentMoveID:MoveID = MoveIDExtender.newMoveID(row, col);
+		
 		if (// If at least one of the movement directions was valid...
 			(vertMove != 0 || horizMove != 0) &&
 			// If the movement is "held", then only move if not currently moving.
-			(!heldMove || !isMoving)
-			)
+			(!heldMove || !isMoving) &&
+			// If input mode is PLAYER_UNIT, movement is held, and...
+			((currInputMode != InputModes.PLAYER_UNIT || !heldMove || 
+			// The cursor's current position is in the selected locations, then only move if
+			!selectedLocations.exists(currentMoveID)) ||
+			// the targeted location is also in the map of selected locations
+			selectedLocations.exists(currentMoveID.getOtherByOffset(vertMove, horizMove))))
 		{
 			row += vertMove;
 			col += horizMove;
+			framesLeftInMove = framesPerMove;
 			isMoving = true;
 			moveSound.play(true);
 			subject.notify(EventTypes.MOVE);
@@ -684,40 +723,27 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	 */
 	private function moveCornerAnchors():Void
 	{
-		var xPos:Float = col * tileSize;
-		var yPos:Float = row * tileSize;
-		
-		var horizMove:Int	= 0;
-		var vertMove:Int	= 0;
-		
-		var framesPerMove:Int = 4;
-		
-		if (currCornerArr[0].getAnchorX() > xPos + currentAnchorLX)
+		if (framesLeftInMove > 0)
 		{
-			horizMove--;
-		}
-		else if (currCornerArr[0].getAnchorX() < xPos + currentAnchorLX)
-		{
-			horizMove++;
-		}
-		if (currCornerArr[0].getAnchorY() > yPos + currentAnchorTY)
-		{
-			vertMove--;
-		}
-		else if (currCornerArr[0].getAnchorY() < yPos + currentAnchorTY)
-		{
-			vertMove++;
-		}
-		
-		for (corner in currCornerArr)
-		{
-			corner.setAnchor(corner.getAnchorX() + (tileSize / framesPerMove * horizMove),
-				corner.getAnchorY() + (tileSize / framesPerMove * vertMove));
-		}
-		if (currCornerArr[0].getAnchorX() == xPos + currentAnchorLX &&
-			currCornerArr[0].getAnchorY() == yPos + currentAnchorTY)
-		{
-			isMoving = false;
+			var xPos:Float = col * tileSize;
+			var yPos:Float = row * tileSize;
+			
+			var remainingX:Float = xPos + currentAnchorLX - currCornerArr[0].getAnchorX();
+			var remainingY:Float = yPos + currentAnchorTY - currCornerArr[0].getAnchorY();
+			
+			for (corner in currCornerArr)
+			{
+				corner.setAnchor(corner.getAnchorX() + remainingX / framesLeftInMove, 
+					corner.getAnchorY() + remainingY / framesLeftInMove);
+			}
+			
+			framesLeftInMove--;
+			
+			if (currCornerArr[0].getAnchorX() == xPos + currentAnchorLX &&
+				currCornerArr[0].getAnchorY() == yPos + currentAnchorTY)
+			{
+				isMoving = false;
+			}
 		}
 	}
 	
@@ -752,6 +778,8 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 		// Change cameraHitbox position.
 		cameraHitbox.x += xDifference;
 		cameraHitbox.y += yDifference;
+		
+		subject.notify(EventTypes.MOVE);
 	}
 	
 	
@@ -840,47 +868,6 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	{
 		if (active)
 		{
-			// NOTE: This section is temporary, and will likely be replaced by game logic later.
-			
-			if (currMoveMode != MoveModes.EXPANDED_STILL && FlxG.keys.pressed.ALT)
-			{
-				expandedStill();
-			}
-			else if (currMoveMode != MoveModes.BOUNCE_IN_OUT && !FlxG.keys.pressed.ALT)
-			{
-				bounceInOut();
-			}
-			
-			// Compare [0] index of arrays as a shortcut to see if they contain the same elements.
-			if (currCornerArr[0] != targetCornerArr[0] && FlxG.keys.pressed.CONTROL)
-			{
-				changeCurrCornerArr(targetCornerArr);
-				if (currMoveMode == MoveModes.EXPANDED_STILL)
-				{
-					expandedStill();
-				}
-				else
-				{
-					bounceInOut();
-				}
-			}
-			else if (currCornerArr[0] != normCornerArr[0] && !FlxG.keys.pressed.CONTROL)
-			{
-				changeCurrCornerArr(normCornerArr);
-				if (currMoveMode == MoveModes.EXPANDED_STILL)
-				{
-					expandedStill();
-				}
-				else
-				{
-					bounceInOut();
-				}
-			}
-			
-			// NOTE: end of likely-to-be-replaced section.
-			
-			
-			
 			// Actions should remain buffered until movement ends.
 			if (!isMoving)
 			{
@@ -891,7 +878,6 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 					ActionInputHandler.useBufferedInput(doCursorAction);
 				}
 			}
-			
 			
 			if (currInputMode != InputModes.DISABLED)
 			{
@@ -933,5 +919,6 @@ class InputModes
 {
 	public static var DISABLED		(default, never) = 0;
 	public static var FREE_MOVEMENT	(default, never) = 1;
-	public static var UNIT_SELECTED	(default, never) = 2;
+	public static var PLAYER_UNIT	(default, never) = 2;
+	public static var OTHER_UNIT	(default, never) = 3;
 }
