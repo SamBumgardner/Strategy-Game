@@ -189,7 +189,8 @@ class MapCursorManager implements Observer
 	}
 	
 	/**
-	 * 
+	 * Changes the mapCursor's inputState and other variables to reflect the change
+	 * 	in state that accompanies a unit becoming selected.
 	 */
 	public function unitSelected(unit:Unit):Void
 	{
@@ -209,7 +210,8 @@ class MapCursorManager implements Observer
 	}
 	
 	/**
-	 * 
+	 * Changes the mapCursor's inputState and other variables to reflect the change
+	 * 	in state that accompanies a unit becoming unselected.
 	 */
 	public function unitUnselected():Void
 	{
@@ -229,8 +231,9 @@ class MapCursorManager implements Observer
 	}
 	
 	/**
+	 * Jumps the mapCursor's logical and visible position to the specified unit.
 	 * 
-	 * @param	unit
+	 * @param	unit	The unit the mapCursor should jump to.
 	 */
 	public function jumpToUnit(unit:Unit):Void
 	{
@@ -241,6 +244,10 @@ class MapCursorManager implements Observer
 	 * Function to satisfy the Observer interface.
 	 * Is used to respond to events sent out by the MapCursor, and shouldn't
 	 * 	recieve any notifications from anything else.
+	 * 
+	 * If the cursor is in FREE_MOVEMENT input mode, it should update its hovered unit 
+	 * 	type after moving. It shouldn't when used in any other input mode, because hovering
+	 * 	over a unit only matters when the player hasn't already selected something to do yet.
 	 * 
 	 * @param 	event		InputEvent object containing information about event type and sender.
 	 * @param	notifier	Reference to the object that caused the notification.
