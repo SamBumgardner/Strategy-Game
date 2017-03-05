@@ -127,7 +127,7 @@ class UnitManager implements Observer
 	 * Tracks which index of the movePath/neighborPath the currently moving unit is moving
 	 * 	through.
 	 * 
-	 * -1 acts as the default "not crrently moving" index.
+	 * -1 acts as the default "not currently moving" index.
 	 */
 	private var unitMovementIndex:Int = -1;
 	

@@ -31,7 +31,7 @@ package missions;
  * UNIT_INFO:	Entered after the player presses the info button while over any unit
  * 				while in the FREE_MOVE, PLAYER_UNIT, or OTHER_UNIT states. Allows the
  * 				player to view all available information about the chosen unit as well
- * 				as cycle through other units on the smae team to view their information.
+ * 				as cycle through other units on the same team to view their information.
  * 
  * ENEMY_TURN:	Entered after all player units are no longer active, or when the player
  * 				manually chooses to end their turn through an option in the map menu.
