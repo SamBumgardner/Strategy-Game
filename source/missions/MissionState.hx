@@ -275,7 +275,8 @@ class MissionState extends FlxState
 	}
 	
 	/**
-	 * 
+	 * Takes information from the mapCursorManager and uses it to instruct the unitManager
+	 * 	on how the current movePath and movement arrow should be changed.
 	 */
 	public function calculateNewMoveArrow()
 	{
@@ -300,6 +301,10 @@ class MissionState extends FlxState
 		}
 	}
 	
+	/**
+	 * Executes the proper response to a confirm event from the mapCursor, depending on this
+	 * 	object's current controlState.
+	 */
 	public function mapCursorConfirm()
 	{
 		if (controlState == PlayerControlStates.FREE_MOVE)
@@ -348,7 +353,7 @@ class MissionState extends FlxState
 	/**
 	 * Order that unitUnselecteds are called matters.
 	 */
-	public function mapCursorCancel()
+	public function mapCursorCancel():Void
 	{
 		if (controlState == PlayerControlStates.PLAYER_UNIT || 
 			controlState == PlayerControlStates.OTHER_UNIT)
@@ -359,6 +364,9 @@ class MissionState extends FlxState
 		}
 	}
 	
+	/**
+	 * Executes whatever game logic should occur when a unit's movement has finished.
+	 */
 	public function unitMovementFinished():Void
 	{
 		if (unitManager.selectedUnit.team == TeamType.PLAYER)
@@ -397,6 +405,11 @@ class MissionState extends FlxState
 	 * 	May need to have special behavior when the unit menu was closed.
 	 * 	Shouldn't go back to just free map cursor, should go back to unit being selected
 	 * 	(or special behavior for a move-again type character).
+	 * 
+	 * NOTE:
+	 * 	The current logic isn't really what I want it to end up being. Should check if
+	 * 		the unit is still able to act or if it has done some sort of permanent action.
+	 * 		If it has done some permanent action, then it should not undo the unit move.
 	 */
 	public function allMenusClosed(closedByCancel:Bool):Void
 	{
@@ -431,7 +444,8 @@ class MissionState extends FlxState
 	/**
 	 * Changes the object currentlyUpdatingObject references & calls the input handlers'
 	 * 	reset functions.
-	 * @param	newObj
+	 * 
+	 * @param	newObj	New UpdatingEntity to become the currentlyUpdatingObject.
 	 */
 	public function changeCurrUpdatingObj(newObj:UpdatingEntity):Void
 	{
