@@ -7,15 +7,15 @@ import missions.MissionState;
 import observerPattern.Observed;
 import observerPattern.Observer;
 import observerPattern.eventSystem.InputEvent;
-import units.ArrowTile;
-import units.MoveID;
-import units.PossibleMove;
+import units.movement.ArrowTile;
+import units.movement.MoveID;
+import units.movement.PossibleMove;
 import units.RangeTile;
-import units.TileChange;
+import units.movement.TileChange;
 import units.Unit;
 import units.UnitInfo;
 
-using units.MoveIDExtender;
+using units.movement.MoveIDExtender;
 
 /**
  * A component of MissionState that acts as a middleman between MissionState 

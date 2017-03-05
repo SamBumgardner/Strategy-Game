@@ -7,11 +7,11 @@ import observerPattern.Observer;
 import observerPattern.eventSystem.EventTypes;
 import observerPattern.eventSystem.InputEvent;
 import units.MapCursorUnitTypes;
-import units.MoveID;
+import units.movement.MoveID;
 import units.Unit;
 
 using observerPattern.eventSystem.EventExtender;
-using units.MoveIDExtender;
+using units.movement.MoveIDExtender;
 
 /**
  * A component of MissionState that acts as a middleman between MissionState 

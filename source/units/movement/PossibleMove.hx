@@ -1,6 +1,6 @@
-package units;
+package units.movement;
 
-using units.MoveIDExtender;
+using units.movement.MoveIDExtender;
 
 /**
  * This class contains information about the tiles of the mission's map. This includes

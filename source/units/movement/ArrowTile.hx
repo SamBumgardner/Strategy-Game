@@ -1,9 +1,9 @@
-package units;
+package units.movement;
 
 import flixel.FlxSprite;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 
-using units.MoveIDExtender;
+using units.movement.MoveIDExtender;
 
 /**
  * Extension of FlxSprite used to draw arrows that indicate the path of unit movement.

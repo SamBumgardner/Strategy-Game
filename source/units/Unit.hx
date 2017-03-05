@@ -4,6 +4,8 @@ import flixel.FlxSprite;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import observerPattern.Observed;
 import observerPattern.Subject;
+import units.movement.MoveID;
+import units.movement.PossibleMove;
 
 /**
  * Needs to have the following:

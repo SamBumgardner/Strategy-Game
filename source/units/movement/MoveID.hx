@@ -1,4 +1,4 @@
-package units;
+package units.movement;
 
 /**
  * typeDef for the MoveID type, which is really just a wrapper around an int. 

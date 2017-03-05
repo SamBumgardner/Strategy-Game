@@ -13,14 +13,14 @@ import flixel.tweens.misc.NumTween;
 import inputHandlers.ActionInputHandler;
 import inputHandlers.MoveInputHandler;
 import observerPattern.eventSystem.EventTypes;
-import units.MoveID;
-import units.PossibleMove;
+import units.movement.MoveID;
+import units.movement.PossibleMove;
 import utilities.HideableEntity;
 import observerPattern.Observed;
 import observerPattern.Subject;
 import utilities.UpdatingEntity;
 
-using units.MoveIDExtender;
+using units.movement.MoveIDExtender;
 
 /**
  * The cursor that the player moves around the map to direct their characters.

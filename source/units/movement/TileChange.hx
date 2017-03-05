@@ -1,4 +1,4 @@
-package units;
+package units.movement;
 import units.Unit.TeamID;
 
 /**

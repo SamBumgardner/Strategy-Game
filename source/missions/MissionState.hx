@@ -20,13 +20,13 @@ import observerPattern.Observer;
 import observerPattern.eventSystem.EventTypes;
 import observerPattern.eventSystem.InputEvent;
 import units.MapCursorUnitTypes;
-import units.MoveID;
+import units.movement.MoveID;
 import units.Unit;
 import utilities.StrategyOgmoLoader;
 import utilities.UpdatingEntity;
 
 using observerPattern.eventSystem.EventExtender;
-using units.MoveIDExtender;
+using units.movement.MoveIDExtender;
 
 /**
  * Instantiates and coordinates all of the game components of the

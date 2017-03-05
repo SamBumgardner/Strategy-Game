@@ -1,5 +1,6 @@
-package units;
-import units.PossibleMove.NeighborDirections;
+package units.movement;
+import units.movement.MoveID;
+import units.movement.PossibleMove.NeighborDirections;
 
 /**
  * Static extension of the MoveID type.
