@@ -4,7 +4,6 @@ import boxes.ResizableBox;
 import cursors.MapCursor;
 import flixel.FlxG;
 import flixel.FlxState;
-import flixel.group.FlxGroup;
 import flixel.input.keyboard.FlxKey;
 import flixel.math.FlxRect;
 import flixel.tile.FlxTilemap;
@@ -16,14 +15,18 @@ import menus.MissionMenuTypes;
 import menus.ResizableBasicMenu;
 import missions.managers.MapCursorManager;
 import missions.managers.MenuManager;
-import observerPattern.Observed;
+import missions.managers.UnitManager;
 import observerPattern.Observer;
 import observerPattern.eventSystem.EventTypes;
 import observerPattern.eventSystem.InputEvent;
+import units.MapCursorUnitTypes;
+import units.movement.MoveID;
+import units.Unit;
 import utilities.StrategyOgmoLoader;
 import utilities.UpdatingEntity;
 
 using observerPattern.eventSystem.EventExtender;
+using units.movement.MoveIDExtender;
 
 /**
  * Instantiates and coordinates all of the game components of the
@@ -74,6 +77,11 @@ class MissionState extends FlxState
 	private var menuManager:MenuManager;
 	
 	/**
+	 * Manages all units and responds to their events.
+	 */
+	private var unitManager:UnitManager;
+	
+	/**
 	 * Size of the map's tiles, measured in pixels.
 	 */
 	public var tileSize(default, never):Int = 64;
@@ -88,6 +96,12 @@ class MissionState extends FlxState
 	 * Usually is the component of the game that the player is currently interacting with.
 	 */
 	private var currentlyUpdatingObject:UpdatingEntity;
+	
+	/**
+	 * Tracks the state of the Mission. Determines what should be displayed and how
+	 * 	input should be interpreted.
+	 */
+	public var controlState(default, null):PlayerControlStates = PlayerControlStates.FREE_MOVE;
 
 	///////////////////////////////////////
 	//          INITIALIZATION           //
@@ -129,8 +143,15 @@ class MissionState extends FlxState
 		add(terrainTiles);
 		
 		terrainArray = map.loadTerrainArray("terrain_strategic", tileSize);
+		initMoveIDExtender();
 		
 		map.loadEntities(placeEntitites, "entities");
+	}
+	
+	private function initMoveIDExtender():Void
+	{
+		MoveIDExtender.numRows = terrainArray.length;
+		MoveIDExtender.numCols = terrainArray[0].length;
 	}
 	
 	/**
@@ -187,6 +208,7 @@ class MissionState extends FlxState
 	{
 		mapCursorManager = new MapCursorManager(this);
 		menuManager = new MenuManager(this);
+		unitManager = new UnitManager(this);
 	}
 	
 	/**
@@ -196,6 +218,7 @@ class MissionState extends FlxState
 	 */
 	private function addAllFlxObjects():Void
 	{
+		add(unitManager.totalFlxGrp);
 		add(mapCursor.totalFlxGrp);
 		add(menuManager.totalFlxGrp);
 	}
@@ -209,13 +232,157 @@ class MissionState extends FlxState
 	 * Uses manager objects to identify how to respond to the input, then call the 
 	 * 	appropriate manager functions to carry out that response.
 	 * 
-	 * If the cursor is over a player unit, the unit action menu should open.
+	 * If the cursor is over an active player unit, the unit action menu should open.
+	 * If the cursor is over an inactive player unit, then the map action menu should open.
 	 * If the cursor is over an enemy unit, the enemy's attack range should be displayed.
 	 * If the cursor is over no unit, then the map action menu should open.
 	 */
-	public function mapCursorConfirmPressed():Void
+	public function isMapCursorOverUnit():MapCursorUnitTypes
 	{
-		menuManager.openTopLevelMenu(MissionMenuTypes.UNIT_ACTION);
+		var targetRow:Int = mapCursorManager.mapCursor.row;
+		var targetCol:Int = mapCursorManager.mapCursor.col;
+		
+		var targetUnit:Unit = unitManager.getUnitAtLoc(targetRow, targetCol);
+		
+		// Update the unitManager's hovered unit variable.
+		unitManager.changeHoveredUnit(targetUnit);
+		
+		var targetUnitType:MapCursorUnitTypes;
+		
+		if (targetUnit != null)
+		{
+			if(targetUnit.team == TeamType.PLAYER)
+			{
+				if (targetUnit.canAct == true)
+				{
+					// Need to set some variable so game knows which unit is active.
+					targetUnitType = MapCursorUnitTypes.PLAYER_ACTIVE;
+				}
+				else
+				{
+					targetUnitType = MapCursorUnitTypes.PLAYER_INACTIVE;
+				}
+			}
+			else // target unit is on neutral or enemy team
+			{
+				targetUnitType = MapCursorUnitTypes.NOT_PLAYER;
+			}
+		}
+		else
+		{
+			targetUnitType = MapCursorUnitTypes.NONE;
+		}
+		
+		return targetUnitType;
+	}
+	
+	/**
+	 * Takes information from the mapCursorManager and uses it to instruct the unitManager
+	 * 	on how the current movePath and movement arrow should be changed.
+	 */
+	public function calculateNewMoveArrow()
+	{
+		var verticalMove:Int = 
+			mapCursorManager.currCursorPos.getRow() - mapCursorManager.prevCursorPos.getRow();
+		
+		var horizontalMove:Int = 
+			mapCursorManager.currCursorPos.getCol() - mapCursorManager.prevCursorPos.getCol();
+		
+		if (Math.abs(verticalMove + horizontalMove) == 1)
+		{
+			unitManager.updateMoveArrow(mapCursorManager.currCursorPos);
+		}
+		else
+		{
+			// The cursor moved diagonally, so do 2 separate updateMoveArrow calls.
+			unitManager.updateMoveArrow(
+				mapCursorManager.prevCursorPos.getOtherByOffset(verticalMove, 0));
+			
+			unitManager.updateMoveArrow(
+				mapCursorManager.prevCursorPos.getOtherByOffset(verticalMove, horizontalMove));
+		}
+	}
+	
+	/**
+	 * Executes the proper response to a confirm event from the mapCursor, depending on this
+	 * 	object's current controlState.
+	 */
+	public function mapCursorConfirm()
+	{
+		if (controlState == PlayerControlStates.FREE_MOVE)
+		{
+			if (mapCursorManager.hoveredUnitType == PLAYER_ACTIVE)
+			{
+				controlState = PlayerControlStates.PLAYER_UNIT;
+				mapCursorManager.unitSelected(unitManager.hoveredUnit);
+				unitManager.unitSelected(unitManager.hoveredUnit);
+			}
+			else if (mapCursorManager.hoveredUnitType == NOT_PLAYER)
+			{
+				controlState = PlayerControlStates.OTHER_UNIT;
+				mapCursorManager.unitSelected(unitManager.hoveredUnit);
+				unitManager.unitSelected(unitManager.hoveredUnit);
+			}
+			else
+			{
+				controlState = PlayerControlStates.MAP_MENU;
+				openTopLevelMenu(MissionMenuTypes.MAP_ACTION);
+			}
+		}
+		else if (controlState == PlayerControlStates.OTHER_UNIT)
+		{
+			controlState = PlayerControlStates.FREE_MOVE;
+			mapCursorManager.unitUnselected();
+			unitManager.unitUnselected();
+		}
+		else if (controlState == PlayerControlStates.PLAYER_UNIT)
+		{
+			// A move is valid if the tile is empty or contains the selected unit and...
+			//	the tile is within the selected unit's movement range.
+			if ((mapCursorManager.hoveredUnitType == MapCursorUnitTypes.NONE ||
+				unitManager.hoveredUnit == unitManager.selectedUnit) &&
+				mapCursor.selectedLocations.exists(mapCursorManager.currCursorPos))
+			{
+				controlState = PlayerControlStates.UNIT_MENU;
+				unitManager.initiateUnitMovement();
+				mapCursorManager.deactivateMapCursor();
+				// waits to open unit menu until player unit finishes moving.
+			}
+		}
+		
+	}
+	
+	/**
+	 * Order that unitUnselecteds are called matters.
+	 */
+	public function mapCursorCancel():Void
+	{
+		if (controlState == PlayerControlStates.PLAYER_UNIT || 
+			controlState == PlayerControlStates.OTHER_UNIT)
+		{
+			controlState = PlayerControlStates.FREE_MOVE;
+			unitManager.unitUnselected();
+			mapCursorManager.unitUnselected();
+		}
+	}
+	
+	/**
+	 * Executes whatever game logic should occur when a unit's movement has finished.
+	 */
+	public function unitMovementFinished():Void
+	{
+		if (unitManager.selectedUnit.team == TeamType.PLAYER)
+		{
+			menuManager.openTopLevelMenu(MissionMenuTypes.UNIT_ACTION);
+		}
+	}
+	
+	/**
+	 * Public interface that allows external classes to request that a top-level menu be opened.
+	 */
+	public function openTopLevelMenu(menuType:Int):Void
+	{
+		menuManager.openTopLevelMenu(menuType);
 	}
 	
 	/**
@@ -240,16 +407,47 @@ class MissionState extends FlxState
 	 * 	May need to have special behavior when the unit menu was closed.
 	 * 	Shouldn't go back to just free map cursor, should go back to unit being selected
 	 * 	(or special behavior for a move-again type character).
+	 * 
+	 * NOTE:
+	 * 	The current logic isn't really what I want it to end up being. Should check if
+	 * 		the unit is still able to act or if it has done some sort of permanent action.
+	 * 		If it has done some permanent action, then it should not undo the unit move.
 	 */
-	public function allMenusClosed():Void
+	public function allMenusClosed(closedByCancel:Bool):Void
 	{
-		mapCursorManager.activateMapCursor();
+		if (controlState == PlayerControlStates.MAP_MENU)
+		{
+			controlState = PlayerControlStates.FREE_MOVE;
+			mapCursorManager.activateMapCursor();
+		}
+		if (controlState == PlayerControlStates.UNIT_MENU) 
+		{
+			if (closedByCancel)
+			{
+				controlState = PlayerControlStates.PLAYER_UNIT;
+				unitManager.undoUnitMove();
+				mapCursorManager.activateMapCursor();
+				mapCursorManager.jumpToUnit(unitManager.selectedUnit);
+				
+				mapCursorManager.unitSelected(unitManager.hoveredUnit);
+				unitManager.unitSelected(unitManager.hoveredUnit);
+			}
+			else
+			{
+				controlState = PlayerControlStates.FREE_MOVE;
+				mapCursorManager.activateMapCursor();
+				unitManager.updateUnitPos(unitManager.selectedUnit, mapCursor.row, mapCursor.col);
+				unitManager.unitUnselected();
+				mapCursorManager.unitUnselected();
+			}
+		}
 	}
 	
 	/**
 	 * Changes the object currentlyUpdatingObject references & calls the input handlers'
 	 * 	reset functions.
-	 * @param	newObj
+	 * 
+	 * @param	newObj	New UpdatingEntity to become the currentlyUpdatingObject.
 	 */
 	public function changeCurrUpdatingObj(newObj:UpdatingEntity):Void
 	{
@@ -274,6 +472,7 @@ class MissionState extends FlxState
 		ActionInputHandler.bufferActions(elapsed);
 		super.update(elapsed);
 		currentlyUpdatingObject.update(elapsed);
+		unitManager.update(elapsed);
 		MoveInputHandler.updateCycleFinished();
 		ActionInputHandler.updateCycleFinished();
 	}
