@@ -56,7 +56,7 @@ class ResizableBasicMenu extends BasicMenu
 	/**
 	 * Object that contains a set of sprites that can be used as a resizable box.
 	 * Call this object's public functions to do any resizing or interactions with
-	 * the box
+	 *  the box.
 	 */
 	public var resizableBox:ResizableBox;
 	
@@ -157,7 +157,7 @@ class ResizableBasicMenu extends BasicMenu
 	/**
 	 * Helper function for MenuTemplate's reveal().
 	 * Also is responsible for resetting the menu's variables and appearance back to their
-	 * 	starting states. This includes hiding the background higlight graphic of all menu
+	 * 	starting states. This includes hiding the background highlight graphic of all menu
 	 * 	options that are not initally hovered over in the menu.
 	 * 
 	 * In ResizableBasicMenu, it must also hide all menuOptions that are not currently

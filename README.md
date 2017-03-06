@@ -5,13 +5,13 @@ The goal of this project is to put together a complete game with enough polish t
 
 ## Overview
 
-Lead a ragtag team of heroes against overwhelmign odds in a turn-based strategy/RPG hybrid!
+Lead a ragtag team of heroes against overwhelming odds in a turn-based strategy/RPG hybrid!
 
 The game does not currently have a playable demo but you can build and run the game by following the steps below.
 
 ## Getting Started
 
-To build and run Potion-Shop on Windows or Linux (note: only tested on Windows), follow the steps below:
+To build and run Strategy-Game on Windows or Linux (note: only tested on Windows), follow the steps below:
 
 1. Ensure you have [Haxe](http://www.haxe.org/download) and [HaxeFlixel](http://www.haxeflixel.com) installed on your computer.
   * Installing HaxeFlixel should also automatically install [OpenFl](http://www.openfl.org/learn/docs/getting-started/) and [Lime](https://lib.haxe.org/p/lime).
@@ -27,7 +27,7 @@ To build and run Potion-Shop on Windows or Linux (note: only tested on Windows),
 If you're interested in making contributions to this game, please follow the steps outlined below.
 
 * Fork this repository using the button at the top-right part of the page.
-* Create a branch off of `develop` with a name that describes what sort of changes you plan to make.
+* Create a branch off of `master` with a name that describes what sort of changes you plan to make.
 * Make changes/additions/deletions, committing them to your branch as you go. 
  * Aim to make your commits atomic, each dealing with a single subject.
 * When finished, come back to this repository and open a pull request from your branch to `master`.

@@ -137,7 +137,8 @@ class MissionState extends FlxState
 	private function initMap():Void
 	{
 		map = new StrategyOgmoLoader(AssetPaths.forest_1__oel);
-		terrainTiles = map.loadTilemap(AssetPaths.terrain_forest__png, 64, 64, "terrain_visual");
+		terrainTiles = map.loadTilemap(AssetPaths.terrain_forest__png,
+			tileSize, tileSize, "terrain_visual");
 		terrainTiles.follow();
 		add(terrainTiles);
 		
@@ -172,10 +173,11 @@ class MissionState extends FlxState
 		}
 		else
 		{
-		FlxG.camera.follow(mapCursor.cameraHitbox, 1);
-		FlxG.camera.deadzone = new FlxRect (tileSize * deadzoneBorderTiles, 
-			tileSize * deadzoneBorderTiles, FlxG.width - deadzoneBorderTiles * tileSize * 2,
-			FlxG.height - deadzoneBorderTiles * tileSize * 2);
+			var deadzoneWidth:Int = tileSize * deadzoneBorderTiles;
+			FlxG.camera.follow(mapCursor.cameraHitbox, 1);
+			FlxG.camera.deadzone = new FlxRect (deadzoneWidth, deadzoneWidth,
+				FlxG.width - deadzoneWidth * 2,
+				FlxG.height - deadzoneWidth * 2);
 		}
 	}
 	
@@ -211,8 +213,8 @@ class MissionState extends FlxState
 	
 	/**
 	 * Adds all HaxeFlixel-inheriting object to the scene in the correct order.
-	 * Since all of these objects will be controlled some sort of manager, this function just
-	 * 	has to add the totalFlxGrps of all if the state's manager objects.
+	 * Since all of these objects will be controlled by some sort of manager, this function just
+	 * 	has to add the totalFlxGrps of all of the state's manager objects.
 	 */
 	private function addAllFlxObjects():Void
 	{

@@ -213,8 +213,7 @@ class BasicMenu extends MenuTemplate implements VarSizedBox
 	 * Reveals the menu's cursor in addition to default MenuTemplate behavior.
 	 * 
 	 * NOTE:
-	 * 	Does not make the menu visible the menu. 
-	 * 	Use reveal() to make it visible.
+	 * 	Does not make the menu visible. Use reveal() to make it visible.
 	 */
 	override public function activate():Void
 	{
@@ -230,8 +229,8 @@ class BasicMenu extends MenuTemplate implements VarSizedBox
 	/**
 	 * Recieves an array of boolean values that correspond to certain types of input, then
 	 * 	determines what actions to take as a result of that input. This often involves
-	 * 	notifying its observes that the event happened, and lets those observers take care
-	 * 	of manipulation of external objects.
+	 * 	notifying its observers that the event happened, and then lets
+	 * 	those observers take care of manipulation of external objects.
 	 * 
 	 * Is not expecting to ever get a call with heldAction being true (because it uses the 
 	 * 	default MenuTemplate update function) but I set up the test at the start of the function 
