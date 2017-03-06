@@ -7,8 +7,12 @@ The goal of this project is to put together a complete game with enough polish t
 
 Lead a ragtag team of heroes against overwhelming odds in a turn-based strategy/RPG hybrid!
 
-The game does not currently have a playable demo but you can build and run the game by following the steps below.
+![Strategy-Game Screenshot](/docs/Strategy-Game_screenshot.png?raw=true)
 
+We have a (very) basic demo available online - [Play Here!](http://SamBumgardner.Github.io/Strategy-Game)
+
+Use the Arrow Keys to move, [Z] to confirm, and [X] to cancel.
+	
 ## Getting Started
 
 To build and run Strategy-Game on Windows or Linux (note: only tested on Windows), follow the steps below:
@@ -27,10 +31,10 @@ To build and run Strategy-Game on Windows or Linux (note: only tested on Windows
 If you're interested in making contributions to this game, please follow the steps outlined below.
 
 * Fork this repository using the button at the top-right part of the page.
-* Create a branch off of `master` with a name that describes what sort of changes you plan to make.
+* Create a branch off of `develop` with a name that describes what sort of changes you plan to make.
 * Make changes/additions/deletions, committing them to your branch as you go. 
  * Aim to make your commits atomic, each dealing with a single subject.
-* When finished, come back to this repository and open a pull request from your branch to `master`.
+* When finished, come back to this repository and open a pull request from your branch to `develop`.
  * See existing pull requests for a general format to follow.
 * Your pull request will be reviewed, responded to, and hopefully merged in!
 
