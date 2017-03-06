@@ -27,7 +27,7 @@ To build and run Strategy-Game on Windows or Linux (note: only tested on Windows
 If you're interested in making contributions to this game, please follow the steps outlined below.
 
 * Fork this repository using the button at the top-right part of the page.
-* Create a branch off of `develop` with a name that describes what sort of changes you plan to make.
+* Create a branch off of `master` with a name that describes what sort of changes you plan to make.
 * Make changes/additions/deletions, committing them to your branch as you go. 
  * Aim to make your commits atomic, each dealing with a single subject.
 * When finished, come back to this repository and open a pull request from your branch to `master`.
