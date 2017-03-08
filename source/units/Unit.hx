@@ -4,6 +4,7 @@ import flixel.FlxSprite;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import observerPattern.Observed;
 import observerPattern.Subject;
+import units.items.Inventory;
 import units.movement.MoveID;
 import units.movement.PossibleMove;
 
@@ -109,7 +110,7 @@ class Unit extends FlxSprite implements Observed
 	
 	// Inventory
 	
-	private var inventory:Inventory;
+	public var inventory:Inventory;
 	
 	// List of integer ranges this unit can attack from, based on contents of inventory.
 	public var attackRanges:Array<Int>;
