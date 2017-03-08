@@ -191,6 +191,11 @@ class UnitManager implements Observer
 	public var selectedUnit:Unit = null;
 	
 	/**
+	 * Reference to the unit that is the target of the selected unit's current action.
+	 */
+	public var targetUnit:Unit = null;
+	
+	/**
 	 * Tracks the frame of the idle animation that all idling units should be on.
 	 * Should be updated with every update cycle.
 	 * Is used whenever a unit is instructed to start up it's idle animation again.
