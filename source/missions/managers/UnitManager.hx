@@ -847,9 +847,47 @@ class UnitManager implements Observer
 	}
 	
 	/**
-	 * Removes all blocked tiles from the unit's movement range, then calls 
-	 * 	tileBlockedRecalcMove(), passing in all tiles that were both in the
-	 * 	unit's movement range and adjacent to the blocked tiles.
+	 * Helper function for tilesBlockedRecalc(). Passed as an argument into a call
+	 * 	to getValidNeighbors. This function's criteria is that the neighbor tile is already
+	 * 	in the unit's moveTiles map, and that its move ID isn't in the array of MoveIDs 
+	 * 	that represent the directly blocked tiles (both the removed and to-be-removed ones).
+	 * 
+	 * @param	unit			The unit whose moveTiles map should be used during testing.
+	 * @param	directlyBlocked	Array of tiles that were directly blocked during recalculation.
+	 * @param	alreadyRemovedIndex	The heighest index of directlyBlocked that has been removed.
+	 * @param	neighborID		The MoveID that is being tested.
+	 * @param	dirFromOrigin	Not used in this function. Inc. to match requried param types.
+	 * @return	Bool indicating if the provided MoveID is valid for tilesBlockedRecalc().
+	 */
+	private function blockRecalcTest(unit:Unit, directlyBlocked:Array<MoveID>, 
+		alreadyRemovedIndex:Int, neighborID:MoveID, dirFromOrigin:NeighborDirections):Bool
+	{
+		var result:Bool = false;
+		if (unit.moveTiles.exists(neighborID))
+		{
+			result = true;
+			
+			// Now test if the tile is the unprocessed section of the directlyBlocked array
+			for (i in 1...(directlyBlocked.length - alreadyRemovedIndex))
+			{
+				if (directlyBlocked[directlyBlocked.length - i] == neighborID)
+				{
+					result = false;
+				}
+			}
+		}
+		
+		return result;
+	}
+	
+	/**
+	 * Removes all directly blocked tiles from the unit's movement range, then calls 
+	 * 	tileBlockedRecalcMove(), passing tiles that were adjacent to directly blocked
+	 * 	tiles (but not any tiles that were directly blocked).
+	 * 
+	 * After removing all directly & indirectly blocked movement spaces, the array of
+	 * 	all removed tiles is passed in to tileBlockedRecalcAttack() to recalculate the
+	 * 	unit's attack range.
 	 * 
 	 * @param	unit			The unit whose move range is being recalculated.
 	 * @param	blockedTiles	Array of blocked tile locations.
@@ -857,18 +895,22 @@ class UnitManager implements Observer
 	public function tilesBlockedRecalc(unit:Unit, blockedTiles:Array<MoveID>):Void
 	{
 		var tilesToBeChecked:Array<MoveID> = new Array<MoveID>();
-		for (tileID in blockedTiles)
+		for (i in 0...(blockedTiles.length))
 		{
+			var tileID:MoveID = blockedTiles[i];
+			
 			if (unit.moveTiles.exists(tileID))
 			{
 				unit.moveTiles.remove(tileID);
+				
 				tilesToBeChecked = tilesToBeChecked.concat(
-					getValidNeighbors(tileID, [1], tileInMoveTiles.bind(unit)));
+					getValidNeighbors(tileID, [1], blockRecalcTest.bind(unit, blockedTiles, i)));
 			}
 		}
 		
 		var removedTiles:Array<MoveID> = tileBlockedRecalcMove(unit, tilesToBeChecked);
-		removedTiles.concat(blockedTiles);
+		removedTiles = removedTiles.concat(blockedTiles);
+		
 		tileBlockedRecalcAttack(unit, removedTiles);
 	}
 	
