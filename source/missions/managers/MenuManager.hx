@@ -3,6 +3,7 @@ package missions.managers;
 import flixel.FlxG;
 import flixel.group.FlxGroup;
 import menus.BasicMenu;
+import menus.CursorMenuTemplate;
 import menus.MenuTemplate;
 import menus.MissionMenuCreator;
 import menus.MissionMenuTypes;
@@ -930,9 +931,11 @@ class MenuManager implements Observer
 			case EventTypes.CONFIRM:
 			{
 				var menu:MenuTemplate = cast notifier;
+				// At the moment, only cursor-type menus have multiple confirm functions.
 				if (confirmFunctions[menu.subject.ID].length > 1)
 				{
-					confirmFunctions[menu.subject.ID][menu.currMenuOption.id]();
+					var cursorMenu:CursorMenuTemplate = cast menu;
+					confirmFunctions[cursorMenu.subject.ID][cursorMenu.currMenuOption.id]();
 				}
 				else
 				{

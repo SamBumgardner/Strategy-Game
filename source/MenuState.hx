@@ -12,7 +12,7 @@ import flixel.FlxState;
 import flixel.text.FlxText;
 import flixel.ui.FlxButton;
 import flixel.math.FlxMath;
-import menus.MenuTemplate;
+import menus.CursorMenuTemplate;
 import observerPattern.eventSystem.InputEvent;
 import observerPattern.eventSystem.EventTypes;
 import observerPattern.Observed;
@@ -98,7 +98,7 @@ class MenuState extends FlxState implements Observer
 		
 		if (event.getType() == EventTypes.CONFIRM)
 		{
-			if (Std.is(notifier, MenuTemplate))
+			if (Std.is(notifier, CursorMenuTemplate))
 			{
 				trace("The selected MenuOption was: " + (cast notifier).currMenuOption.label.text);
 			}
