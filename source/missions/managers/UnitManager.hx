@@ -853,6 +853,8 @@ class UnitManager implements Observer
 	 * 	that represent the directly blocked tiles (both the removed and to-be-removed ones).
 	 * 
 	 * @param	unit			The unit whose moveTiles map should be used during testing.
+	 * @param	directlyBlocked	Array of tiles that were directly blocked during recalculation.
+	 * @param	alreadyRemovedIndex	The heighest index of directlyBlocked that has been removed.
 	 * @param	neighborID		The MoveID that is being tested.
 	 * @param	dirFromOrigin	Not used in this function. Inc. to match requried param types.
 	 * @return	Bool indicating if the provided MoveID is valid for tilesBlockedRecalc().
