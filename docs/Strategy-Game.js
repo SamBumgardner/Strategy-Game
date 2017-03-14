@@ -97,7 +97,7 @@ ApplicationMain.init = function() {
 	}
 };
 ApplicationMain.main = function() {
-	ApplicationMain.config = { build : "1290", company : "Samuel Bumgardner", file : "Strategy-Game", fps : 60, name : "Strategy-Game", orientation : "", packageName : "com.example.myapp", version : "0.0.1", windows : [{ antialiasing : 0, background : 0, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : false, height : 960, parameters : "{}", resizable : false, stencilBuffer : true, title : "Strategy-Game", vsync : true, width : 1280, x : null, y : null}]};
+	ApplicationMain.config = { build : "1305", company : "Samuel Bumgardner", file : "Strategy-Game", fps : 60, name : "Strategy-Game", orientation : "", packageName : "com.example.myapp", version : "0.0.1", windows : [{ antialiasing : 0, background : 0, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : false, height : 960, parameters : "{}", resizable : false, stencilBuffer : true, title : "Strategy-Game", vsync : true, width : 1280, x : null, y : null}]};
 };
 ApplicationMain.start = function() {
 	var hasMain = false;
@@ -53315,23 +53315,36 @@ missions_managers_UnitManager.prototype = {
 		}
 		this.calculateAttackTiles(unit,this.bfCalcMoveTiles(unit,tilesToBfCalcFrom));
 	}
+	,blockRecalcTest: function(unit,directlyBlocked,alreadyRemovedIndex,neighborID,dirFromOrigin) {
+		var result = false;
+		if(unit.moveTiles.h.hasOwnProperty(neighborID)) {
+			result = true;
+			var _g1 = 1;
+			var _g = directlyBlocked.length - alreadyRemovedIndex;
+			while(_g1 < _g) if(directlyBlocked[directlyBlocked.length - _g1++] == neighborID) {
+				result = false;
+			}
+		}
+		return result;
+	}
 	,tilesBlockedRecalc: function(unit,blockedTiles) {
 		var tilesToBeChecked = [];
-		var _g = 0;
-		while(_g < blockedTiles.length) {
-			var tileID = blockedTiles[_g];
-			++_g;
+		var _g1 = 0;
+		var _g = blockedTiles.length;
+		while(_g1 < _g) {
+			var i = _g1++;
+			var tileID = blockedTiles[i];
 			if(unit.moveTiles.h.hasOwnProperty(tileID)) {
 				unit.moveTiles.remove(tileID);
-				tilesToBeChecked = tilesToBeChecked.concat(this.getValidNeighbors(tileID,[1],(function(a1,f) {
-					return function(a2,a3) {
-						return f[0](a1[0],a2,a3);
+				tilesToBeChecked = tilesToBeChecked.concat(this.getValidNeighbors(tileID,[1],(function(a3,a2,a1,f) {
+					return function(a4,a5) {
+						return f[0](a1[0],a2[0],a3[0],a4,a5);
 					};
-				})([unit],[$bind(this,this.tileInMoveTiles)])));
+				})([i],[blockedTiles],[unit],[$bind(this,this.blockRecalcTest)])));
 			}
 		}
 		var removedTiles = this.tileBlockedRecalcMove(unit,tilesToBeChecked);
-		removedTiles.concat(blockedTiles);
+		removedTiles = removedTiles.concat(blockedTiles);
 		this.tileBlockedRecalcAttack(unit,removedTiles);
 	}
 	,tileBlockedTestFunc: function(unit,fromOrigin,notInMoveRange,neighborID,dirFromOrigin) {
@@ -53474,7 +53487,7 @@ missions_managers_UnitManager.prototype = {
 					}
 				}
 			} else if(currTile.numTimesInBfQueue < 0) {
-				haxe_Log.trace("ERROR: The following tile is in the queue a negative # of times:",{ fileName : "UnitManager.hx", lineNumber : 1200, className : "missions.managers.UnitManager", methodName : "bfCalcMoveTiles", customParams : [currTile]});
+				haxe_Log.trace("ERROR: The following tile is in the queue a negative # of times:",{ fileName : "UnitManager.hx", lineNumber : 1242, className : "missions.managers.UnitManager", methodName : "bfCalcMoveTiles", customParams : [currTile]});
 				break;
 			}
 			++i;
@@ -53589,7 +53602,7 @@ missions_managers_UnitManager.prototype = {
 				colOffset = 1;
 				break;
 			default:
-				haxe_Log.trace("ERROR: Non-orthagonal move provided to updateMoveArrow.",{ fileName : "UnitManager.hx", lineNumber : 1444, className : "missions.managers.UnitManager", methodName : "findNeighborPathToTarget"});
+				haxe_Log.trace("ERROR: Non-orthagonal move provided to updateMoveArrow.",{ fileName : "UnitManager.hx", lineNumber : 1486, className : "missions.managers.UnitManager", methodName : "findNeighborPathToTarget"});
 			}
 			moveTile = this.selectedUnit.moveTiles.h[units_movement_MoveIDExtender.getOtherByOffset(moveTile.moveID,rowOffset,colOffset)];
 		}
@@ -53669,7 +53682,7 @@ missions_managers_UnitManager.prototype = {
 							colOffset = 1;
 							break;
 						default:
-							haxe_Log.trace("ERROR: Non-orthagonal move provided to updateMoveArrow.",{ fileName : "UnitManager.hx", lineNumber : 1591, className : "missions.managers.UnitManager", methodName : "updateMoveArrow"});
+							haxe_Log.trace("ERROR: Non-orthagonal move provided to updateMoveArrow.",{ fileName : "UnitManager.hx", lineNumber : 1633, className : "missions.managers.UnitManager", methodName : "updateMoveArrow"});
 						}
 						moveTile = this.selectedUnit.moveTiles.h[units_movement_MoveIDExtender.getOtherByOffset(moveTile.moveID,rowOffset,colOffset)];
 					}
@@ -53742,7 +53755,7 @@ missions_managers_UnitManager.prototype = {
 			vertMod = -1;
 			break;
 		default:
-			haxe_Log.trace("ERROR: currMoveDir was not a string representation of a direction.",{ fileName : "UnitManager.hx", lineNumber : 1720, className : "missions.managers.UnitManager", methodName : "moveUnit"});
+			haxe_Log.trace("ERROR: currMoveDir was not a string representation of a direction.",{ fileName : "UnitManager.hx", lineNumber : 1762, className : "missions.managers.UnitManager", methodName : "moveUnit"});
 		}
 		var moveDist = this.remainingMoveDist / this.framesLeftInMove;
 		this.remainingMoveDist -= moveDist;
