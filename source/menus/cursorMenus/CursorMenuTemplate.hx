@@ -1,4 +1,4 @@
-package menus;
+package menus.cursorMenus;
 
 import cursors.AnchoredSprite;
 import flixel.FlxBasic;
@@ -13,6 +13,7 @@ import flixel.tweens.FlxTween;
 import flixel.tweens.misc.NumTween;
 import inputHandlers.ActionInputHandler;
 import inputHandlers.MoveInputHandler;
+import menus.cursorMenus.MenuOption;
 import observerPattern.eventSystem.EventTypes;
 import utilities.HideableEntity;
 import observerPattern.Observed;

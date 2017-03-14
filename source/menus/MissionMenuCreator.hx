@@ -1,4 +1,6 @@
 package menus;
+import menus.cursorMenus.BasicMenu;
+import menus.cursorMenus.ResizableBasicMenu;
 
 /**
  * A collection of public static functions used to generate all menus

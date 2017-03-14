@@ -1,4 +1,4 @@
-package menus;
+package menus.cursorMenus;
 
 import boxes.BoxCreator;
 import boxes.VarSizedBox;

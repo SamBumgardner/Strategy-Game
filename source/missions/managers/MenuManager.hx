@@ -2,12 +2,12 @@ package missions.managers;
 
 import flixel.FlxG;
 import flixel.group.FlxGroup;
-import menus.BasicMenu;
-import menus.CursorMenuTemplate;
+import menus.cursorMenus.BasicMenu;
+import menus.cursorMenus.CursorMenuTemplate;
 import menus.MenuTemplate;
 import menus.MissionMenuCreator;
 import menus.MissionMenuTypes;
-import menus.ResizableBasicMenu;
+import menus.cursorMenus.ResizableBasicMenu;
 import missions.MissionState;
 import observerPattern.Observed;
 import observerPattern.Observer;
