@@ -491,19 +491,18 @@ class UnitManager implements Observer
 	 */
 	public function updateUnitPos(unit:Unit, row:Int, col:Int):Void
 	{
-		var oldMoveID:MoveID = MoveIDExtender.newMoveID(unit.mapRow, unit.mapCol);
+		var oldMoveID:MoveID = MoveIDExtender.newMoveID(unit.mapPos.getRow(), unit.mapPos.getCol());
 		var newMoveID:MoveID = MoveIDExtender.newMoveID(row, col);
 		
-		unitMap[unit.mapRow][unit.mapCol] = -1;
-		teamMap[unit.mapRow][unit.mapCol] = TeamID.NONE;
+		unitMap[unit.mapPos.getRow()][unit.mapPos.getCol()] = -1;
+		teamMap[unit.mapPos.getRow()][unit.mapPos.getCol()] = TeamID.NONE;
 		tileChanges.push(new TileChange(oldMoveID, true, unit.teamID));
 		
 		unitMap[row][col] = unit.subject.ID;
 		teamMap[row][col] = unit.teamID;
 		tileChanges.push(new TileChange(newMoveID, false, unit.teamID));
 		
-		unit.mapRow = row;
-		unit.mapCol = col;
+		unit.mapPos = newMoveID;
 		
 		// TEMP CODE: Remove later
 		unitTerrainArr = normTerrainMap;
@@ -632,7 +631,7 @@ class UnitManager implements Observer
 		unit.attackTiles = null;
 		unit.attackTiles = new Map<MoveID, Bool>();
 		
-		var startingTile:PossibleMove = new PossibleMove(START, 0, unit.mapRow, unit.mapCol);
+		var startingTile:PossibleMove = new PossibleMove(START, 0, unit.mapPos.getRow(), unit.mapPos.getCol());
 		unit.moveTiles.set(startingTile.moveID, startingTile);
 		
 		startingTile.numTimesInBfQueue++;
@@ -1504,8 +1503,8 @@ class UnitManager implements Observer
 	 */
 	public function updateMoveArrow(newMoveID:MoveID):Void
 	{
-		if (newMoveID.getRow() == selectedUnit.mapRow && 
-			newMoveID.getCol() == selectedUnit.mapCol)
+		if (newMoveID.getRow() == selectedUnit.mapPos.getRow() && 
+			newMoveID.getCol() == selectedUnit.mapPos.getCol())
 		{
 			// Cursor returned to starting space, clear the array and path cost.
 			hideAllArrowTiles();
@@ -1541,7 +1540,7 @@ class UnitManager implements Observer
 				
 				if (movePath.length == 1)
 				{
-					prevLoc = MoveIDExtender.newMoveID(selectedUnit.mapRow, selectedUnit.mapCol);
+					prevLoc = MoveIDExtender.newMoveID(selectedUnit.mapPos.getRow(), selectedUnit.mapPos.getCol());
 				}
 				else if (movePath.length > 1)
 				{
@@ -1558,7 +1557,7 @@ class UnitManager implements Observer
 				
 				if (movePath.length == 0)
 				{
-					prevLoc = MoveIDExtender.newMoveID(selectedUnit.mapRow, selectedUnit.mapCol);
+					prevLoc = MoveIDExtender.newMoveID(selectedUnit.mapPos.getRow(), selectedUnit.mapPos.getCol());
 				}
 				else if (movePath.length > 0)
 				{
@@ -1580,7 +1579,7 @@ class UnitManager implements Observer
 					if (movePath.length == 1)
 					{
 						prevPrevLoc = 
-							MoveIDExtender.newMoveID(selectedUnit.mapRow, selectedUnit.mapCol);
+							MoveIDExtender.newMoveID(selectedUnit.mapPos.getRow(), selectedUnit.mapPos.getCol());
 					}
 					else if (movePath.length > 1)
 					{
@@ -1782,8 +1781,8 @@ class UnitManager implements Observer
 	 */
 	public function undoUnitMove():Void
 	{
-		selectedUnit.x = selectedUnit.mapCol * parentState.tileSize;
-		selectedUnit.y = selectedUnit.mapRow * parentState.tileSize;
+		selectedUnit.x = selectedUnit.mapPos.getCol() * parentState.tileSize;
+		selectedUnit.y = selectedUnit.mapPos.getRow() * parentState.tileSize;
 		// Or play whatever default move direction the character should use.
 		selectedUnit.animation.play("down");
 	}

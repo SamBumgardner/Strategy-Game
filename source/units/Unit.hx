@@ -6,6 +6,9 @@ import observerPattern.Observed;
 import observerPattern.Subject;
 import units.movement.MoveID;
 import units.movement.PossibleMove;
+import utilities.OnMapEntity;
+
+using units.movement.MoveIDExtender;
 
 /**
  * Needs to have the following:
@@ -68,7 +71,7 @@ import units.movement.PossibleMove;
  * 
  * @author Samuel Bumgardner
  */
-class Unit extends FlxSprite implements Observed
+class Unit extends FlxSprite implements Observed implements OnMapEntity
 {
 	public var spriteHeight(default, never):Int = 96;
 	public var spriteWidth(default, never):Int = 128;
@@ -120,8 +123,7 @@ class Unit extends FlxSprite implements Observed
 	
 	//
 	
-	public var mapRow:Int;
-	public var mapCol:Int;
+	public var mapPos:MoveID;
 	
 	
 	//
@@ -173,8 +175,7 @@ class Unit extends FlxSprite implements Observed
 		animation.play("idle");
 		
 		// Cannot set mapCol = X / tileSize because crashes on Neko.
-		mapCol = col;
-		mapRow = row;
+		mapPos = MoveIDExtender.newMoveID(row, col);
 		
 		subject = new Subject(this, ID);
 		
