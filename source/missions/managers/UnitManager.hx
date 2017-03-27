@@ -739,7 +739,7 @@ class UnitManager implements Observer
 				{
 					var direction:NeighborDirections = NeighborDirections.START;
 					var rowOffset:Int = cast (range - Math.abs(colOffset)) * rowModifier;
-					var neighborTile:MoveID;
+					var neighborTile:MoveID = -1;
 					neighborTile = startTile.getOtherByOffset(rowOffset, colOffset);
 					
 					if (colOffset == 0)
@@ -772,7 +772,7 @@ class UnitManager implements Observer
 					}
 					
 					// If the neighboring tile was outside the map's bounds, it will be null.
-					if (neighborTile != null && testFunc(neighborTile, direction))
+					if (neighborTile != -1 && testFunc(neighborTile, direction))
 					{
 						validNeighbors.push(neighborTile);
 						
@@ -1537,7 +1537,7 @@ class UnitManager implements Observer
 				}
 				// and change the new end-of-arrow sprite to the appropriate arrow end.
 				
-				var prevLoc:MoveID = null;
+				var prevLoc:MoveID = -1;
 				
 				if (movePath.length == 1)
 				{
@@ -1554,7 +1554,7 @@ class UnitManager implements Observer
 			else
 			{
 				// Sets up prevLoc variable, which is needed in the upcoming if statement. 
-				var prevLoc:MoveID = null;
+				var prevLoc:MoveID = -1;
 				
 				if (movePath.length == 0)
 				{
@@ -1575,7 +1575,7 @@ class UnitManager implements Observer
 					// The arrow should be extended according to the direction of movement.
 					totalPathCost += unitTerrainArr[newMoveID.getRow()][newMoveID.getCol()];
 					
-					var prevPrevLoc:MoveID = null;
+					var prevPrevLoc:MoveID = -1;
 					
 					if (movePath.length == 1)
 					{
