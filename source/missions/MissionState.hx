@@ -456,6 +456,35 @@ class MissionState extends FlxState
 		MoveInputHandler.resetNumVars();
 	}
 	
+	
+	/**
+	 * Hands off the provided arguments to unitManager's getValidUnitsInRange, whose
+	 * 	documentation is included below:
+	 * 
+	 * Identifies the group of units within "range" of the current selected unit that
+	 * 	pass the provided test function. Will often be used by target-type menus to 
+	 * 	identify the set of targets they can look at.
+	 * 
+	 * @param	rangesToCheck	An array of neighbor distances to check. [1] means only check
+	 * 							1-distance away neighbors, [1,2] means check both 1- and 
+	 * 							2-distance away neighbors, etc.
+	 * @param	testFunc     	A function that returns true if the neighbor Unit should be 
+	 * 							included in the returned array of valid Units. The first
+	 *                       	argument should be for the currently selected unit, and
+	 *       	             	the second argument should be for the neighbor to be checked.
+	 * 
+	 * @return	An array containing all valid Unit objects within range.
+	 */
+	public function getValidUnitsInRange(rangesToCheck:Array<Int>, 
+		testFunc:Unit->Unit->Bool):Array<Unit>
+	{
+		var unitArray:Array<Unit>;
+		
+		unitArray = unitManager.getValidUnitsInRange(rangesToCheck, testFunc);
+		
+		return unitArray;
+	}
+	
 	///////////////////////////////////////
 	//         UPDATE FUNCTIONS          //
 	///////////////////////////////////////

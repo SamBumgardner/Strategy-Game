@@ -527,6 +527,69 @@ class UnitManager implements Observer
 	}
 	
 	/**
+	 * Identifies the group of units within "range" of the current selected unit that
+	 * 	pass the provided test function. Will often be used by target-type menus to 
+	 * 	identify the set of targets they can look at.
+	 * 
+	 * @param	rangesToCheck	An array of neighbor distances to check. [1] means only check
+	 * 							1-distance away neighbors, [1,2] means check both 1- and 
+	 * 							2-distance away neighbors, etc.
+	 * @param	testFunc     	A function that returns true if the neighbor Unit should be 
+	 * 							included in the returned array of valid Units. The first
+	 *                       	argument should be for the currently selected unit, and
+	 *       	             	the second argument should be for the neighbor to be checked.
+	 * 
+	 * @return	An array containing all valid Unit objects within range.
+	 */
+	public function getValidUnitsInRange(rangesToCheck:Array<Int>, 
+		testFunc:Unit->Unit->Bool):Array<Unit>
+	{
+		var validUnits:Array<Unit> = new Array<Unit>();
+		for (range in rangesToCheck)
+		{
+			for (colOffset in -range...(range+1))
+			{
+				for (rowModifier in [-1, 1])
+				{
+					var rowOffset:Int = cast (range - Math.abs(colOffset)) * rowModifier;
+					
+					var startTile = selectedUnit.mapPos;
+					
+					var neighborLoc:MoveID = startTile.getOtherByOffset(rowOffset, colOffset);
+					
+					// If the neighbor location is in the map...
+					if (neighborLoc != -1)
+					{
+						// Look up the id of the unit at neighbor location.
+						var neighborUnitID:Int = unitMap[neighborLoc.getRow()]
+							[neighborLoc.getCol()];
+						
+						// If the neighboring tile does contain a unit...
+						if (neighborUnitID != -1) 
+						{
+							var neighborUnit:Unit = unitArray[neighborUnitID];
+							
+							// Check if the found unit passes the provided test.
+							if (testFunc(selectedUnit, neighborUnit))
+							{
+								validUnits.push(neighborUnit);
+							}
+						}
+					}
+					
+					// Prevent checking the same square twice when rowOffset is 0.
+					if (rowOffset == 0)
+					{
+						break;
+					}
+				}
+			}
+		}
+		
+		return validUnits;
+	}
+	
+	/**
 	 * Function to satisfy the Observer interface.
 	 * Recieves & responds to notifications from Unit-type objects.
 	 * 
