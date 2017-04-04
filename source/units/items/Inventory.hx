@@ -1,4 +1,4 @@
-package units;
+package units.items;
 
 /**
  * Inventory for a unit
