@@ -34,7 +34,7 @@ class TargetMenuTemplate extends MenuTemplate
 	/**
 	 * Array of the menu's current potential targets.
 	 */
-	private var possibleTargets:Array<OnMapEntity>;
+	public var possibleTargets(default, null):Array<OnMapEntity>;
 	
 	/**
 	 * The currently targeted index in the possibleTargets array.
@@ -51,7 +51,7 @@ class TargetMenuTemplate extends MenuTemplate
 	/**
 	 * Static reference to the targetCursor used by all MapCursor objects.
 	 */
-	private static var targetCursor:MapCursor;
+	public static var targetCursor:MapCursor;
 	
 	
 	///////////////////////////////////////

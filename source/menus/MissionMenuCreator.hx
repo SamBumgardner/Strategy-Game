@@ -1,6 +1,7 @@
 package menus;
 import menus.cursorMenus.BasicMenu;
 import menus.cursorMenus.ResizableBasicMenu;
+import menus.targetMenus.AttackTargetMenu;
 
 /**
  * A collection of public static functions used to generate all menus
@@ -165,9 +166,9 @@ class MissionMenuCreator
 	 * @return	A ResizeableBasicMenu with all of the options needed by the map action menu.
 	 */
 	public static function makeAttackTargetMenu(?X:Float = 0, ?Y:Float = 0, 
-		?ID:Int = 0):ResizableBasicMenu
+		?ID:Int = 0):AttackTargetMenu
 	{
-		return new ResizableBasicMenu(X, Y, ["Target 1", "Target 2"], ID);
+		return new AttackTargetMenu(ID);
 	}
 	
 	/**

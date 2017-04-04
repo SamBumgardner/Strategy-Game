@@ -8,11 +8,15 @@ import menus.MenuTemplate;
 import menus.MissionMenuCreator;
 import menus.MissionMenuTypes;
 import menus.cursorMenus.ResizableBasicMenu;
+import menus.cursorMenus.optionEnums.UnitActionMenuOptions;
+import menus.targetMenus.AttackTargetMenu;
+import menus.targetMenus.TargetMenuTemplate;
 import missions.MissionState;
 import observerPattern.Observed;
 import observerPattern.Observer;
 import observerPattern.eventSystem.EventTypes;
 import observerPattern.eventSystem.InputEvent;
+import units.targeting.SimpleTargetTests;
 import utilities.PossiblePosTracker;
 
 using observerPattern.eventSystem.EventExtender;
@@ -76,7 +80,7 @@ class MenuManager implements Observer
 	/**
 	 * Menu used to select which enemy unit to attack.
 	 */
-	private var attackTargetMenu:ResizableBasicMenu;
+	private var attackTargetMenu:AttackTargetMenu;
 	
 	/**
 	 * Menu used to select which allied unit to heal.
@@ -134,7 +138,14 @@ class MenuManager implements Observer
 	private var activeMenuStack:Array<MenuTemplate> = new Array<MenuTemplate>();
 	
 	/**
-	 * Array containing al functions that may need to be called as a result of the "cancel"
+	 * Array containing all functions that need to be called as a menu opens,
+	 * 	to refresh their available options to whatever they should be in their
+	 * 	current state.
+	 */
+	private var openFunctions:Array<Void->Void> = new Array<Void->Void>();
+	
+	/**
+	 * Array containing all functions that may need to be called as a result of the "cancel"
 	 * 	input being pressed inside of a menu.
 	 * 
 	 * Each menu has one cancel function, so a single array is all that is needed.
@@ -267,6 +278,8 @@ class MenuManager implements Observer
 	 */
 	private function fillTotalFlxGrp():Void
 	{
+		totalFlxGrp.add(TargetMenuTemplate.targetCursor.totalFlxGrp);
+		
 		totalFlxGrp.add(mapActionMenu.totalFlxGrp);
 		totalFlxGrp.add(unitActionMenu.totalFlxGrp);
 		totalFlxGrp.add(unitInvMenu.totalFlxGrp);
@@ -289,14 +302,22 @@ class MenuManager implements Observer
 		// Initial setup
 		for (i in 0...MissionMenuTypes.NUM_OF_MENUS)
 		{
+			openFunctions.push(defaultOpen);
 			cancelFunctions.push(popCancel);
 			confirmFunctions.push(new Array<Void->Void>());
 		}
+		
+		// non-default open menu functions setup.
+		
+		openFunctions[MissionMenuTypes.UNIT_ACTION] = unitActionMenuOpen;
+		openFunctions[MissionMenuTypes.ATTACK_TARGET] = attackTargetMenuOpen;
+		
 		
 		// non-default cancel functions
 		cancelFunctions[MissionMenuTypes.UNIT_ACTION] = unitActionMenuCancel;
 		cancelFunctions[MissionMenuTypes.TRADE_TARGET] = tradeMenuCancel;
 		cancelFunctions[MissionMenuTypes.TRADE_ACTION] = tradeMenuCancel;
+		
 		
 		// confirm function setup.
 		
@@ -363,6 +384,7 @@ class MenuManager implements Observer
 		{
 			activeMenuStack[activeMenuStack.length - 2].deactivate();
 		}
+		
 		activateTopMenu();
 	}
 	
@@ -441,6 +463,10 @@ class MenuManager implements Observer
 	private function activateTopMenu():Void
 	{
 		var menuToActivate:MenuTemplate = activeMenuStack[activeMenuStack.length - 1];
+		
+		// Call the menu's corresponding open function.
+		openFunctions[menuToActivate.subject.ID](); 
+		
 		menuToActivate.activate();
 		menuToActivate.reveal();
 		
@@ -476,6 +502,53 @@ class MenuManager implements Observer
 		
 		// Reveal the menu with the searched for ID, or the bottom menu in the stack.
 		activeMenuStack[activeMenuStack.length - 1 - i].reveal();
+	}
+	
+	
+	///////////////////////////////////////
+	//        MENU OPEN FUNCTIONS        //
+	///////////////////////////////////////
+	
+	/**
+	 * Default open behavior: do nothing out of the ordinary.
+	 */
+	private function defaultOpen():Void{}
+	
+	/**
+	 * Checks which of the unitActionMenu's options should be visible this time.
+	 */
+	private function unitActionMenuOpen():Void
+	{
+		// Start with all 9 possible options set to be displayed.
+		var whichOptionsActive:Array<Bool> = [true, true, true, true, true, 
+		                                      true, true, true, true];
+		
+		var selectedUnit = parentState.getSelectedUnit();
+		
+		
+		// Checking ATTACK option...
+		//  If the unit has no weapons, no attacking.
+		if (selectedUnit.attackRanges.length == 0)
+		{
+			whichOptionsActive[UnitActionMenuOptions.ATTACK] = false;
+		}
+		// 	If there are no enemies in range of any of the unit's weapons, no attacking.
+		else if (parentState.getValidUnitsInRange(selectedUnit.attackRanges, 
+			SimpleTargetTests.enemyUnitTest).length == 0)
+		{
+			whichOptionsActive[UnitActionMenuOptions.ATTACK] = false;
+		}
+		
+		
+		unitActionMenu.changeMenuOptions(whichOptionsActive);
+	}
+	
+	/**
+	 * Refreshes the set of available targets based on the selected unit's current weapon.
+	 */
+	private function attackTargetMenuOpen():Void
+	{
+		attackTargetMenu.refreshTargets(parentState);
 	}
 	
 	
@@ -874,7 +947,7 @@ class MenuManager implements Observer
 			unitActionMenu.setPos(rootMenuPos.leftX, rootMenuPos.topY);
 			
 			tradeTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
-			attackTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
+			//attackTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			healTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			rescueTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			takeTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
@@ -888,8 +961,8 @@ class MenuManager implements Observer
 			
 			tradeTargetMenu.setPos(cornerMenuPos.rightX - tradeTargetMenu.boxWidth, 
 				cornerMenuPos.topY);
-			attackTargetMenu.setPos(cornerMenuPos.rightX - attackTargetMenu.boxWidth, 
-				cornerMenuPos.topY);
+			//attackTargetMenu.setPos(cornerMenuPos.rightX - attackTargetMenu.boxWidth, 
+			//	cornerMenuPos.topY);
 			healTargetMenu.setPos(cornerMenuPos.rightX - healTargetMenu.boxWidth, 
 				cornerMenuPos.topY);
 			rescueTargetMenu.setPos(cornerMenuPos.rightX - rescueTargetMenu.boxWidth, 
