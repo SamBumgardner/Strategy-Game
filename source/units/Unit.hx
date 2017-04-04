@@ -125,6 +125,10 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	
 	public var mapPos:MoveID;
 	
+	//
+	
+	public var preMoveMapPos:MoveID;
+	
 	
 	//
 	
@@ -176,6 +180,7 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		
 		// Cannot set mapCol = X / tileSize because crashes on Neko.
 		mapPos = MoveIDExtender.newMoveID(row, col);
+		preMoveMapPos = mapPos;
 		
 		subject = new Subject(this, ID);
 		

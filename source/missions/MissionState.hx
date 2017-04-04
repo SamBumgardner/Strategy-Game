@@ -344,7 +344,7 @@ class MissionState extends FlxState
 				mapCursor.selectedLocations.exists(mapCursorManager.currCursorPos))
 			{
 				controlState = PlayerControlStates.UNIT_MENU;
-				unitManager.initiateUnitMovement();
+				unitManager.initiateUnitMovement(mapCursor.row, mapCursor.col);
 				mapCursorManager.deactivateMapCursor();
 				// waits to open unit menu until player unit finishes moving.
 			}
@@ -436,7 +436,7 @@ class MissionState extends FlxState
 			{
 				controlState = PlayerControlStates.FREE_MOVE;
 				mapCursorManager.activateMapCursor();
-				unitManager.updateUnitPos(unitManager.selectedUnit, mapCursor.row, mapCursor.col);
+				unitManager.confirmUnitMove();
 				unitManager.unitUnselected();
 				mapCursorManager.unitUnselected();
 			}
