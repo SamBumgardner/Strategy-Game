@@ -61,9 +61,9 @@ class TargetMenuTemplate extends MenuTemplate
 	/**
 	 * Initializer
 	 */
-	public function new() 
+	public function new(ID:Int) 
 	{
-		super();
+		super(0, 0, ID);
 		
 		// Do one-time initialization of the static targetCursor.
 		if (targetCursor == null)
@@ -172,7 +172,7 @@ class TargetMenuTemplate extends MenuTemplate
 	 *  of eligible targets.
 	 * Logic should be handled in child classes.
 	 */
-	public function refreshTargets():Void {}
+	public function refreshTargets(parentState:MissionState):Void {}
 	
 	
 	///////////////////////////////////////

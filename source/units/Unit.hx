@@ -4,6 +4,8 @@ import flixel.FlxSprite;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import observerPattern.Observed;
 import observerPattern.Subject;
+import units.items.Inventory;
+import units.items.Weapon;
 import units.movement.MoveID;
 import units.movement.PossibleMove;
 import utilities.OnMapEntity;
@@ -117,6 +119,8 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	// List of integer ranges this unit can attack from, based on contents of inventory.
 	public var attackRanges:Array<Int>;
 	
+	public var equippedWeapon:Weapon = new Weapon();
+	
 	//
 	
 	private var statChangeArr:Array<StatChange>;
@@ -194,7 +198,8 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		else if (team == TeamType.OTHER)
 			teamID = TeamID.OTHER;
 		move = 5;
-		attackRanges = [1,2];
+		// Should actually display the union of all attack ranges in the backpack.
+		attackRanges = equippedWeapon.attackRanges;
 	}
 	
 	

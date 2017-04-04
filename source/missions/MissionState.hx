@@ -456,6 +456,15 @@ class MissionState extends FlxState
 		MoveInputHandler.resetNumVars();
 	}
 	
+	/**
+	 * Gets the value of unitManager's selectedUnit variable.
+	 * 
+	 * @return	The unitManager's currently selectedUnit.
+	 */
+	public function getSelectedUnit():Unit
+	{
+		return unitManager.selectedUnit;
+	}
 	
 	/**
 	 * Hands off the provided arguments to unitManager's getValidUnitsInRange, whose
