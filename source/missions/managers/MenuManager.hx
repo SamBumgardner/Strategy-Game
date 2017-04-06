@@ -10,6 +10,7 @@ import menus.MissionMenuTypes;
 import menus.cursorMenus.ResizableBasicMenu;
 import menus.cursorMenus.optionEnums.UnitActionMenuOptions;
 import menus.targetMenus.AttackTargetMenu;
+import menus.targetMenus.HealTargetMenu;
 import menus.targetMenus.TalkTargetMenu;
 import menus.targetMenus.TargetMenuTemplate;
 import missions.MissionState;
@@ -86,7 +87,7 @@ class MenuManager implements Observer
 	/**
 	 * Menu used to select which allied unit to heal.
 	 */
-	private var healTargetMenu:ResizableBasicMenu;
+	private var healTargetMenu:HealTargetMenu;
 	
 	/**
 	 * Menu used to select which adjacent unit to talk to.
@@ -322,6 +323,7 @@ class MenuManager implements Observer
 		
 		openFunctions[MissionMenuTypes.UNIT_ACTION] = unitActionMenuOpen;
 		openFunctions[MissionMenuTypes.ATTACK_TARGET] = attackTargetMenuOpen;
+		openFunctions[MissionMenuTypes.HEAL_TARGET] = healTargetMenuOpen;
 		openFunctions[MissionMenuTypes.TALK_TARGET] = talkTargetMenuOpen;
 		
 		
@@ -562,6 +564,11 @@ class MenuManager implements Observer
 	private function attackTargetMenuOpen():Void
 	{
 		attackTargetMenu.refreshTargets(parentState);
+	}
+	
+	private function healTargetMenuOpen():Void
+	{
+		healTargetMenu.refreshTargets(parentState);
 	}
 	
 	private function talkTargetMenuOpen():Void
@@ -978,10 +985,10 @@ class MenuManager implements Observer
 			
 			tradeTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			//attackTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
-			healTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			rescueTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			takeTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			dropTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
+			//healTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			//talkTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 		}
 		else if (goToLeft != menusOnLeft && !goToLeft)
@@ -994,14 +1001,14 @@ class MenuManager implements Observer
 				cornerMenuPos.topY);
 			//attackTargetMenu.setPos(cornerMenuPos.rightX - attackTargetMenu.boxWidth, 
 			//	cornerMenuPos.topY);
-			healTargetMenu.setPos(cornerMenuPos.rightX - healTargetMenu.boxWidth, 
-				cornerMenuPos.topY);
 			rescueTargetMenu.setPos(cornerMenuPos.rightX - rescueTargetMenu.boxWidth, 
 				cornerMenuPos.topY);
 			takeTargetMenu.setPos(cornerMenuPos.rightX - takeTargetMenu.boxWidth, 
 				cornerMenuPos.topY);
 			dropTargetMenu.setPos(cornerMenuPos.rightX - dropTargetMenu.boxWidth, 
 				cornerMenuPos.topY);
+			//healTargetMenu.setPos(cornerMenuPos.rightX - healTargetMenu.boxWidth, 
+			//	cornerMenuPos.topY);
 			//talkTargetMenu.setPos(cornerMenuPos.rightX - healTargetMenu.boxWidth, 
 			//	cornerMenuPos.topY);
 		}
