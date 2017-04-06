@@ -10,6 +10,7 @@ import menus.MissionMenuTypes;
 import menus.cursorMenus.ResizableBasicMenu;
 import menus.cursorMenus.optionEnums.UnitActionMenuOptions;
 import menus.targetMenus.AttackTargetMenu;
+import menus.targetMenus.TalkTargetMenu;
 import menus.targetMenus.TargetMenuTemplate;
 import missions.MissionState;
 import observerPattern.Observed;
@@ -86,6 +87,11 @@ class MenuManager implements Observer
 	 * Menu used to select which allied unit to heal.
 	 */
 	private var healTargetMenu:ResizableBasicMenu;
+	
+	/**
+	 * Menu used to select which adjacent unit to talk to.
+	 */
+	private var talkTargetMenu:TalkTargetMenu;
 	
 	/**
 	 * Menu used to select which allied unit to rescue.
@@ -258,6 +264,10 @@ class MenuManager implements Observer
 			cornerMenuPos.topY, MissionMenuTypes.HEAL_TARGET);
 		healTargetMenu.subject.addObserver(this);
 		
+		talkTargetMenu = MissionMenuCreator.makeTalkTargetMenu(cornerMenuPos.leftX,
+			cornerMenuPos.topY, MissionMenuTypes.TALK_TARGET);
+		talkTargetMenu.subject.addObserver(this);
+		
 		rescueTargetMenu = MissionMenuCreator.makeRescueTargetMenu(cornerMenuPos.leftX,
 			cornerMenuPos.topY, MissionMenuTypes.RESCUE_TARGET);
 		rescueTargetMenu.subject.addObserver(this);
@@ -289,6 +299,7 @@ class MenuManager implements Observer
 		totalFlxGrp.add(weaponSelectMenu.totalFlxGrp);
 		totalFlxGrp.add(attackTargetMenu.totalFlxGrp);
 		totalFlxGrp.add(healTargetMenu.totalFlxGrp);
+		totalFlxGrp.add(talkTargetMenu.totalFlxGrp);
 		totalFlxGrp.add(rescueTargetMenu.totalFlxGrp);
 		totalFlxGrp.add(takeTargetMenu.totalFlxGrp);
 		totalFlxGrp.add(dropTargetMenu.totalFlxGrp);
@@ -311,6 +322,7 @@ class MenuManager implements Observer
 		
 		openFunctions[MissionMenuTypes.UNIT_ACTION] = unitActionMenuOpen;
 		openFunctions[MissionMenuTypes.ATTACK_TARGET] = attackTargetMenuOpen;
+		openFunctions[MissionMenuTypes.TALK_TARGET] = talkTargetMenuOpen;
 		
 		
 		// non-default cancel functions
@@ -356,6 +368,7 @@ class MenuManager implements Observer
 		confirmFunctions[MissionMenuTypes.WEAPON_SELECT].push(weaponSelectConfirm);
 		confirmFunctions[MissionMenuTypes.ATTACK_TARGET].push(attackTargetConfirm);
 		confirmFunctions[MissionMenuTypes.HEAL_TARGET].push(healTargetConfirm);
+		confirmFunctions[MissionMenuTypes.TALK_TARGET].push(talkTargetConfirm);
 		confirmFunctions[MissionMenuTypes.RESCUE_TARGET].push(rescueTargetConfirm);
 		confirmFunctions[MissionMenuTypes.TAKE_TARGET].push(takeTargetConfirm);
 		confirmFunctions[MissionMenuTypes.DROP_TARGET].push(dropTargetConfirm);
@@ -551,6 +564,11 @@ class MenuManager implements Observer
 		attackTargetMenu.refreshTargets(parentState);
 	}
 	
+	private function talkTargetMenuOpen():Void
+	{
+		talkTargetMenu.refreshTargets(parentState);
+	}
+	
 	
 	///////////////////////////////////////
 	//       MENU CONFIRM FUNCTIONS      //
@@ -632,7 +650,8 @@ class MenuManager implements Observer
 	private function talkConfirm():Void
 	{
 		trace("Talk!");
-		clearMenuStack();
+		hideMenuStack();
+		pushMenuStack(talkTargetMenu);
 	}
 	
 	/**
@@ -813,6 +832,17 @@ class MenuManager implements Observer
 	}
 	
 	
+	// talkTargetMenu confirm function //
+	
+	/**
+	 * Called when any option in the talkTargetMenu is selected.
+	 */
+	private function talkTargetConfirm():Void
+	{
+		trace("Selected target to talk to!");
+		clearMenuStack();
+	}
+	
 	// rescueTargetMenu confirm function //
 	
 	/**
@@ -952,6 +982,7 @@ class MenuManager implements Observer
 			rescueTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			takeTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			dropTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
+			//talkTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 		}
 		else if (goToLeft != menusOnLeft && !goToLeft)
 		{
@@ -971,6 +1002,8 @@ class MenuManager implements Observer
 				cornerMenuPos.topY);
 			dropTargetMenu.setPos(cornerMenuPos.rightX - dropTargetMenu.boxWidth, 
 				cornerMenuPos.topY);
+			//talkTargetMenu.setPos(cornerMenuPos.rightX - healTargetMenu.boxWidth, 
+			//	cornerMenuPos.topY);
 		}
 		
 		menusOnLeft = goToLeft;

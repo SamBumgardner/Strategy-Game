@@ -2,6 +2,7 @@ package menus;
 import menus.cursorMenus.BasicMenu;
 import menus.cursorMenus.ResizableBasicMenu;
 import menus.targetMenus.AttackTargetMenu;
+import menus.targetMenus.TalkTargetMenu;
 
 /**
  * A collection of public static functions used to generate all menus
@@ -184,6 +185,12 @@ class MissionMenuCreator
 		?ID:Int = 0):ResizableBasicMenu
 	{
 		return new ResizableBasicMenu(X, Y, ["Target 1", "Target 2"], ID);
+	}
+	
+	public static function makeTalkTargetMenu(?X:Float = 0, ?Y:Float = 0,
+		?ID:Int = 0):TalkTargetMenu
+	{
+		return new TalkTargetMenu(ID);
 	}
 	
 	/**
