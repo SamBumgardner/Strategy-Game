@@ -20,6 +20,8 @@ package units.items;
 class Inventory
 {
 
+	public var items:Array<Item> = new Array<Item>();
+	
 	public function new() 
 	{
 		

@@ -116,7 +116,7 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	
 	// Inventory
 	
-	private var inventory:Inventory;
+	public var inventory(default, null):Inventory;
 	
 	// List of integer ranges this unit can attack from, based on contents of inventory.
 	public var attackRanges:Array<Int>;
@@ -125,6 +125,11 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	public var healRanges:Array<Int>;
 	
 	public var equippedItem:Item;
+	
+	
+	// Rescued info
+	
+	public var rescuedUnit:Unit;
 	
 	//
 	
@@ -203,6 +208,12 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		else if (team == TeamType.OTHER)
 			teamID = TeamID.OTHER;
 		move = 5;
+		
+		weight = 5;
+		carry = 5;
+		
+		inventory = new Inventory();
+		
 		equippedItem = new WeaponItem();
 		
 		// Should actually display the union of all attack ranges in the backpack.

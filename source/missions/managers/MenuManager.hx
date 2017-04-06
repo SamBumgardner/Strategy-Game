@@ -22,6 +22,7 @@ import observerPattern.Observed;
 import observerPattern.Observer;
 import observerPattern.eventSystem.EventTypes;
 import observerPattern.eventSystem.InputEvent;
+import units.Unit;
 import units.targeting.SimpleTargetTests;
 import utilities.PossiblePosTracker;
 
@@ -545,22 +546,76 @@ class MenuManager implements Observer
 		var whichOptionsActive:Array<Bool> = [true, true, true, true, true, 
 		                                      true, true, true, true];
 		
-		var selectedUnit = parentState.getSelectedUnit();
-		
+		var selectedUnit:Unit = parentState.getSelectedUnit();
 		
 		// Checking ATTACK option...
-		//  If the unit has no weapons, no attacking.
-		if (selectedUnit.attackRanges.length == 0)
-		{
-			whichOptionsActive[UnitActionMenuOptions.ATTACK] = false;
-		}
 		// 	If there are no enemies in range of any of the unit's weapons, no attacking.
-		else if (parentState.getValidUnitsInRange(selectedUnit.attackRanges, 
+		if (parentState.getValidUnitsInRange(selectedUnit.attackRanges, 
 			SimpleTargetTests.enemyUnitTest).length == 0)
 		{
 			whichOptionsActive[UnitActionMenuOptions.ATTACK] = false;
 		}
 		
+		// Checking HEAL option...
+		// 	If there are no allies in range of the unit's healing items, no healing.
+		if (parentState.getValidUnitsInRange(selectedUnit.healRanges,
+			SimpleTargetTests.alliedUnitTest).length == 0)
+		{
+			whichOptionsActive[UnitActionMenuOptions.HEAL] = false;
+		}
+		
+		// Checking TALK option...
+		// 	If there are no talking units adjacent to the selected unit, no talking.
+		// 	If there are adjacent talking units, need to make sure they can talk to this unit.
+		if (parentState.getValidUnitsInRange([1], TalkTargetMenu.talkTargetTest).length == 0)
+		{
+			whichOptionsActive[UnitActionMenuOptions.TALK] = false;
+		}
+		
+		// Checking RESCUE option...
+		// 	If the selected unit is already carrying a rescued ally, cannot rescue.
+		// 	If no adjacent ally has a weight lower than this unit's carry, cannot rescue.
+		if (selectedUnit.rescuedUnit != null || parentState.getValidUnitsInRange([1], 
+			RescueTargetMenu.rescueTargetTest).length == 0)
+		{
+			whichOptionsActive[UnitActionMenuOptions.RESCUE] = false;
+		}
+		
+		// Checking TAKE option...
+		// 	If the selected unit is already rescuing someone, cannot take.
+		//  If the selected unit is not adjacent to any allies, cannot take.
+		// 	If the selected unit is not adjacent to any mid-rescue units, cannot take.
+		//  If the selected unit does not have a higher carry stat than the adjacent 
+		// 		rescued unit, cannot take.
+		if (selectedUnit.rescuedUnit != null || parentState.getValidUnitsInRange([1],
+			TakeTargetMenu.takeTargetTest).length == 0)
+		{
+			whichOptionsActive[UnitActionMenuOptions.TAKE] = false;
+		}
+		
+		// Checking DROP option...
+		// If the selected unit isn't carrying a rescued ally, no drop option.
+		// If there is no adjacent terrain that the other unit can stand in, no drop option.
+		if (selectedUnit.rescuedUnit == null)
+		{
+			// Still need to implement check for dropability in other terrain.
+			whichOptionsActive[UnitActionMenuOptions.DROP] = false;
+		}
+		
+		
+		// Checking ITEM option...
+		// 	If the selected unit has no items, no item option.
+		if (selectedUnit.inventory.items.length == 0)
+		{
+			whichOptionsActive[UnitActionMenuOptions.ITEM] = false;
+		}
+		
+		// Checking TRADE option...
+		// 	If the selected unit isn't adjacent to any allies, cannot trade.
+		if (parentState.getValidUnitsInRange([1], SimpleTargetTests.alliedUnitTest).length == 0)
+		{
+			whichOptionsActive[UnitActionMenuOptions.TRADE] = false;
+		}
 		
 		unitActionMenu.changeMenuOptions(whichOptionsActive);
 	}
