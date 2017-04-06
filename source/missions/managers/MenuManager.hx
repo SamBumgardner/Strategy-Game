@@ -13,6 +13,7 @@ import menus.targetMenus.AttackTargetMenu;
 import menus.targetMenus.HealTargetMenu;
 import menus.targetMenus.TalkTargetMenu;
 import menus.targetMenus.TargetMenuTemplate;
+import menus.targetMenus.TradeTargetMenu;
 import missions.MissionState;
 import observerPattern.Observed;
 import observerPattern.Observer;
@@ -67,7 +68,7 @@ class MenuManager implements Observer
 	/**
 	 * Menu used to select which other unit to trade with.
 	 */
-	private var tradeTargetMenu:ResizableBasicMenu;
+	private var tradeTargetMenu:TradeTargetMenu;
 	
 	/**
 	 * Menu used to trade items between two units.
@@ -325,6 +326,7 @@ class MenuManager implements Observer
 		openFunctions[MissionMenuTypes.ATTACK_TARGET] = attackTargetMenuOpen;
 		openFunctions[MissionMenuTypes.HEAL_TARGET] = healTargetMenuOpen;
 		openFunctions[MissionMenuTypes.TALK_TARGET] = talkTargetMenuOpen;
+		openFunctions[MissionMenuTypes.TRADE_TARGET] = tradeTargetMenuOpen;
 		
 		
 		// non-default cancel functions
@@ -574,6 +576,11 @@ class MenuManager implements Observer
 	private function talkTargetMenuOpen():Void
 	{
 		talkTargetMenu.refreshTargets(parentState);
+	}
+	
+	private function tradeTargetMenuOpen():Void
+	{
+		tradeTargetMenu.refreshTargets(parentState);
 	}
 	
 	
@@ -983,7 +990,7 @@ class MenuManager implements Observer
 			mapActionMenu.setPos(rootMenuPos.leftX, rootMenuPos.topY);
 			unitActionMenu.setPos(rootMenuPos.leftX, rootMenuPos.topY);
 			
-			tradeTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
+			//tradeTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			//attackTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			rescueTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			takeTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
@@ -997,8 +1004,8 @@ class MenuManager implements Observer
 				rootMenuPos.topY);
 			mapActionMenu.setPos(rootMenuPos.rightX - mapActionMenu.boxWidth, rootMenuPos.topY);
 			
-			tradeTargetMenu.setPos(cornerMenuPos.rightX - tradeTargetMenu.boxWidth, 
-				cornerMenuPos.topY);
+			//tradeTargetMenu.setPos(cornerMenuPos.rightX - tradeTargetMenu.boxWidth, 
+			//	cornerMenuPos.topY);
 			//attackTargetMenu.setPos(cornerMenuPos.rightX - attackTargetMenu.boxWidth, 
 			//	cornerMenuPos.topY);
 			rescueTargetMenu.setPos(cornerMenuPos.rightX - rescueTargetMenu.boxWidth, 

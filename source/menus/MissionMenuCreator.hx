@@ -4,6 +4,7 @@ import menus.cursorMenus.ResizableBasicMenu;
 import menus.targetMenus.AttackTargetMenu;
 import menus.targetMenus.HealTargetMenu;
 import menus.targetMenus.TalkTargetMenu;
+import menus.targetMenus.TradeTargetMenu;
 
 /**
  * A collection of public static functions used to generate all menus
@@ -123,9 +124,9 @@ class MissionMenuCreator
 	 * @return	A ResizeableBasicMenu with all of the options needed by the map action menu.
 	 */
 	public static function makeTradeTargetMenu(?X:Float = 0, ?Y:Float = 0, 
-		?ID:Int = 0):ResizableBasicMenu
+		?ID:Int = 0):TradeTargetMenu
 	{
-		return new ResizableBasicMenu(X, Y, ["Target 1", "Target 2"], ID);
+		return new TradeTargetMenu(ID);
 	}
 	
 	/**
