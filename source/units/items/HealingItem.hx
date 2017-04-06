@@ -4,15 +4,14 @@ package units.items;
  * ...
  * @author Samuel Bumgardner
  */
-class Weapon extends Item
+class HealingItem extends Item
 {
 
-	public var attackRanges:Array<Int> = [1, 2];
+	public var healRanges:Array<Int> = [1, 2];
 	
 	public function new() 
 	{
 		super();
-		
 	}
 	
 }
