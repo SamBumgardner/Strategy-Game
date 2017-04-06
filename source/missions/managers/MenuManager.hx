@@ -10,6 +10,7 @@ import menus.MissionMenuTypes;
 import menus.cursorMenus.ResizableBasicMenu;
 import menus.cursorMenus.optionEnums.UnitActionMenuOptions;
 import menus.targetMenus.AttackTargetMenu;
+import menus.targetMenus.DropTargetMenu;
 import menus.targetMenus.HealTargetMenu;
 import menus.targetMenus.RescueTargetMenu;
 import menus.targetMenus.TakeTargetMenu;
@@ -110,7 +111,7 @@ class MenuManager implements Observer
 	/**
 	 * Menu used to select where to drop a rescued unit.
 	 */
-	private var dropTargetMenu:ResizableBasicMenu;
+	private var dropTargetMenu:DropTargetMenu;
 	
 	/**
 	 * X and Y coordinates that "root" level menus (unitAction & mapAction) should use to set 
@@ -592,6 +593,11 @@ class MenuManager implements Observer
 		takeTargetMenu.refreshTargets(parentState);
 	}
 	
+	private function dropTargetMenuOpen():Void
+	{
+		dropTargetMenu.refreshTargets(parentState);
+	}
+	
 	private function tradeTargetMenuOpen():Void
 	{
 		tradeTargetMenu.refreshTargets(parentState);
@@ -1006,11 +1012,11 @@ class MenuManager implements Observer
 			
 			//tradeTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			//attackTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
-			dropTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			//healTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			//talkTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			//rescueTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			//takeTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
+			//dropTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 		}
 		else if (goToLeft != menusOnLeft && !goToLeft)
 		{
@@ -1022,8 +1028,6 @@ class MenuManager implements Observer
 			//	cornerMenuPos.topY);
 			//attackTargetMenu.setPos(cornerMenuPos.rightX - attackTargetMenu.boxWidth, 
 			//	cornerMenuPos.topY);
-			dropTargetMenu.setPos(cornerMenuPos.rightX - dropTargetMenu.boxWidth, 
-				cornerMenuPos.topY);
 			//healTargetMenu.setPos(cornerMenuPos.rightX - healTargetMenu.boxWidth, 
 			//	cornerMenuPos.topY);
 			//talkTargetMenu.setPos(cornerMenuPos.rightX - healTargetMenu.boxWidth, 
@@ -1031,6 +1035,8 @@ class MenuManager implements Observer
 			//rescueTargetMenu.setPos(cornerMenuPos.rightX - rescueTargetMenu.boxWidth, 
 			//	cornerMenuPos.topY);
 			//takeTargetMenu.setPos(cornerMenuPos.rightX - takeTargetMenu.boxWidth, 
+			//	cornerMenuPos.topY);
+			//dropTargetMenu.setPos(cornerMenuPos.rightX - dropTargetMenu.boxWidth, 
 			//	cornerMenuPos.topY);
 		}
 		
