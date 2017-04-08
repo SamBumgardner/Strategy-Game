@@ -4,6 +4,7 @@ import flixel.FlxSprite;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import observerPattern.Observed;
 import observerPattern.Subject;
+import units.items.EquippableItem;
 import units.items.Inventory;
 import units.items.Item;
 import units.items.Item;
@@ -124,7 +125,7 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	// List of integer ranges this unit can heal, based on contents of inventory.
 	public var healRanges:Array<Int>;
 	
-	public var equippedItem:Item;
+	public var equippedItem:EquippableItem;
 	
 	
 	// Rescued info

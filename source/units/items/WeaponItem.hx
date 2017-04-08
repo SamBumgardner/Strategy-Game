@@ -4,7 +4,7 @@ package units.items;
  * ...
  * @author Samuel Bumgardner
  */
-class WeaponItem extends Item
+class WeaponItem extends EquippableItem
 {
 
 	public var attackRanges:Array<Int> = [1, 2];

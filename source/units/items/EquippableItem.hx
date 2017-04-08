@@ -4,14 +4,15 @@ package units.items;
  * ...
  * @author Samuel Bumgardner
  */
-class HealingItem extends EquippableItem
+class EquippableItem extends Item
 {
 
-	public var healRanges:Array<Int> = [1, 2];
+	public var weight:Int = 4;
 	
 	public function new() 
 	{
 		super();
+		
 	}
 	
 }
