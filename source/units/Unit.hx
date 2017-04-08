@@ -221,8 +221,28 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		// Instead, this just assumes that the equipped item is just a weapon.
 		attackRanges = (cast equippedItem).attackRanges;
 		healRanges = [];
+		
+		health = FlxG.random.int(10, 30);
+		energy = FlxG.random.int(5, 25);
+		
+		strength = FlxG.random.int(1, 10);
+		agility = FlxG.random.int(1, 10);
+		skill = FlxG.random.int(1, 10);
+		defense = FlxG.random.int(1, 10);
+		intel = FlxG.random.int(1, 10);
+		
+		calcDerivedStats();
 	}
 	
+	public function calcDerivedStats():Void
+	{
+		accuracy = skill + agility + (strength - equippedItem.weight);
+		evade = agility + Math.floor(intel / 2) + (strength - equippedItem.weight);
+		attackCost = Std.int(Math.max(5 + equippedItem.weight - strength, 1));
+		attackDamage = strength + equippedItem.weight;
+		critCost = Std.int(Math.max(10 - intel - agility + (equippedItem.weight * 2 - strength), 1));
+		critDamage = Std.int(Math.max(strength, skill) * 2 + equippedItem.weight);
+	}
 	
 	public function attack(isCrit:Bool):Int
 	{
