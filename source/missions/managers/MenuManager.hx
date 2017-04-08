@@ -1066,7 +1066,8 @@ class MenuManager implements Observer
 			unitActionMenu.setPos(rootMenuPos.leftX, rootMenuPos.topY);
 			
 			//tradeTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
-			//attackTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
+			attackTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
+			weaponSelectMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			//healTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			//talkTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			//rescueTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
@@ -1081,8 +1082,10 @@ class MenuManager implements Observer
 			
 			//tradeTargetMenu.setPos(cornerMenuPos.rightX - tradeTargetMenu.boxWidth, 
 			//	cornerMenuPos.topY);
-			//attackTargetMenu.setPos(cornerMenuPos.rightX - attackTargetMenu.boxWidth, 
-			//	cornerMenuPos.topY);
+			attackTargetMenu.setPos(cornerMenuPos.rightX - attackTargetMenu.boxWidth, 
+				cornerMenuPos.topY);
+			weaponSelectMenu.setPos(cornerMenuPos.rightX - attackTargetMenu.boxWidth, 
+				cornerMenuPos.topY);
 			//healTargetMenu.setPos(cornerMenuPos.rightX - healTargetMenu.boxWidth, 
 			//	cornerMenuPos.topY);
 			//talkTargetMenu.setPos(cornerMenuPos.rightX - healTargetMenu.boxWidth, 
