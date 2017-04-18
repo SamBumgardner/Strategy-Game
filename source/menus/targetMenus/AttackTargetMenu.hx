@@ -6,11 +6,16 @@ import flixel.FlxSprite;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import flixel.text.FlxText;
 import flixel.util.FlxColor;
+import inputHandlers.ActionInputHandler.KeyIndex;
 import menus.MenuTemplate;
 import missions.MissionState;
+import observerPattern.eventSystem.EventTypes;
 import units.Unit;
+import units.items.ItemTypes;
 import units.targeting.SimpleTargetTests;
 import utilities.OnMapEntity;
+
+using units.movement.MoveIDExtender;
 
 /**
  * A target-style menu used to select which enemy to attack.
@@ -31,6 +36,9 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 	
 	private var InfoArray:Array<Array<FlxText>>;
 	
+	private var validWeaponIndices:Array<Int> = new Array<Int>();
+	private var currWeaponIndexID:Int = 0;
+	private var currWeaponIndex(default, set):Int = 0;
 	
 	/**
 	 * Initializer
@@ -99,22 +107,66 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		
 		// Get array of valid units, then cast to store as Array<OnMapEntity>
 		possibleTargets = cast parentState.getValidUnitsInRange(
-			(cast selectedUnit.equippedItem).attackRanges, SimpleTargetTests.enemyUnitTest);
+			selectedUnit.attackRanges, SimpleTargetTests.enemyUnitTest);
 		
 		// Assumes that there is at least one entry in possibleTargets. 
 		// If there wasn't then this menu shouldn't be reachable in the first place.
 		setInfoArrayColumn(InfoWindowCols.PLAYER_INFO, selectedUnit, cast possibleTargets[0]);
 	}
 	
+	/**
+	 * 
+	 * @return
+	 */
+	private function findValidWeaponIndices():Void
+	{
+		// Clear current validWeaponIndices array.
+		validWeaponIndices.splice(0, -1);
+		
+		var changeWeapon:Bool = true;
+		
+		var distToTarget:Int = selectedUnit.mapPos.getDistFromOther(currentTarget.mapPos);
+		for (i in selectedUnit.inventory.weaponIndices)
+		{
+			// Check if the target is in this weapon's range.
+			if (selectedUnit.inventory.items[i].ranges.indexOf(distToTarget) != -1)
+			{
+				// If so, add its index to the list of valid WeaponIndices.
+				validWeaponIndices.push(i);
+				
+				if (i == currWeaponIndex)
+				{
+					changeWeapon = false;
+					currWeaponIndexID = validWeaponIndices.length - 1;
+				}
+			}
+		}
+		
+		if (changeWeapon)
+		{
+			currWeaponIndexID = 0;
+			currWeaponIndex = validWeaponIndices[currWeaponIndexID];
+		}
+	}
+	
+	private function set_currWeaponIndex(newWeaponIndex:Int):Int
+	{
+		selectedUnit.calcDerivedStats(cast selectedUnit.inventory.items[newWeaponIndex]);
+		return currWeaponIndex = newWeaponIndex;
+	}
+	
 	private override function set_currentTarget(newTarget:OnMapEntity):OnMapEntity
 	{
+		currentTarget = newTarget;
+		
+		findValidWeaponIndices();
+		
 		var otherUnit:Unit = cast newTarget;
 		
 		setInfoArrayColumn(InfoWindowCols.PLAYER_INFO, selectedUnit, otherUnit);
 		setInfoArrayColumn(InfoWindowCols.ENEMY_INFO, otherUnit, selectedUnit);
 		
-		
-		return currentTarget = newTarget;
+		return currentTarget;
 	}
 	
 	private function setInfoArrayColumn(colIndex:Int, new_unit:Unit, enemy_unit:Unit):Void
@@ -134,6 +186,50 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 			Std.string(new_unit.critCost + enemy_unit.intel);
 		InfoArray[InfoWindowRows.CRIT_DAMAGE][colIndex].text = 
 			Std.string(Std.int(Math.max(new_unit.critDamage - enemy_unit.defense, 0)));
+	}
+	
+	public override function actionResponse(pressedKeys:Array<Bool>, heldAction:Bool)
+	{
+		// Could also be done with a loop, but this ends up being easier to understand.
+		if (pressedKeys[KeyIndex.CONFIRM])
+		{
+			confirmSound.play(true);
+			subject.notify(EventTypes.CONFIRM);
+		}
+		else if (pressedKeys[KeyIndex.CANCEL])
+		{
+			cancelSound.play(true);
+			subject.notify(EventTypes.CANCEL);
+		}
+		else if (pressedKeys[KeyIndex.INFO])
+		{
+			subject.notify(EventTypes.INFO);
+		}
+		else if (pressedKeys[KeyIndex.NEXT])
+		{
+			if (validWeaponIndices.length > 1)
+			{
+				// Cycle backward through weapons
+				currWeaponIndexID = currWeaponIndexID + 1 % validWeaponIndices.length;
+				currWeaponIndex = validWeaponIndices[currWeaponIndexID];
+			}
+		}
+		else if (pressedKeys[KeyIndex.PAINT])
+		{
+			if (validWeaponIndices.length > 1)
+			{
+				// Cycle forward through weapons
+				if (currWeaponIndexID != 0)
+				{
+					currWeaponIndexID = currWeaponIndexID - 1;
+				}
+				else
+				{
+					currWeaponIndexID = validWeaponIndices.length - 1;
+				}
+				currWeaponIndex = validWeaponIndices[currWeaponIndexID];
+			}
+		}
 	}
 }
 

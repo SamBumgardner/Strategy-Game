@@ -6,10 +6,13 @@ package units.items;
  */
 class Item
 {
-
-	public function new() 
+	public var ranges:Array<Int>;
+	public var itemType:ItemTypes;
+	
+	public function new(rangeArr:Array<Int>, type:ItemTypes) 
 	{
-		
+		ranges = rangeArr;
+		itemType = type;
 	}
 	
 }

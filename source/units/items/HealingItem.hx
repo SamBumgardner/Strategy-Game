@@ -6,12 +6,10 @@ package units.items;
  */
 class HealingItem extends EquippableItem
 {
-
-	public var healRanges:Array<Int> = [1, 2];
-	
-	public function new() 
+	public function new(rangeArr:Array<Int>) 
 	{
-		super();
+		super(rangeArr, ItemTypes.HEALING);
+		
 	}
 	
 }

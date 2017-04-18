@@ -215,7 +215,7 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		
 		inventory = new Inventory();
 		
-		equippedItem = new WeaponItem();
+		equippedItem = new WeaponItem([1,2]);
 		
 		// Should actually display the union of all attack ranges in the backpack.
 		// Instead, this just assumes that the equipped item is just a weapon.
@@ -231,17 +231,17 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		defense = FlxG.random.int(1, 10);
 		intel = FlxG.random.int(1, 10);
 		
-		calcDerivedStats();
+		calcDerivedStats(equippedItem);
 	}
 	
-	public function calcDerivedStats():Void
+	public function calcDerivedStats(itemToUse:EquippableItem):Void
 	{
-		accuracy = skill + agility + (strength - equippedItem.weight);
-		evade = agility + Math.floor(intel / 2) + (strength - equippedItem.weight);
-		attackCost = Std.int(Math.max(5 + equippedItem.weight - strength, 1));
-		attackDamage = strength + equippedItem.weight;
-		critCost = Std.int(Math.max(10 - intel - agility + (equippedItem.weight * 2 - strength), 1));
-		critDamage = Std.int(Math.max(strength, skill) * 2 + equippedItem.weight);
+		accuracy = skill + agility + (strength - itemToUse.weight);
+		evade = agility + Math.floor(intel / 2) + (strength - itemToUse.weight);
+		attackCost = Std.int(Math.max(5 + itemToUse.weight - strength, 1));
+		attackDamage = strength + itemToUse.weight;
+		critCost = Std.int(Math.max(10 - intel - agility + (itemToUse.weight * 2 - strength), 1));
+		critDamage = Std.int(Math.max(strength, skill) * 2 + itemToUse.weight);
 	}
 	
 	public function attack(isCrit:Bool):Int
