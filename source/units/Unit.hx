@@ -214,12 +214,29 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		carry = 5;
 		
 		inventory = new Inventory();
+		inventory.items.push(new WeaponItem([1, 2]));
+		inventory.items.push(new WeaponItem([1, 2, 3]));
+		inventory.items.push(new WeaponItem([1, 2, 3, 4]));
+		inventory.items.push(new WeaponItem([1]));
 		
-		equippedItem = new WeaponItem([1,2]);
+		(cast inventory.items[0]).weight = FlxG.random.int(1, 10);
+		(cast inventory.items[1]).weight = FlxG.random.int(1, 10);
+		(cast inventory.items[2]).weight = FlxG.random.int(1, 10);
+		(cast inventory.items[3]).weight = FlxG.random.int(1, 10);
+		
+		inventory.items[0].name = "weapon 0";
+		inventory.items[1].name = "weapon 1";
+		inventory.items[2].name = "weapon 2";
+		inventory.items[3].name = "weapon 3";
+		
+		inventory.weaponIndices = [0, 1, 2, 3];
+		
+		
+		equippedItem = cast inventory.items[0];
 		
 		// Should actually display the union of all attack ranges in the backpack.
 		// Instead, this just assumes that the equipped item is just a weapon.
-		attackRanges = (cast equippedItem).attackRanges;
+		attackRanges = [1, 2, 3, 4];
 		healRanges = [];
 		
 		health = FlxG.random.int(10, 30);

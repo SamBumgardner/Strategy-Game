@@ -8,6 +8,7 @@ class Item
 {
 	public var ranges:Array<Int>;
 	public var itemType:ItemTypes;
+	public var name:String;
 	
 	public function new(rangeArr:Array<Int>, type:ItemTypes) 
 	{

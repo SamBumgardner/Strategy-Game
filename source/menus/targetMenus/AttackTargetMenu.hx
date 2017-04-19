@@ -34,6 +34,7 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 	
 	private var infoWindow:FlxSprite;
 	
+	private var weaponName:FlxText;
 	private var InfoArray:Array<Array<FlxText>>;
 	
 	private var validWeaponIndices:Array<Int> = new Array<Int>();
@@ -62,6 +63,10 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 	
 	private function initInfoArray():Void
 	{
+		weaponName = new FlxText(x + 15, y + 10, 300, "", 15);
+		weaponName.color = FlxColor.BLACK;
+		totalFlxGrp.add(weaponName);
+		
 		InfoArray = new Array<Array<FlxText>>();
 		
 		for (row in 0...InfoWindowRows.NUM_ROWS)
@@ -111,7 +116,13 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		
 		// Assumes that there is at least one entry in possibleTargets. 
 		// If there wasn't then this menu shouldn't be reachable in the first place.
-		setInfoArrayColumn(InfoWindowCols.PLAYER_INFO, selectedUnit, cast possibleTargets[0]);
+		currentTarget = possibleTargets[0];
+		
+		// Is only really needed for first time setup, but requires selectedUnit to be set.
+		if (weaponName.text == "")
+		{
+			weaponName.text = selectedUnit.inventory.items[currWeaponIndex].name;
+		}
 	}
 	
 	/**
@@ -152,6 +163,12 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 	private function set_currWeaponIndex(newWeaponIndex:Int):Int
 	{
 		selectedUnit.calcDerivedStats(cast selectedUnit.inventory.items[newWeaponIndex]);
+		
+		weaponName.text = selectedUnit.inventory.items[newWeaponIndex].name;
+		
+		setInfoArrayColumn(InfoWindowCols.PLAYER_INFO, selectedUnit, cast currentTarget);
+		setInfoArrayColumn(InfoWindowCols.ENEMY_INFO, cast currentTarget, selectedUnit);
+		
 		return currWeaponIndex = newWeaponIndex;
 	}
 	
