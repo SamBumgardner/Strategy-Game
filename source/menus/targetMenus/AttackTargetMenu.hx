@@ -132,7 +132,7 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 	private function findValidWeaponIndices():Void
 	{
 		// Clear current validWeaponIndices array.
-		validWeaponIndices.splice(0, -1);
+		validWeaponIndices.splice(0, validWeaponIndices.length);
 		
 		var changeWeapon:Bool = true;
 		
@@ -187,7 +187,7 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 	}
 	
 	private function setInfoArrayColumn(colIndex:Int, new_unit:Unit, enemy_unit:Unit):Void
-	{
+	{	
 		InfoArray[InfoWindowRows.HEALTH][colIndex].text = Std.string(new_unit.health);
 		InfoArray[InfoWindowRows.ENERGY][colIndex].text = Std.string(new_unit.energy);
 		
@@ -218,20 +218,7 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 			cancelSound.play(true);
 			subject.notify(EventTypes.CANCEL);
 		}
-		else if (pressedKeys[KeyIndex.INFO])
-		{
-			subject.notify(EventTypes.INFO);
-		}
 		else if (pressedKeys[KeyIndex.NEXT])
-		{
-			if (validWeaponIndices.length > 1)
-			{
-				// Cycle backward through weapons
-				currWeaponIndexID = currWeaponIndexID + 1 % validWeaponIndices.length;
-				currWeaponIndex = validWeaponIndices[currWeaponIndexID];
-			}
-		}
-		else if (pressedKeys[KeyIndex.PAINT])
 		{
 			if (validWeaponIndices.length > 1)
 			{
@@ -244,6 +231,16 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 				{
 					currWeaponIndexID = validWeaponIndices.length - 1;
 				}
+				currWeaponIndex = validWeaponIndices[currWeaponIndexID];
+			}
+		}
+		else if (pressedKeys[KeyIndex.INFO])
+		{
+			trace(validWeaponIndices);
+			if (validWeaponIndices.length > 1)
+			{
+				// Cycle backward through weapons
+				currWeaponIndexID = (currWeaponIndexID + 1) % validWeaponIndices.length;
 				currWeaponIndex = validWeaponIndices[currWeaponIndexID];
 			}
 		}
