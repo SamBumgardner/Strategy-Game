@@ -211,41 +211,44 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 	
 	public override function actionResponse(pressedKeys:Array<Bool>, heldAction:Bool)
 	{
-		// Could also be done with a loop, but this ends up being easier to understand.
-		if (pressedKeys[KeyIndex.CONFIRM])
+		if (!heldAction)
 		{
-			confirmSound.play(true);
-			subject.notify(EventTypes.CONFIRM);
-		}
-		else if (pressedKeys[KeyIndex.CANCEL])
-		{
-			cancelSound.play(true);
-			subject.notify(EventTypes.CANCEL);
-		}
-		else if (pressedKeys[KeyIndex.NEXT])
-		{
-			if (validWeaponIndices.length > 1)
+			// Could also be done with a loop, but this ends up being easier to understand.
+			if (pressedKeys[KeyIndex.CONFIRM])
 			{
-				// Cycle forward through weapons
-				if (currWeaponIndexID != 0)
-				{
-					currWeaponIndexID = currWeaponIndexID - 1;
-				}
-				else
-				{
-					currWeaponIndexID = validWeaponIndices.length - 1;
-				}
-				currWeaponIndex = validWeaponIndices[currWeaponIndexID];
+				confirmSound.play(true);
+				subject.notify(EventTypes.CONFIRM);
 			}
-		}
-		else if (pressedKeys[KeyIndex.INFO])
-		{
-			trace(validWeaponIndices);
-			if (validWeaponIndices.length > 1)
+			else if (pressedKeys[KeyIndex.CANCEL])
 			{
-				// Cycle backward through weapons
-				currWeaponIndexID = (currWeaponIndexID + 1) % validWeaponIndices.length;
-				currWeaponIndex = validWeaponIndices[currWeaponIndexID];
+				cancelSound.play(true);
+				subject.notify(EventTypes.CANCEL);
+			}
+			else if (pressedKeys[KeyIndex.NEXT])
+			{
+				if (validWeaponIndices.length > 1)
+				{
+					// Cycle forward through weapons
+					if (currWeaponIndexID != 0)
+					{
+						currWeaponIndexID = currWeaponIndexID - 1;
+					}
+					else
+					{
+						currWeaponIndexID = validWeaponIndices.length - 1;
+					}
+					currWeaponIndex = validWeaponIndices[currWeaponIndexID];
+				}
+			}
+			else if (pressedKeys[KeyIndex.INFO])
+			{
+				trace(validWeaponIndices);
+				if (validWeaponIndices.length > 1)
+				{
+					// Cycle backward through weapons
+					currWeaponIndexID = (currWeaponIndexID + 1) % validWeaponIndices.length;
+					currWeaponIndex = validWeaponIndices[currWeaponIndexID];
+				}
 			}
 		}
 	}
