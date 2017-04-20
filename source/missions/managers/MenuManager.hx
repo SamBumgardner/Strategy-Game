@@ -80,11 +80,6 @@ class MenuManager implements Observer
 	private var tradeActionMenu:ResizableBasicMenu;
 	
 	/**
-	 * Menu used to select which weapon to use in combat.
-	 */
-	private var weaponSelectMenu:ResizableBasicMenu;
-	
-	/**
 	 * Menu used to select which enemy unit to attack.
 	 */
 	private var attackTargetMenu:AttackTargetMenu;
@@ -258,10 +253,6 @@ class MenuManager implements Observer
 			MissionMenuTypes.TRADE_ACTION);
 		tradeActionMenu.subject.addObserver(this);
 		
-		weaponSelectMenu = MissionMenuCreator.makeWeaponSelectMenu(0, 0, 
-			MissionMenuTypes.WEAPON_SELECT);
-		weaponSelectMenu.subject.addObserver(this);
-		
 		attackTargetMenu = MissionMenuCreator.makeAttackTargetMenu(cornerMenuPos.leftX,
 			cornerMenuPos.topY, MissionMenuTypes.ATTACK_TARGET);
 		attackTargetMenu.subject.addObserver(this);
@@ -302,7 +293,6 @@ class MenuManager implements Observer
 		totalFlxGrp.add(itemActionMenu.totalFlxGrp);
 		totalFlxGrp.add(tradeTargetMenu.totalFlxGrp);
 		totalFlxGrp.add(tradeActionMenu.totalFlxGrp);
-		totalFlxGrp.add(weaponSelectMenu.totalFlxGrp);
 		totalFlxGrp.add(attackTargetMenu.totalFlxGrp);
 		totalFlxGrp.add(healTargetMenu.totalFlxGrp);
 		totalFlxGrp.add(talkTargetMenu.totalFlxGrp);
@@ -375,7 +365,6 @@ class MenuManager implements Observer
 		confirmFunctions[MissionMenuTypes.UNIT_INVENTORY].push(unitInvConfirm);
 		confirmFunctions[MissionMenuTypes.TRADE_TARGET].push(tradeTargetConfirm);
 		confirmFunctions[MissionMenuTypes.TRADE_ACTION].push(tradeActionConfirm);
-		confirmFunctions[MissionMenuTypes.WEAPON_SELECT].push(weaponSelectConfirm);
 		confirmFunctions[MissionMenuTypes.ATTACK_TARGET].push(attackTargetConfirm);
 		confirmFunctions[MissionMenuTypes.HEAL_TARGET].push(healTargetConfirm);
 		confirmFunctions[MissionMenuTypes.TALK_TARGET].push(talkTargetConfirm);
@@ -720,7 +709,7 @@ class MenuManager implements Observer
 	{
 		trace("Attack!");
 		hideMenuStack();
-		pushMenuStack(weaponSelectMenu);
+		pushMenuStack(attackTargetMenu);
 	}
 	
 	/**
@@ -881,19 +870,6 @@ class MenuManager implements Observer
 	private function tradeActionConfirm():Void
 	{
 		trace("Trading around items!");
-	}
-	
-	
-	// weaponSelectMenu confirm function //
-	
-	/**
-	 * Called when any option in the weaponSelectMenu is selected.
-	 */
-	private function weaponSelectConfirm():Void
-	{
-		trace("Selected weapon...");
-		hideMenuStack();
-		pushMenuStack(attackTargetMenu);
 	}
 	
 	
@@ -1067,7 +1043,6 @@ class MenuManager implements Observer
 			
 			//tradeTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			attackTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
-			weaponSelectMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			//healTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			//talkTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			//rescueTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
@@ -1083,8 +1058,6 @@ class MenuManager implements Observer
 			//tradeTargetMenu.setPos(cornerMenuPos.rightX - tradeTargetMenu.boxWidth, 
 			//	cornerMenuPos.topY);
 			attackTargetMenu.setPos(cornerMenuPos.rightX - attackTargetMenu.boxWidth, 
-				cornerMenuPos.topY);
-			weaponSelectMenu.setPos(cornerMenuPos.rightX - attackTargetMenu.boxWidth, 
 				cornerMenuPos.topY);
 			//healTargetMenu.setPos(cornerMenuPos.rightX - healTargetMenu.boxWidth, 
 			//	cornerMenuPos.topY);

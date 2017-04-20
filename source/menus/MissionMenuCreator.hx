@@ -148,21 +148,6 @@ class MissionMenuCreator
 	}
 	
 	/**
-	 * Temporary placeholder, should be an inventory-type menu that only displays weapons.
-	 * Still functions in a menu-like way outside of that, though.
-	 * 
-	 * @param	X	The desired X position of the newly created menu.
-	 * @param	Y	The desired Y position of the newly created menu.
-	 * @param	ID	The desired ID for the newly created menu.
-	 * @return	A ResizeableBasicMenu with all of the options needed by the map action menu.
-	 */
-	public static function makeWeaponSelectMenu(?X:Float = 0, ?Y:Float = 0, 
-		?ID:Int = 0):ResizableBasicMenu
-	{
-		return new ResizableBasicMenu(X, Y, ["Weapon 1", "Weapon 2", "Weapon 3"], ID);
-	}
-	
-	/**
 	 * Temporary placeholder, target menus should involve a cursor highlighting the 
 	 *  unit on the map rather than a normal menu structure.
 	 * 
@@ -192,6 +177,15 @@ class MissionMenuCreator
 		return new HealTargetMenu(ID);
 	}
 	
+	/**
+	 * Temporary placeholder, target menus should involve a cursor highlighting the 
+	 *  unit on the map rather than a normal menu structure.
+	 * 
+	 * @param	X	The desired X position of the newly created menu.
+	 * @param	Y	The desired Y position of the newly created menu.
+	 * @param	ID	The desired ID for the newly created menu.
+	 * @return	A ResizeableBasicMenu with all of the options needed by the map action menu.
+	 */
 	public static function makeTalkTargetMenu(?X:Float = 0, ?Y:Float = 0,
 		?ID:Int = 0):TalkTargetMenu
 	{
