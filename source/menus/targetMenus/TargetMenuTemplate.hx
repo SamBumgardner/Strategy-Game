@@ -21,7 +21,8 @@ using units.movement.MoveIDExtender;
  *  - Typical handling of move events to cycle through possible targets.
  *  - Typical handling of action inputs for a target menu.
  * 
- * There is additional menu functionality that can be found by looking in the 
+ * This class inherits additional menu properties/functions from its parent class, MenuTemplate.
+ * See its child classes, such as AttackTargetMenu, HealTargetMenu, etc.
  * 
  * @author Samuel Bumgardner
  */

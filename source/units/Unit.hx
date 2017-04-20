@@ -74,6 +74,10 @@ using units.movement.MoveIDExtender;
  * 
  * 	equip a weapon (involves updating derived stats and rearranging inventory)
  * 
+ * 
+ * 
+ * NOTE: Need to update documentation.
+ * 
  * @author Samuel Bumgardner
  */
 class Unit extends FlxSprite implements Observed implements OnMapEntity

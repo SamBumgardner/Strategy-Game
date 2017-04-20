@@ -38,6 +38,8 @@ import menus.targetMenus.TradeTargetMenu;
  * 		take target
  * 		drop target
  * 
+ * NOTE: Need to update documentation.
+ * 
  * @author Samuel Bumgardner
  */
 class MissionMenuCreator

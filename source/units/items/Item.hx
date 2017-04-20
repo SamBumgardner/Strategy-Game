@@ -2,6 +2,8 @@ package units.items;
 
 /**
  * ...
+ * 
+ * NOTE: Need to update documentation.
  * @author Samuel Bumgardner
  */
 class Item

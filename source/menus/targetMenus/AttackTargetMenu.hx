@@ -20,6 +20,8 @@ using units.movement.MoveIDExtender;
 /**
  * A target-style menu used to select which enemy to attack.
  * 
+ * NOTE: Need to update documentation.
+ * 
  * @author Samuel Bumgardner
  */
 class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
