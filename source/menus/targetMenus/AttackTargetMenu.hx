@@ -114,15 +114,16 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		possibleTargets = cast parentState.getValidUnitsInRange(
 			selectedUnit.attackRanges, SimpleTargetTests.enemyUnitTest);
 		
+		// Set up the equipped weapon as the default item upon equip
+		if (selectedUnit.equippedItem != null && 
+			selectedUnit.equippedItem.itemType == ItemTypes.WEAPON)
+		{
+			currWeaponIndex = selectedUnit.inventory.items.indexOf(selectedUnit.equippedItem);
+		}
+		
 		// Assumes that there is at least one entry in possibleTargets. 
 		// If there wasn't then this menu shouldn't be reachable in the first place.
 		currentTarget = possibleTargets[0];
-		
-		// Is only really needed for first time setup, but requires selectedUnit to be set.
-		if (weaponName.text == "")
-		{
-			weaponName.text = selectedUnit.inventory.items[currWeaponIndex].name;
-		}
 	}
 	
 	/**
@@ -166,8 +167,11 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		
 		weaponName.text = selectedUnit.inventory.items[newWeaponIndex].name;
 		
-		setInfoArrayColumn(InfoWindowCols.PLAYER_INFO, selectedUnit, cast currentTarget);
-		setInfoArrayColumn(InfoWindowCols.ENEMY_INFO, cast currentTarget, selectedUnit);
+		if (selectedUnit != null && currentTarget != null)
+		{
+			setInfoArrayColumn(InfoWindowCols.PLAYER_INFO, selectedUnit, cast currentTarget);
+			setInfoArrayColumn(InfoWindowCols.ENEMY_INFO, cast currentTarget, selectedUnit);
+		}
 		
 		return currWeaponIndex = newWeaponIndex;
 	}
