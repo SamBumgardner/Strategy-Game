@@ -97,7 +97,7 @@ ApplicationMain.init = function() {
 	}
 };
 ApplicationMain.main = function() {
-	ApplicationMain.config = { build : "1305", company : "Samuel Bumgardner", file : "Strategy-Game", fps : 60, name : "Strategy-Game", orientation : "", packageName : "com.example.myapp", version : "0.0.1", windows : [{ antialiasing : 0, background : 0, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : false, height : 960, parameters : "{}", resizable : false, stencilBuffer : true, title : "Strategy-Game", vsync : true, width : 1280, x : null, y : null}]};
+	ApplicationMain.config = { build : "1513", company : "Samuel Bumgardner", file : "Strategy-Game", fps : 60, name : "Strategy-Game", orientation : "", packageName : "com.example.myapp", version : "0.0.1", windows : [{ antialiasing : 0, background : 0, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : false, height : 960, parameters : "{}", resizable : false, stencilBuffer : true, title : "Strategy-Game", vsync : true, width : 1280, x : null, y : null}]};
 };
 ApplicationMain.start = function() {
 	var hasMain = false;
@@ -6050,6 +6050,9 @@ cursors_MapCursor.prototype = {
 	,moveToPosition: function(newRow,newCol) {
 		this.row = newRow;
 		this.col = newCol;
+		this.framesLeftInMove = this.framesPerMove;
+		this.isMoving = true;
+		this.subject.notify(observerPattern_eventSystem_EventTypes.MOVE);
 	}
 	,jumpToPosition: function(newRow,newCol) {
 		this.row = newRow;
@@ -6065,7 +6068,7 @@ cursors_MapCursor.prototype = {
 			this.expandedStill();
 			break;
 		default:
-			haxe_Log.trace("ERROR: invalid MoveMode.",{ fileName : "MapCursor.hx", lineNumber : 327, className : "cursors.MapCursor", methodName : "changeMovementModes"});
+			haxe_Log.trace("ERROR: invalid MoveMode.",{ fileName : "MapCursor.hx", lineNumber : 330, className : "cursors.MapCursor", methodName : "changeMovementModes"});
 		}
 	}
 	,changeCursorType: function(newCursorType) {
@@ -6077,7 +6080,7 @@ cursors_MapCursor.prototype = {
 			this.changeCurrCornerArr(this.targetCornerArr);
 			break;
 		default:
-			haxe_Log.trace("ERROR: invalid CursorType.",{ fileName : "MapCursor.hx", lineNumber : 342, className : "cursors.MapCursor", methodName : "changeCursorType"});
+			haxe_Log.trace("ERROR: invalid CursorType.",{ fileName : "MapCursor.hx", lineNumber : 345, className : "cursors.MapCursor", methodName : "changeCursorType"});
 		}
 	}
 	,changeInputModes: function(newInputMode) {
@@ -51711,11 +51714,6 @@ var menus_MenuTemplate = function(X,Y,subjectID) {
 	if(X == null) {
 		X = 0;
 	}
-	this.framesLeftInMove = 0;
-	this.framesPerMove = 4;
-	this.bounceDistance = 15;
-	this.menuOptionArr = [];
-	this.optionFlxGrp = new flixel_group_FlxTypedGroup();
 	this.totalFlxGrp = new flixel_group_FlxTypedGroup();
 	this.menuScrollFactor = new flixel_math_FlxPoint(0,0);
 	this.active = false;
@@ -51752,13 +51750,6 @@ menus_MenuTemplate.prototype = {
 		this.totalFlxGrp.forEach(function(a1) {
 			f(a1,dX,dY);
 		},true);
-		var _g = 0;
-		var _g1 = this.menuOptionArr;
-		while(_g < _g1.length) {
-			var menuOption = _g1[_g];
-			++_g;
-			menuOption.moveCursorPos(xDiff,yDiff);
-		}
 		this.x = newX;
 		this.y = newY;
 	}
@@ -51770,7 +51761,6 @@ menus_MenuTemplate.prototype = {
 	}
 	,hide: function() {
 		this.totalFlxGrp.forEach($bind(this,this.hideSprite),true);
-		this.menuCursorTween.set_active(false);
 	}
 	,hideSprite: function(targetSprite) {
 		if(js_Boot.__instanceof(targetSprite,flixel_FlxSprite)) {
@@ -51780,8 +51770,228 @@ menus_MenuTemplate.prototype = {
 	}
 	,reveal: function() {
 		this.totalFlxGrp.forEach($bind(this,this.revealSprite),true);
-		this.menuCursorTween.set_active(true);
 		this.resetMenu();
+	}
+	,resetMenu: function() {
+	}
+	,revealSprite: function(targetSprite) {
+		if(js_Boot.__instanceof(targetSprite,flixel_FlxSprite)) {
+			targetSprite.visible = true;
+			targetSprite.active = true;
+		}
+	}
+	,activate: function() {
+		this.active = true;
+	}
+	,deactivate: function() {
+		this.active = false;
+	}
+	,moveResponse: function(vertMove,horizMove,heldMove) {
+	}
+	,actionResponse: function(pressedKeys,heldAction) {
+	}
+	,update: function(elapsed) {
+		if(this.active) {
+			inputHandlers_MoveInputHandler.handleMovement(elapsed,$bind(this,this.moveResponse));
+			while(this.active && inputHandlers_ActionInputHandler.actionBuffer.length > inputHandlers_ActionInputHandler.numInputsUsed) inputHandlers_ActionInputHandler.useBufferedInput($bind(this,this.actionResponse));
+		}
+	}
+	,__class__: menus_MenuTemplate
+};
+var menus_MissionMenuCreator = function() {
+};
+$hxClasses["menus.MissionMenuCreator"] = menus_MissionMenuCreator;
+menus_MissionMenuCreator.__name__ = ["menus","MissionMenuCreator"];
+menus_MissionMenuCreator.makeMapActionMenu = function(X,Y,ID) {
+	if(ID == null) {
+		ID = 0;
+	}
+	if(Y == null) {
+		Y = 0;
+	}
+	if(X == null) {
+		X = 0;
+	}
+	return new menus_cursorMenus_BasicMenu(X,Y,["Unit","Status","Options","Suspend","End"],ID);
+};
+menus_MissionMenuCreator.makeUnitActionMenu = function(X,Y,ID) {
+	if(ID == null) {
+		ID = 0;
+	}
+	if(Y == null) {
+		Y = 0;
+	}
+	if(X == null) {
+		X = 0;
+	}
+	return new menus_cursorMenus_ResizableBasicMenu(X,Y,["Attack","Heal","Talk","Rescue","Take","Drop","Item","Trade","Wait"],ID);
+};
+menus_MissionMenuCreator.makeInventoryMenu = function(X,Y,ID) {
+	if(ID == null) {
+		ID = 0;
+	}
+	if(Y == null) {
+		Y = 0;
+	}
+	if(X == null) {
+		X = 0;
+	}
+	return new menus_cursorMenus_ResizableBasicMenu(X,Y,["Item 1","Item 2","Item 3","Item 4","Item 5"],ID);
+};
+menus_MissionMenuCreator.makeItemActionMenu = function(X,Y,ID) {
+	if(ID == null) {
+		ID = 0;
+	}
+	if(Y == null) {
+		Y = 0;
+	}
+	if(X == null) {
+		X = 0;
+	}
+	return new menus_cursorMenus_ResizableBasicMenu(X,Y,["Equip","Use","Trade","Discard"],ID);
+};
+menus_MissionMenuCreator.makeTradeTargetMenu = function(X,Y,ID) {
+	if(ID == null) {
+		ID = 0;
+	}
+	if(Y == null) {
+		Y = 0;
+	}
+	if(X == null) {
+		X = 0;
+	}
+	return new menus_targetMenus_TradeTargetMenu(ID);
+};
+menus_MissionMenuCreator.makeTradeActionMenu = function(X,Y,ID) {
+	if(ID == null) {
+		ID = 0;
+	}
+	if(Y == null) {
+		Y = 0;
+	}
+	if(X == null) {
+		X = 0;
+	}
+	return new menus_cursorMenus_ResizableBasicMenu(X,Y,["Trade 1","Trade 2"],ID);
+};
+menus_MissionMenuCreator.makeAttackTargetMenu = function(X,Y,ID) {
+	if(ID == null) {
+		ID = 0;
+	}
+	if(Y == null) {
+		Y = 0;
+	}
+	if(X == null) {
+		X = 0;
+	}
+	return new menus_targetMenus_AttackTargetMenu(ID);
+};
+menus_MissionMenuCreator.makeHealTargetMenu = function(X,Y,ID) {
+	if(ID == null) {
+		ID = 0;
+	}
+	if(Y == null) {
+		Y = 0;
+	}
+	if(X == null) {
+		X = 0;
+	}
+	return new menus_targetMenus_HealTargetMenu(ID);
+};
+menus_MissionMenuCreator.makeTalkTargetMenu = function(X,Y,ID) {
+	if(ID == null) {
+		ID = 0;
+	}
+	if(Y == null) {
+		Y = 0;
+	}
+	if(X == null) {
+		X = 0;
+	}
+	return new menus_targetMenus_TalkTargetMenu(ID);
+};
+menus_MissionMenuCreator.makeRescueTargetMenu = function(X,Y,ID) {
+	if(ID == null) {
+		ID = 0;
+	}
+	if(Y == null) {
+		Y = 0;
+	}
+	if(X == null) {
+		X = 0;
+	}
+	return new menus_targetMenus_RescueTargetMenu(ID);
+};
+menus_MissionMenuCreator.makeTakeTargetMenu = function(X,Y,ID) {
+	if(ID == null) {
+		ID = 0;
+	}
+	if(Y == null) {
+		Y = 0;
+	}
+	if(X == null) {
+		X = 0;
+	}
+	return new menus_targetMenus_TakeTargetMenu(ID);
+};
+menus_MissionMenuCreator.makeDropTargetMenu = function(X,Y,ID) {
+	if(ID == null) {
+		ID = 0;
+	}
+	if(Y == null) {
+		Y = 0;
+	}
+	if(X == null) {
+		X = 0;
+	}
+	return new menus_targetMenus_DropTargetMenu(ID);
+};
+menus_MissionMenuCreator.prototype = {
+	__class__: menus_MissionMenuCreator
+};
+var menus_MissionMenuTypes = function() { };
+$hxClasses["menus.MissionMenuTypes"] = menus_MissionMenuTypes;
+menus_MissionMenuTypes.__name__ = ["menus","MissionMenuTypes"];
+var menus_cursorMenus_CursorMenuTemplate = function(X,Y,subjectID) {
+	if(subjectID == null) {
+		subjectID = 0;
+	}
+	if(Y == null) {
+		Y = 0;
+	}
+	if(X == null) {
+		X = 0;
+	}
+	this.framesLeftInMove = 0;
+	this.framesPerMove = 4;
+	this.bounceDistance = 15;
+	this.menuOptionArr = [];
+	this.optionFlxGrp = new flixel_group_FlxTypedGroup();
+	menus_MenuTemplate.call(this,X,Y,subjectID);
+};
+$hxClasses["menus.cursorMenus.CursorMenuTemplate"] = menus_cursorMenus_CursorMenuTemplate;
+menus_cursorMenus_CursorMenuTemplate.__name__ = ["menus","cursorMenus","CursorMenuTemplate"];
+menus_cursorMenus_CursorMenuTemplate.__super__ = menus_MenuTemplate;
+menus_cursorMenus_CursorMenuTemplate.prototype = $extend(menus_MenuTemplate.prototype,{
+	setPos: function(newX,newY) {
+		var xDiff = newX - this.x;
+		var yDiff = newY - this.y;
+		var _g = 0;
+		var _g1 = this.menuOptionArr;
+		while(_g < _g1.length) {
+			var menuOption = _g1[_g];
+			++_g;
+			menuOption.moveCursorPos(xDiff,yDiff);
+		}
+		menus_MenuTemplate.prototype.setPos.call(this,newX,newY);
+	}
+	,hide: function() {
+		menus_MenuTemplate.prototype.hide.call(this);
+		this.menuCursorTween.set_active(false);
+	}
+	,reveal: function() {
+		menus_MenuTemplate.prototype.reveal.call(this);
+		this.menuCursorTween.set_active(true);
 	}
 	,resetMenu: function() {
 		this.currMenuOption = this.menuOptionArr[0];
@@ -51796,18 +52006,6 @@ menus_MenuTemplate.prototype = {
 				this.hideSprite(menuOption.bgHighlight);
 			}
 		}
-	}
-	,revealSprite: function(targetSprite) {
-		if(js_Boot.__instanceof(targetSprite,flixel_FlxSprite)) {
-			targetSprite.visible = true;
-			targetSprite.active = true;
-		}
-	}
-	,activate: function() {
-		this.active = true;
-	}
-	,deactivate: function() {
-		this.active = false;
 	}
 	,initBasicCursor: function() {
 		this.menuCursor = new cursors_AnchoredSprite(0,0,"assets/images/menu_cursor_simple.png");
@@ -51825,7 +52023,7 @@ menus_MenuTemplate.prototype = {
 		cursor.set_x(cursor.getAnchorX() + offsetValue);
 		cursor.set_y(cursor.getAnchorY());
 	}
-	,moveCursor: function(vertMove,horizMove,heldMove) {
+	,moveResponse: function(vertMove,horizMove,heldMove) {
 		if(!heldMove || this.framesLeftInMove == 0) {
 			this.currMenuOption.cursorExited();
 			if(vertMove > 0) {
@@ -51866,7 +52064,7 @@ menus_MenuTemplate.prototype = {
 			this.framesLeftInMove--;
 		}
 	}
-	,doCursorAction: function(pressedKeys,heldAction) {
+	,actionResponse: function(pressedKeys,heldAction) {
 		if(!heldAction) {
 			if(pressedKeys[inputHandlers_KeyIndex.CONFIRM]) {
 				this.confirmSound.play(true);
@@ -51884,15 +52082,14 @@ menus_MenuTemplate.prototype = {
 		}
 	}
 	,update: function(elapsed) {
+		menus_MenuTemplate.prototype.update.call(this,elapsed);
 		if(this.active) {
-			inputHandlers_MoveInputHandler.handleMovement(elapsed,$bind(this,this.moveCursor));
-			while(this.active && inputHandlers_ActionInputHandler.actionBuffer.length > inputHandlers_ActionInputHandler.numInputsUsed) inputHandlers_ActionInputHandler.useBufferedInput($bind(this,this.doCursorAction));
 			this.moveCursorAnchors();
 		}
 	}
-	,__class__: menus_MenuTemplate
-};
-var menus_BasicMenu = function(X,Y,labelTextArr,id) {
+	,__class__: menus_cursorMenus_CursorMenuTemplate
+});
+var menus_cursorMenus_BasicMenu = function(X,Y,labelTextArr,id) {
 	if(id == null) {
 		id = 0;
 	}
@@ -51901,7 +52098,7 @@ var menus_BasicMenu = function(X,Y,labelTextArr,id) {
 	this.backgroundSize = 10;
 	this.cornerSize = 10;
 	this.boxSpriteSheet = "assets/images/box_simple.png";
-	menus_MenuTemplate.call(this,X,Y,id);
+	menus_cursorMenus_CursorMenuTemplate.call(this,X,Y,id);
 	var maxTextWidth = this.initMenuOptions(X,Y,labelTextArr);
 	this.initBgGraphics(maxTextWidth);
 	this.initMenuBox(X,Y,maxTextWidth);
@@ -51910,11 +52107,11 @@ var menus_BasicMenu = function(X,Y,labelTextArr,id) {
 	this.setScrollFactors();
 	this.hide();
 };
-$hxClasses["menus.BasicMenu"] = menus_BasicMenu;
-menus_BasicMenu.__name__ = ["menus","BasicMenu"];
-menus_BasicMenu.__interfaces__ = [boxes_VarSizedBox];
-menus_BasicMenu.__super__ = menus_MenuTemplate;
-menus_BasicMenu.prototype = $extend(menus_MenuTemplate.prototype,{
+$hxClasses["menus.cursorMenus.BasicMenu"] = menus_cursorMenus_BasicMenu;
+menus_cursorMenus_BasicMenu.__name__ = ["menus","cursorMenus","BasicMenu"];
+menus_cursorMenus_BasicMenu.__interfaces__ = [boxes_VarSizedBox];
+menus_cursorMenus_BasicMenu.__super__ = menus_cursorMenus_CursorMenuTemplate;
+menus_cursorMenus_BasicMenu.prototype = $extend(menus_cursorMenus_CursorMenuTemplate.prototype,{
 	initMenuOptions: function(X,Y,labelTextArr) {
 		var newMenuOption;
 		var maxTextWidth = 0;
@@ -51922,7 +52119,7 @@ menus_BasicMenu.prototype = $extend(menus_MenuTemplate.prototype,{
 		var _g = labelTextArr.length;
 		while(_g1 < _g) {
 			var i = _g1++;
-			newMenuOption = new menus_MenuOption(X + this.cornerSize,Y + this.cornerSize + this.labelInterval * i,i,0,labelTextArr[i],this.labelTextSize,true);
+			newMenuOption = new menus_cursorMenus_MenuOption(X + this.cornerSize,Y + this.cornerSize + this.labelInterval * i,i,0,labelTextArr[i],this.labelTextSize,true);
 			newMenuOption.label.set_color(-16777216);
 			this.menuOptionArr.push(newMenuOption);
 			if(maxTextWidth < newMenuOption.label.get_width() || i == 0) {
@@ -51968,14 +52165,14 @@ menus_BasicMenu.prototype = $extend(menus_MenuTemplate.prototype,{
 		this.totalFlxGrp.add(this.menuCursor);
 	}
 	,deactivate: function() {
-		menus_MenuTemplate.prototype.deactivate.call(this);
+		menus_cursorMenus_CursorMenuTemplate.prototype.deactivate.call(this);
 		this.menuCursor.set_visible(false);
 	}
 	,activate: function() {
-		menus_MenuTemplate.prototype.activate.call(this);
+		menus_cursorMenus_CursorMenuTemplate.prototype.activate.call(this);
 		this.menuCursor.set_visible(true);
 	}
-	,doCursorAction: function(pressedKeys,heldAction) {
+	,actionResponse: function(pressedKeys,heldAction) {
 		if(!heldAction) {
 			if(pressedKeys[inputHandlers_KeyIndex.CONFIRM]) {
 				this.confirmSound.play(true);
@@ -51986,9 +52183,9 @@ menus_BasicMenu.prototype = $extend(menus_MenuTemplate.prototype,{
 			}
 		}
 	}
-	,__class__: menus_BasicMenu
+	,__class__: menus_cursorMenus_BasicMenu
 });
-var menus_MenuOption = function(labelX,labelY,ID,labelWidth,labelText,labelSize,hasBgHighlight) {
+var menus_cursorMenus_MenuOption = function(labelX,labelY,ID,labelWidth,labelText,labelSize,hasBgHighlight) {
 	if(hasBgHighlight == null) {
 		hasBgHighlight = false;
 	}
@@ -52010,12 +52207,12 @@ var menus_MenuOption = function(labelX,labelY,ID,labelWidth,labelText,labelSize,
 	this.upIsWrap = false;
 	this.totalFlxGrp = new flixel_group_FlxTypedGroup();
 	this.isHovered = false;
-	this.cursorOffsetX = -1.5 * menus_MenuOption.cursorSideLength;
+	this.cursorOffsetX = -1.5 * menus_cursorMenus_MenuOption.cursorSideLength;
 	this.cursorPos = new flixel_math_FlxPoint();
 	this.labelPos = new flixel_math_FlxPoint();
 	this.id = ID;
 	this.label = new flixel_text_FlxText(labelX,labelY,labelWidth,labelText,labelSize);
-	this.cursorOffsetY = this.label.get_height() / 2 - menus_MenuOption.cursorSideLength / 2;
+	this.cursorOffsetY = this.label.get_height() / 2 - menus_cursorMenus_MenuOption.cursorSideLength / 2;
 	this.cursorPos.set(labelX + this.cursorOffsetX,labelY + this.cursorOffsetY);
 	if(hasBgHighlight) {
 		this.bgHighlight = new flixel_FlxSprite(this.label.x,this.label.y + this.label.get_height() / 2);
@@ -52028,10 +52225,10 @@ var menus_MenuOption = function(labelX,labelY,ID,labelWidth,labelText,labelSize,
 	}
 	this.totalFlxGrp.add(this.label);
 };
-$hxClasses["menus.MenuOption"] = menus_MenuOption;
-menus_MenuOption.__name__ = ["menus","MenuOption"];
-menus_MenuOption.__interfaces__ = [utilities_HideableEntity];
-menus_MenuOption.prototype = {
+$hxClasses["menus.cursorMenus.MenuOption"] = menus_cursorMenus_MenuOption;
+menus_cursorMenus_MenuOption.__name__ = ["menus","cursorMenus","MenuOption"];
+menus_cursorMenus_MenuOption.__interfaces__ = [utilities_HideableEntity];
+menus_cursorMenus_MenuOption.prototype = {
 	moveCursorPos: function(xDiff,yDiff) {
 		var _g = this.cursorPos;
 		_g.set_x(_g.x + xDiff);
@@ -52040,7 +52237,7 @@ menus_MenuOption.prototype = {
 	}
 	,addBgHighlightGraphic: function(width) {
 		if(this.bgHighlight.graphic != null) {
-			haxe_Log.trace("ERROR: created two graphics for one bgHighlight.",{ fileName : "MenuOption.hx", lineNumber : 172, className : "menus.MenuOption", methodName : "addBgHighlightGraphic"});
+			haxe_Log.trace("ERROR: created two graphics for one bgHighlight.",{ fileName : "MenuOption.hx", lineNumber : 172, className : "menus.cursorMenus.MenuOption", methodName : "addBgHighlightGraphic"});
 		}
 		this.bgHighlight.makeGraphic(width,this.label.get_height() / 2,1442840575);
 	}
@@ -52077,174 +52274,20 @@ menus_MenuOption.prototype = {
 			targetSprite.active = true;
 		}
 	}
-	,__class__: menus_MenuOption
+	,__class__: menus_cursorMenus_MenuOption
 };
-var menus_MissionMenuCreator = function() {
-};
-$hxClasses["menus.MissionMenuCreator"] = menus_MissionMenuCreator;
-menus_MissionMenuCreator.__name__ = ["menus","MissionMenuCreator"];
-menus_MissionMenuCreator.makeMapActionMenu = function(X,Y,ID) {
-	if(ID == null) {
-		ID = 0;
-	}
-	if(Y == null) {
-		Y = 0;
-	}
-	if(X == null) {
-		X = 0;
-	}
-	return new menus_BasicMenu(X,Y,["Unit","Status","Options","Suspend","End"],ID);
-};
-menus_MissionMenuCreator.makeUnitActionMenu = function(X,Y,ID) {
-	if(ID == null) {
-		ID = 0;
-	}
-	if(Y == null) {
-		Y = 0;
-	}
-	if(X == null) {
-		X = 0;
-	}
-	return new menus_ResizableBasicMenu(X,Y,["Attack","Heal","Talk","Rescue","Take","Drop","Item","Trade","Wait"],ID);
-};
-menus_MissionMenuCreator.makeInventoryMenu = function(X,Y,ID) {
-	if(ID == null) {
-		ID = 0;
-	}
-	if(Y == null) {
-		Y = 0;
-	}
-	if(X == null) {
-		X = 0;
-	}
-	return new menus_ResizableBasicMenu(X,Y,["Item 1","Item 2","Item 3","Item 4","Item 5"],ID);
-};
-menus_MissionMenuCreator.makeItemActionMenu = function(X,Y,ID) {
-	if(ID == null) {
-		ID = 0;
-	}
-	if(Y == null) {
-		Y = 0;
-	}
-	if(X == null) {
-		X = 0;
-	}
-	return new menus_ResizableBasicMenu(X,Y,["Equip","Use","Trade","Discard"],ID);
-};
-menus_MissionMenuCreator.makeTradeTargetMenu = function(X,Y,ID) {
-	if(ID == null) {
-		ID = 0;
-	}
-	if(Y == null) {
-		Y = 0;
-	}
-	if(X == null) {
-		X = 0;
-	}
-	return new menus_ResizableBasicMenu(X,Y,["Target 1","Target 2"],ID);
-};
-menus_MissionMenuCreator.makeTradeActionMenu = function(X,Y,ID) {
-	if(ID == null) {
-		ID = 0;
-	}
-	if(Y == null) {
-		Y = 0;
-	}
-	if(X == null) {
-		X = 0;
-	}
-	return new menus_ResizableBasicMenu(X,Y,["Trade 1","Trade 2"],ID);
-};
-menus_MissionMenuCreator.makeWeaponSelectMenu = function(X,Y,ID) {
-	if(ID == null) {
-		ID = 0;
-	}
-	if(Y == null) {
-		Y = 0;
-	}
-	if(X == null) {
-		X = 0;
-	}
-	return new menus_ResizableBasicMenu(X,Y,["Weapon 1","Weapon 2","Weapon 3"],ID);
-};
-menus_MissionMenuCreator.makeAttackTargetMenu = function(X,Y,ID) {
-	if(ID == null) {
-		ID = 0;
-	}
-	if(Y == null) {
-		Y = 0;
-	}
-	if(X == null) {
-		X = 0;
-	}
-	return new menus_ResizableBasicMenu(X,Y,["Target 1","Target 2"],ID);
-};
-menus_MissionMenuCreator.makeHealTargetMenu = function(X,Y,ID) {
-	if(ID == null) {
-		ID = 0;
-	}
-	if(Y == null) {
-		Y = 0;
-	}
-	if(X == null) {
-		X = 0;
-	}
-	return new menus_ResizableBasicMenu(X,Y,["Target 1","Target 2"],ID);
-};
-menus_MissionMenuCreator.makeRescueTargetMenu = function(X,Y,ID) {
-	if(ID == null) {
-		ID = 0;
-	}
-	if(Y == null) {
-		Y = 0;
-	}
-	if(X == null) {
-		X = 0;
-	}
-	return new menus_ResizableBasicMenu(X,Y,["Target 1","Target 2"],ID);
-};
-menus_MissionMenuCreator.makeTakeTargetMenu = function(X,Y,ID) {
-	if(ID == null) {
-		ID = 0;
-	}
-	if(Y == null) {
-		Y = 0;
-	}
-	if(X == null) {
-		X = 0;
-	}
-	return new menus_ResizableBasicMenu(X,Y,["Target 1","Target 2"],ID);
-};
-menus_MissionMenuCreator.makeDropTargetMenu = function(X,Y,ID) {
-	if(ID == null) {
-		ID = 0;
-	}
-	if(Y == null) {
-		Y = 0;
-	}
-	if(X == null) {
-		X = 0;
-	}
-	return new menus_ResizableBasicMenu(X,Y,["Target 1","Target 2"],ID);
-};
-menus_MissionMenuCreator.prototype = {
-	__class__: menus_MissionMenuCreator
-};
-var menus_MissionMenuTypes = function() { };
-$hxClasses["menus.MissionMenuTypes"] = menus_MissionMenuTypes;
-menus_MissionMenuTypes.__name__ = ["menus","MissionMenuTypes"];
-var menus_ResizableBasicMenu = function(X,Y,labelTextArr,subjectID) {
+var menus_cursorMenus_ResizableBasicMenu = function(X,Y,labelTextArr,subjectID) {
 	if(subjectID == null) {
 		subjectID = 0;
 	}
 	this.initLabelArrays(labelTextArr);
 	this.numActiveLabels = this.possibleLabelText.length;
-	menus_BasicMenu.call(this,X,Y,labelTextArr,subjectID);
+	menus_cursorMenus_BasicMenu.call(this,X,Y,labelTextArr,subjectID);
 };
-$hxClasses["menus.ResizableBasicMenu"] = menus_ResizableBasicMenu;
-menus_ResizableBasicMenu.__name__ = ["menus","ResizableBasicMenu"];
-menus_ResizableBasicMenu.__super__ = menus_BasicMenu;
-menus_ResizableBasicMenu.prototype = $extend(menus_BasicMenu.prototype,{
+$hxClasses["menus.cursorMenus.ResizableBasicMenu"] = menus_cursorMenus_ResizableBasicMenu;
+menus_cursorMenus_ResizableBasicMenu.__name__ = ["menus","cursorMenus","ResizableBasicMenu"];
+menus_cursorMenus_ResizableBasicMenu.__super__ = menus_cursorMenus_BasicMenu;
+menus_cursorMenus_ResizableBasicMenu.prototype = $extend(menus_cursorMenus_BasicMenu.prototype,{
 	initLabelArrays: function(labelTextArr) {
 		this.possibleLabelText = labelTextArr.map(function(s) {
 			return s;
@@ -52273,19 +52316,19 @@ menus_ResizableBasicMenu.prototype = $extend(menus_BasicMenu.prototype,{
 		this.resizeMenuBox(maxTextWidth);
 	}
 	,resetMenu: function() {
-		menus_BasicMenu.prototype.resetMenu.call(this);
+		menus_cursorMenus_BasicMenu.prototype.resetMenu.call(this);
 		var _g1 = this.numActiveLabels;
 		var _g = this.menuOptionArr.length;
 		while(_g1 < _g) this.menuOptionArr[_g1++].hide();
 	}
 	,setPos: function(newX,newY) {
-		menus_BasicMenu.prototype.setPos.call(this,newX,newY);
+		menus_cursorMenus_BasicMenu.prototype.setPos.call(this,newX,newY);
 		this.resizableBox.x = newX;
 		this.resizableBox.y = newY;
 	}
 	,setActiveLabels: function(newBoolArray) {
 		if(newBoolArray.length != this.activeLabels.length) {
-			haxe_Log.trace("ERROR: the array provided to setActiveLabels() has an incorrect number " + "of elements.",{ fileName : "ResizableBasicMenu.hx", lineNumber : 210, className : "menus.ResizableBasicMenu", methodName : "setActiveLabels"});
+			haxe_Log.trace("ERROR: the array provided to setActiveLabels() has an incorrect number " + "of elements.",{ fileName : "ResizableBasicMenu.hx", lineNumber : 211, className : "menus.cursorMenus.ResizableBasicMenu", methodName : "setActiveLabels"});
 		} else {
 			this.numActiveLabels = 0;
 			var _g1 = 0;
@@ -52350,7 +52393,346 @@ menus_ResizableBasicMenu.prototype = $extend(menus_BasicMenu.prototype,{
 		this.boxHeight = lastActiveLabel.y + lastActiveLabel.get_height() + this.cornerSize - this.y;
 		this.resizableBox.resize(this.boxWidth,this.boxHeight);
 	}
-	,__class__: menus_ResizableBasicMenu
+	,__class__: menus_cursorMenus_ResizableBasicMenu
+});
+var menus_cursorMenus_optionEnums_UnitActionMenuOptions = function() { };
+$hxClasses["menus.cursorMenus.optionEnums.UnitActionMenuOptions"] = menus_cursorMenus_optionEnums_UnitActionMenuOptions;
+menus_cursorMenus_optionEnums_UnitActionMenuOptions.__name__ = ["menus","cursorMenus","optionEnums","UnitActionMenuOptions"];
+var menus_targetMenus_TargetMenuTemplate = function(ID) {
+	menus_MenuTemplate.call(this,0,0,ID);
+	if(menus_targetMenus_TargetMenuTemplate.targetCursor == null) {
+		this.initTargetCursor();
+	}
+};
+$hxClasses["menus.targetMenus.TargetMenuTemplate"] = menus_targetMenus_TargetMenuTemplate;
+menus_targetMenus_TargetMenuTemplate.__name__ = ["menus","targetMenus","TargetMenuTemplate"];
+menus_targetMenus_TargetMenuTemplate.targetCursor = null;
+menus_targetMenus_TargetMenuTemplate.__super__ = menus_MenuTemplate;
+menus_targetMenus_TargetMenuTemplate.prototype = $extend(menus_MenuTemplate.prototype,{
+	initTargetCursor: function() {
+		menus_targetMenus_TargetMenuTemplate.targetCursor = new cursors_MapCursor(flixel_FlxG.game._state.map.width,flixel_FlxG.game._state.map.height,1);
+		menus_targetMenus_TargetMenuTemplate.targetCursor.changeCursorType(cursors_CursorTypes.TARGET);
+		menus_targetMenus_TargetMenuTemplate.targetCursor.changeMovementModes(cursors_MoveModes.BOUNCE_IN_OUT);
+		menus_targetMenus_TargetMenuTemplate.targetCursor.changeInputModes(cursors_InputModes.DISABLED);
+		menus_targetMenus_TargetMenuTemplate.targetCursor.hide();
+	}
+	,set_targetIndex: function(newIndex) {
+		this.targetIndex = newIndex;
+		this.set_currentTarget(this.possibleTargets[this.targetIndex]);
+		menus_targetMenus_TargetMenuTemplate.targetCursor.moveToPosition(units_movement_MoveIDExtender.getRow(this.currentTarget.mapPos),units_movement_MoveIDExtender.getCol(this.currentTarget.mapPos));
+		return this.targetIndex;
+	}
+	,set_currentTarget: function(newTarget) {
+		return this.currentTarget = newTarget;
+	}
+	,reveal: function() {
+		menus_MenuTemplate.prototype.reveal.call(this);
+		menus_targetMenus_TargetMenuTemplate.targetCursor.reveal();
+	}
+	,activate: function() {
+		menus_MenuTemplate.prototype.activate.call(this);
+		menus_targetMenus_TargetMenuTemplate.targetCursor.activate();
+	}
+	,hide: function() {
+		menus_MenuTemplate.prototype.hide.call(this);
+		menus_targetMenus_TargetMenuTemplate.targetCursor.hide();
+	}
+	,deactivate: function() {
+		menus_MenuTemplate.prototype.deactivate.call(this);
+		menus_targetMenus_TargetMenuTemplate.targetCursor.deactivate();
+	}
+	,refreshTargets: function(parentState) {
+	}
+	,resetMenu: function() {
+		this.set_targetIndex(0);
+		menus_targetMenus_TargetMenuTemplate.targetCursor.jumpToPosition(units_movement_MoveIDExtender.getRow(this.currentTarget.mapPos),units_movement_MoveIDExtender.getCol(this.currentTarget.mapPos));
+	}
+	,moveResponse: function(vertMove,horizMove,heldMove) {
+		if(this.possibleTargets.length > 1) {
+			if(!heldMove || !menus_targetMenus_TargetMenuTemplate.targetCursor.isMoving) {
+				if(horizMove + vertMove > 0) {
+					this.set_targetIndex((this.targetIndex + 1) % this.possibleTargets.length);
+					this.moveSound.play(true);
+				} else if(horizMove + vertMove < 0) {
+					if(this.targetIndex != 0) {
+						this.set_targetIndex(this.targetIndex - 1);
+					} else {
+						this.set_targetIndex(this.possibleTargets.length - 1);
+					}
+					this.moveSound.play(true);
+				}
+			}
+		}
+	}
+	,actionResponse: function(pressedKeys,heldAction) {
+		if(!heldAction) {
+			if(pressedKeys[inputHandlers_KeyIndex.CONFIRM]) {
+				this.confirmSound.play(true);
+				this.subject.notify(observerPattern_eventSystem_EventTypes.CONFIRM);
+			} else if(pressedKeys[inputHandlers_KeyIndex.CANCEL]) {
+				this.cancelSound.play(true);
+				this.subject.notify(observerPattern_eventSystem_EventTypes.CANCEL);
+			} else if(pressedKeys[inputHandlers_KeyIndex.INFO]) {
+				this.subject.notify(observerPattern_eventSystem_EventTypes.INFO);
+			}
+		}
+	}
+	,update: function(elapsed) {
+		if(this.active) {
+			if(!menus_targetMenus_TargetMenuTemplate.targetCursor.isMoving) {
+				while(this.active && inputHandlers_ActionInputHandler.actionBuffer.length > inputHandlers_ActionInputHandler.numInputsUsed) inputHandlers_ActionInputHandler.useBufferedInput($bind(this,this.actionResponse));
+			}
+			inputHandlers_MoveInputHandler.handleMovement(elapsed,$bind(this,this.moveResponse));
+			menus_targetMenus_TargetMenuTemplate.targetCursor.update(elapsed);
+		}
+	}
+	,__class__: menus_targetMenus_TargetMenuTemplate
+	,__properties__: {set_currentTarget:"set_currentTarget",set_targetIndex:"set_targetIndex"}
+});
+var menus_targetMenus_AttackTargetMenu = function(ID) {
+	if(ID == null) {
+		ID = 0;
+	}
+	this.currWeaponIndex = 0;
+	this.currWeaponIndexID = 0;
+	this.validWeaponIndices = [];
+	this.backgroundSize = 10;
+	this.cornerSize = 10;
+	this.boxSpriteSheet = "assets/images/box_simple.png";
+	this.boxHeight = 300;
+	this.boxWidth = 150;
+	menus_targetMenus_TargetMenuTemplate.call(this,ID);
+	this.initInfoWindow();
+	this.initInfoArray();
+};
+$hxClasses["menus.targetMenus.AttackTargetMenu"] = menus_targetMenus_AttackTargetMenu;
+menus_targetMenus_AttackTargetMenu.__name__ = ["menus","targetMenus","AttackTargetMenu"];
+menus_targetMenus_AttackTargetMenu.__interfaces__ = [boxes_VarSizedBox];
+menus_targetMenus_AttackTargetMenu.__super__ = menus_targetMenus_TargetMenuTemplate;
+menus_targetMenus_AttackTargetMenu.prototype = $extend(menus_targetMenus_TargetMenuTemplate.prototype,{
+	initInfoWindow: function() {
+		boxes_BoxCreator.setBoxType(this.boxSpriteSheet,this.cornerSize,this.backgroundSize);
+		this.infoWindow = boxes_BoxCreator.createBox(this.boxWidth,this.boxHeight);
+		this.infoWindow.set_visible(false);
+		this.totalFlxGrp.add(this.infoWindow);
+	}
+	,initInfoArray: function() {
+		this.weaponName = new flixel_text_FlxText(this.x + 15,this.y + 10,300,"",15);
+		this.weaponName.set_color(-16777216);
+		this.totalFlxGrp.add(this.weaponName);
+		this.InfoArray = [];
+		var _g1 = 0;
+		var _g = menus_targetMenus_InfoWindowRows.NUM_ROWS;
+		while(_g1 < _g) {
+			var row = _g1++;
+			this.InfoArray.push([]);
+			var _g3 = 0;
+			var _g2 = menus_targetMenus_InfoWindowCols.NUM_COLS;
+			while(_g3 < _g2) {
+				var infoEntry = new flixel_text_FlxText(this.x + 50 * _g3++,this.y + 10 + 30 * (row + 1),50,"",15);
+				infoEntry.set_color(-16777216);
+				infoEntry.set_alignment("center");
+				infoEntry.set_visible(false);
+				infoEntry.set_active(false);
+				this.totalFlxGrp.add(infoEntry);
+				this.InfoArray[row].push(infoEntry);
+			}
+		}
+		this.InfoArray[menus_targetMenus_InfoWindowRows.HEALTH][menus_targetMenus_InfoWindowCols.LABEL].set_text("HP");
+		this.InfoArray[menus_targetMenus_InfoWindowRows.ENERGY][menus_targetMenus_InfoWindowCols.LABEL].set_text("EN");
+		this.InfoArray[menus_targetMenus_InfoWindowRows.EVADE_COST][menus_targetMenus_InfoWindowCols.LABEL].set_text("E/C");
+		this.InfoArray[menus_targetMenus_InfoWindowRows.ATTACK_COST][menus_targetMenus_InfoWindowCols.LABEL].set_text("A/C");
+		this.InfoArray[menus_targetMenus_InfoWindowRows.ATTACK_DAMAGE][menus_targetMenus_InfoWindowCols.LABEL].set_text("A/D");
+		this.InfoArray[menus_targetMenus_InfoWindowRows.CRIT_COST][menus_targetMenus_InfoWindowCols.LABEL].set_text("C/C");
+		this.InfoArray[menus_targetMenus_InfoWindowRows.CRIT_DAMAGE][menus_targetMenus_InfoWindowCols.LABEL].set_text("C/D");
+	}
+	,refreshTargets: function(parentState) {
+		this.selectedUnit = parentState.getSelectedUnit();
+		this.possibleTargets = parentState.getValidUnitsInRange(this.selectedUnit.attackRanges,units_targeting_SimpleTargetTests.enemyUnitTest);
+		if(this.selectedUnit.equippedItem != null && this.selectedUnit.equippedItem.itemType == units_items_ItemTypes.WEAPON) {
+			this.set_currWeaponIndex(this.selectedUnit.inventory.items.indexOf(this.selectedUnit.equippedItem));
+		}
+		this.set_currentTarget(this.possibleTargets[0]);
+	}
+	,findValidWeaponIndices: function() {
+		this.validWeaponIndices.splice(0,this.validWeaponIndices.length);
+		var changeWeapon = true;
+		var distToTarget = units_movement_MoveIDExtender.getDistFromOther(this.selectedUnit.mapPos,this.currentTarget.mapPos);
+		var _g = 0;
+		var _g1 = this.selectedUnit.inventory.weaponIndices;
+		while(_g < _g1.length) {
+			var i = _g1[_g];
+			++_g;
+			if(this.selectedUnit.inventory.items[i].ranges.indexOf(distToTarget) != -1) {
+				this.validWeaponIndices.push(i);
+				if(i == this.currWeaponIndex) {
+					changeWeapon = false;
+					this.currWeaponIndexID = this.validWeaponIndices.length - 1;
+				}
+			}
+		}
+		if(changeWeapon) {
+			this.currWeaponIndexID = 0;
+			this.set_currWeaponIndex(this.validWeaponIndices[this.currWeaponIndexID]);
+		}
+	}
+	,set_currWeaponIndex: function(newWeaponIndex) {
+		this.selectedUnit.calcDerivedStats(this.selectedUnit.inventory.items[newWeaponIndex]);
+		this.weaponName.set_text(this.selectedUnit.inventory.items[newWeaponIndex].name);
+		if(this.selectedUnit != null && this.currentTarget != null) {
+			this.setInfoArrayColumn(menus_targetMenus_InfoWindowCols.PLAYER_INFO,this.selectedUnit,this.currentTarget);
+			this.setInfoArrayColumn(menus_targetMenus_InfoWindowCols.ENEMY_INFO,this.currentTarget,this.selectedUnit);
+		}
+		return this.currWeaponIndex = newWeaponIndex;
+	}
+	,set_currentTarget: function(newTarget) {
+		this.currentTarget = newTarget;
+		this.findValidWeaponIndices();
+		var otherUnit = newTarget;
+		this.setInfoArrayColumn(menus_targetMenus_InfoWindowCols.PLAYER_INFO,this.selectedUnit,otherUnit);
+		this.setInfoArrayColumn(menus_targetMenus_InfoWindowCols.ENEMY_INFO,otherUnit,this.selectedUnit);
+		return this.currentTarget;
+	}
+	,setInfoArrayColumn: function(colIndex,new_unit,enemy_unit) {
+		this.InfoArray[menus_targetMenus_InfoWindowRows.HEALTH][colIndex].set_text(new_unit.health == null?"null":"" + new_unit.health);
+		this.InfoArray[menus_targetMenus_InfoWindowRows.ENERGY][colIndex].set_text(new_unit.energy == null?"null":"" + new_unit.energy);
+		this.InfoArray[menus_targetMenus_InfoWindowRows.EVADE_COST][colIndex].set_text(Std.string(Math.max(enemy_unit.accuracy - new_unit.evade,1) | 0));
+		this.InfoArray[menus_targetMenus_InfoWindowRows.ATTACK_COST][colIndex].set_text(new_unit.attackCost == null?"null":"" + new_unit.attackCost);
+		this.InfoArray[menus_targetMenus_InfoWindowRows.ATTACK_DAMAGE][colIndex].set_text(Std.string(Math.max(new_unit.attackDamage - enemy_unit.defense,0) | 0));
+		this.InfoArray[menus_targetMenus_InfoWindowRows.CRIT_COST][colIndex].set_text(Std.string(new_unit.critCost + enemy_unit.intel));
+		this.InfoArray[menus_targetMenus_InfoWindowRows.CRIT_DAMAGE][colIndex].set_text(Std.string(Math.max(new_unit.critDamage - enemy_unit.defense,0) | 0));
+	}
+	,actionResponse: function(pressedKeys,heldAction) {
+		if(!heldAction) {
+			if(pressedKeys[inputHandlers_KeyIndex.CONFIRM]) {
+				this.confirmSound.play(true);
+				this.subject.notify(observerPattern_eventSystem_EventTypes.CONFIRM);
+			} else if(pressedKeys[inputHandlers_KeyIndex.CANCEL]) {
+				this.cancelSound.play(true);
+				this.subject.notify(observerPattern_eventSystem_EventTypes.CANCEL);
+			} else if(pressedKeys[inputHandlers_KeyIndex.NEXT]) {
+				if(this.validWeaponIndices.length > 1) {
+					if(this.currWeaponIndexID != 0) {
+						this.currWeaponIndexID = this.currWeaponIndexID - 1;
+					} else {
+						this.currWeaponIndexID = this.validWeaponIndices.length - 1;
+					}
+					this.set_currWeaponIndex(this.validWeaponIndices[this.currWeaponIndexID]);
+				}
+			} else if(pressedKeys[inputHandlers_KeyIndex.INFO]) {
+				haxe_Log.trace(this.validWeaponIndices.toString(),{ fileName : "AttackTargetMenu.hx", lineNumber : 247, className : "menus.targetMenus.AttackTargetMenu", methodName : "actionResponse"});
+				if(this.validWeaponIndices.length > 1) {
+					this.currWeaponIndexID = (this.currWeaponIndexID + 1) % this.validWeaponIndices.length;
+					this.set_currWeaponIndex(this.validWeaponIndices[this.currWeaponIndexID]);
+				}
+			}
+		}
+	}
+	,__class__: menus_targetMenus_AttackTargetMenu
+	,__properties__: $extend(menus_targetMenus_TargetMenuTemplate.prototype.__properties__,{set_currWeaponIndex:"set_currWeaponIndex"})
+});
+var menus_targetMenus_InfoWindowRows = function() { };
+$hxClasses["menus.targetMenus.InfoWindowRows"] = menus_targetMenus_InfoWindowRows;
+menus_targetMenus_InfoWindowRows.__name__ = ["menus","targetMenus","InfoWindowRows"];
+var menus_targetMenus_InfoWindowCols = function() { };
+$hxClasses["menus.targetMenus.InfoWindowCols"] = menus_targetMenus_InfoWindowCols;
+menus_targetMenus_InfoWindowCols.__name__ = ["menus","targetMenus","InfoWindowCols"];
+var menus_targetMenus_DropTargetMenu = function(ID) {
+	menus_targetMenus_TargetMenuTemplate.call(this,ID);
+};
+$hxClasses["menus.targetMenus.DropTargetMenu"] = menus_targetMenus_DropTargetMenu;
+menus_targetMenus_DropTargetMenu.__name__ = ["menus","targetMenus","DropTargetMenu"];
+menus_targetMenus_DropTargetMenu.dropTargetTest = function(selectedUnit,neighborPos) {
+	return true;
+};
+menus_targetMenus_DropTargetMenu.__super__ = menus_targetMenus_TargetMenuTemplate;
+menus_targetMenus_DropTargetMenu.prototype = $extend(menus_targetMenus_TargetMenuTemplate.prototype,{
+	refreshTargets: function(parentState) {
+		this.selectedUnit = parentState.getSelectedUnit();
+	}
+	,__class__: menus_targetMenus_DropTargetMenu
+});
+var menus_targetMenus_HealTargetMenu = function(ID) {
+	menus_targetMenus_TargetMenuTemplate.call(this,ID);
+};
+$hxClasses["menus.targetMenus.HealTargetMenu"] = menus_targetMenus_HealTargetMenu;
+menus_targetMenus_HealTargetMenu.__name__ = ["menus","targetMenus","HealTargetMenu"];
+menus_targetMenus_HealTargetMenu.__super__ = menus_targetMenus_TargetMenuTemplate;
+menus_targetMenus_HealTargetMenu.prototype = $extend(menus_targetMenus_TargetMenuTemplate.prototype,{
+	refreshTargets: function(parentState) {
+		this.selectedUnit = parentState.getSelectedUnit();
+		this.possibleTargets = parentState.getValidUnitsInRange(this.selectedUnit.equippedItem.healRanges,units_targeting_SimpleTargetTests.alliedUnitTest);
+	}
+	,__class__: menus_targetMenus_HealTargetMenu
+});
+var menus_targetMenus_RescueTargetMenu = function(ID) {
+	menus_targetMenus_TargetMenuTemplate.call(this,ID);
+};
+$hxClasses["menus.targetMenus.RescueTargetMenu"] = menus_targetMenus_RescueTargetMenu;
+menus_targetMenus_RescueTargetMenu.__name__ = ["menus","targetMenus","RescueTargetMenu"];
+menus_targetMenus_RescueTargetMenu.rescueTargetTest = function(selectedUnit,neighborUnit) {
+	if(selectedUnit.teamID == neighborUnit.teamID) {
+		return selectedUnit.carry <= neighborUnit.weight;
+	} else {
+		return false;
+	}
+};
+menus_targetMenus_RescueTargetMenu.__super__ = menus_targetMenus_TargetMenuTemplate;
+menus_targetMenus_RescueTargetMenu.prototype = $extend(menus_targetMenus_TargetMenuTemplate.prototype,{
+	refreshTargets: function(parentState) {
+		this.selectedUnit = parentState.getSelectedUnit();
+		this.possibleTargets = parentState.getValidUnitsInRange([1],menus_targetMenus_RescueTargetMenu.rescueTargetTest);
+	}
+	,__class__: menus_targetMenus_RescueTargetMenu
+});
+var menus_targetMenus_TakeTargetMenu = function(ID) {
+	menus_targetMenus_TargetMenuTemplate.call(this,ID);
+};
+$hxClasses["menus.targetMenus.TakeTargetMenu"] = menus_targetMenus_TakeTargetMenu;
+menus_targetMenus_TakeTargetMenu.__name__ = ["menus","targetMenus","TakeTargetMenu"];
+menus_targetMenus_TakeTargetMenu.takeTargetTest = function(selectedUnit,neighborUnit) {
+	if(selectedUnit.teamID == neighborUnit.teamID && neighborUnit.rescuedUnit != null) {
+		return selectedUnit.carry <= neighborUnit.rescuedUnit.weight;
+	} else {
+		return false;
+	}
+};
+menus_targetMenus_TakeTargetMenu.__super__ = menus_targetMenus_TargetMenuTemplate;
+menus_targetMenus_TakeTargetMenu.prototype = $extend(menus_targetMenus_TargetMenuTemplate.prototype,{
+	refreshTargets: function(parentState) {
+		this.selectedUnit = parentState.getSelectedUnit();
+		this.possibleTargets = parentState.getValidUnitsInRange([1],menus_targetMenus_TakeTargetMenu.takeTargetTest);
+	}
+	,__class__: menus_targetMenus_TakeTargetMenu
+});
+var menus_targetMenus_TalkTargetMenu = function(ID) {
+	menus_targetMenus_TargetMenuTemplate.call(this,ID);
+};
+$hxClasses["menus.targetMenus.TalkTargetMenu"] = menus_targetMenus_TalkTargetMenu;
+menus_targetMenus_TalkTargetMenu.__name__ = ["menus","targetMenus","TalkTargetMenu"];
+menus_targetMenus_TalkTargetMenu.talkTargetTest = function(selectedUnit,neighborUnit) {
+	return false;
+};
+menus_targetMenus_TalkTargetMenu.__super__ = menus_targetMenus_TargetMenuTemplate;
+menus_targetMenus_TalkTargetMenu.prototype = $extend(menus_targetMenus_TargetMenuTemplate.prototype,{
+	refreshTargets: function(parentState) {
+		this.selectedUnit = parentState.getSelectedUnit();
+		this.possibleTargets = parentState.getValidUnitsInRange([1],menus_targetMenus_TalkTargetMenu.talkTargetTest);
+	}
+	,__class__: menus_targetMenus_TalkTargetMenu
+});
+var menus_targetMenus_TradeTargetMenu = function(ID) {
+	menus_targetMenus_TargetMenuTemplate.call(this,ID);
+};
+$hxClasses["menus.targetMenus.TradeTargetMenu"] = menus_targetMenus_TradeTargetMenu;
+menus_targetMenus_TradeTargetMenu.__name__ = ["menus","targetMenus","TradeTargetMenu"];
+menus_targetMenus_TradeTargetMenu.__super__ = menus_targetMenus_TargetMenuTemplate;
+menus_targetMenus_TradeTargetMenu.prototype = $extend(menus_targetMenus_TargetMenuTemplate.prototype,{
+	refreshTargets: function(parentState) {
+		this.selectedUnit = parentState.getSelectedUnit();
+		this.possibleTargets = parentState.getValidUnitsInRange([1],units_targeting_SimpleTargetTests.alliedUnitTest);
+	}
+	,__class__: menus_targetMenus_TradeTargetMenu
 });
 var missions_MissionState = function(MaxSize) {
 	this.controlState = missions_PlayerControlStates.FREE_MOVE;
@@ -52448,7 +52830,7 @@ missions_MissionState.prototype = $extend(flixel_FlxState.prototype,{
 		} else if(this.controlState == missions_PlayerControlStates.PLAYER_UNIT) {
 			if((this.mapCursorManager.hoveredUnitType == units_MapCursorUnitTypes.NONE || this.unitManager.hoveredUnit == this.unitManager.selectedUnit) && this.mapCursor.selectedLocations.h.hasOwnProperty(this.mapCursorManager.currCursorPos)) {
 				this.controlState = missions_PlayerControlStates.UNIT_MENU;
-				this.unitManager.initiateUnitMovement();
+				this.unitManager.initiateUnitMovement(this.mapCursor.row,this.mapCursor.col);
 				this.mapCursorManager.deactivateMapCursor();
 			}
 		}
@@ -52488,7 +52870,7 @@ missions_MissionState.prototype = $extend(flixel_FlxState.prototype,{
 			} else {
 				this.controlState = missions_PlayerControlStates.FREE_MOVE;
 				this.mapCursorManager.activateMapCursor();
-				this.unitManager.updateUnitPos(this.unitManager.selectedUnit,this.mapCursor.row,this.mapCursor.col);
+				this.unitManager.confirmUnitMove();
 				this.unitManager.unitUnselected();
 				this.mapCursorManager.unitUnselected();
 			}
@@ -52498,6 +52880,12 @@ missions_MissionState.prototype = $extend(flixel_FlxState.prototype,{
 		this.currentlyUpdatingObject = newObj;
 		inputHandlers_ActionInputHandler.resetNumVars();
 		inputHandlers_MoveInputHandler.resetNumVars();
+	}
+	,getSelectedUnit: function() {
+		return this.unitManager.selectedUnit;
+	}
+	,getValidUnitsInRange: function(rangesToCheck,testFunc) {
+		return this.unitManager.getValidUnitsInRange(rangesToCheck,testFunc);
 	}
 	,update: function(elapsed) {
 		inputHandlers_ActionInputHandler.bufferActions(elapsed);
@@ -52607,7 +52995,7 @@ missions_managers_MapCursorManager.prototype = {
 		this.mapCursor.selectedLocations = null;
 	}
 	,jumpToUnit: function(unit) {
-		this.mapCursor.jumpToPosition(unit.mapRow,unit.mapCol);
+		this.mapCursor.jumpToPosition(units_movement_MoveIDExtender.getRow(unit.mapPos),units_movement_MoveIDExtender.getCol(unit.mapPos));
 	}
 	,onNotify: function(event,notifier) {
 		if(observerPattern_eventSystem_EventExtender.getID(event) != this.mapCursor.subject.ID) {
@@ -52632,6 +53020,7 @@ var missions_managers_MenuManager = function(parent) {
 	this.infoFunctions = [];
 	this.confirmFunctions = [];
 	this.cancelFunctions = [];
+	this.openFunctions = [];
 	this.activeMenuStack = [];
 	this.totalFlxGrp = new flixel_group_FlxTypedGroup();
 	this.menusOnTop = true;
@@ -52663,12 +53052,12 @@ missions_managers_MenuManager.prototype = {
 		this.tradeTargetMenu.subject.addObserver(this);
 		this.tradeActionMenu = menus_MissionMenuCreator.makeTradeActionMenu(0,0,menus_MissionMenuTypes.TRADE_ACTION);
 		this.tradeActionMenu.subject.addObserver(this);
-		this.weaponSelectMenu = menus_MissionMenuCreator.makeWeaponSelectMenu(0,0,menus_MissionMenuTypes.WEAPON_SELECT);
-		this.weaponSelectMenu.subject.addObserver(this);
 		this.attackTargetMenu = menus_MissionMenuCreator.makeAttackTargetMenu(this.cornerMenuPos.leftX,this.cornerMenuPos.topY,menus_MissionMenuTypes.ATTACK_TARGET);
 		this.attackTargetMenu.subject.addObserver(this);
 		this.healTargetMenu = menus_MissionMenuCreator.makeHealTargetMenu(this.cornerMenuPos.leftX,this.cornerMenuPos.topY,menus_MissionMenuTypes.HEAL_TARGET);
 		this.healTargetMenu.subject.addObserver(this);
+		this.talkTargetMenu = menus_MissionMenuCreator.makeTalkTargetMenu(this.cornerMenuPos.leftX,this.cornerMenuPos.topY,menus_MissionMenuTypes.TALK_TARGET);
+		this.talkTargetMenu.subject.addObserver(this);
 		this.rescueTargetMenu = menus_MissionMenuCreator.makeRescueTargetMenu(this.cornerMenuPos.leftX,this.cornerMenuPos.topY,menus_MissionMenuTypes.RESCUE_TARGET);
 		this.rescueTargetMenu.subject.addObserver(this);
 		this.takeTargetMenu = menus_MissionMenuCreator.makeTakeTargetMenu(this.cornerMenuPos.leftX,this.cornerMenuPos.topY,menus_MissionMenuTypes.TAKE_TARGET);
@@ -52677,15 +53066,16 @@ missions_managers_MenuManager.prototype = {
 		this.dropTargetMenu.subject.addObserver(this);
 	}
 	,fillTotalFlxGrp: function() {
+		this.totalFlxGrp.add(menus_targetMenus_TargetMenuTemplate.targetCursor.totalFlxGrp);
 		this.totalFlxGrp.add(this.mapActionMenu.totalFlxGrp);
 		this.totalFlxGrp.add(this.unitActionMenu.totalFlxGrp);
 		this.totalFlxGrp.add(this.unitInvMenu.totalFlxGrp);
 		this.totalFlxGrp.add(this.itemActionMenu.totalFlxGrp);
 		this.totalFlxGrp.add(this.tradeTargetMenu.totalFlxGrp);
 		this.totalFlxGrp.add(this.tradeActionMenu.totalFlxGrp);
-		this.totalFlxGrp.add(this.weaponSelectMenu.totalFlxGrp);
 		this.totalFlxGrp.add(this.attackTargetMenu.totalFlxGrp);
 		this.totalFlxGrp.add(this.healTargetMenu.totalFlxGrp);
+		this.totalFlxGrp.add(this.talkTargetMenu.totalFlxGrp);
 		this.totalFlxGrp.add(this.rescueTargetMenu.totalFlxGrp);
 		this.totalFlxGrp.add(this.takeTargetMenu.totalFlxGrp);
 		this.totalFlxGrp.add(this.dropTargetMenu.totalFlxGrp);
@@ -52695,9 +53085,17 @@ missions_managers_MenuManager.prototype = {
 		var _g = menus_MissionMenuTypes.NUM_OF_MENUS;
 		while(_g1 < _g) {
 			++_g1;
+			this.openFunctions.push($bind(this,this.defaultOpen));
 			this.cancelFunctions.push($bind(this,this.popCancel));
 			this.confirmFunctions.push([]);
 		}
+		this.openFunctions[menus_MissionMenuTypes.UNIT_ACTION] = $bind(this,this.unitActionMenuOpen);
+		this.openFunctions[menus_MissionMenuTypes.ATTACK_TARGET] = $bind(this,this.attackTargetMenuOpen);
+		this.openFunctions[menus_MissionMenuTypes.HEAL_TARGET] = $bind(this,this.healTargetMenuOpen);
+		this.openFunctions[menus_MissionMenuTypes.TALK_TARGET] = $bind(this,this.talkTargetMenuOpen);
+		this.openFunctions[menus_MissionMenuTypes.RESCUE_TARGET] = $bind(this,this.rescueTargetMenuOpen);
+		this.openFunctions[menus_MissionMenuTypes.TAKE_TARGET] = $bind(this,this.takeTargetMenuOpen);
+		this.openFunctions[menus_MissionMenuTypes.TRADE_TARGET] = $bind(this,this.tradeTargetMenuOpen);
 		this.cancelFunctions[menus_MissionMenuTypes.UNIT_ACTION] = $bind(this,this.unitActionMenuCancel);
 		this.cancelFunctions[menus_MissionMenuTypes.TRADE_TARGET] = $bind(this,this.tradeMenuCancel);
 		this.cancelFunctions[menus_MissionMenuTypes.TRADE_ACTION] = $bind(this,this.tradeMenuCancel);
@@ -52722,9 +53120,9 @@ missions_managers_MenuManager.prototype = {
 		this.confirmFunctions[menus_MissionMenuTypes.UNIT_INVENTORY].push($bind(this,this.unitInvConfirm));
 		this.confirmFunctions[menus_MissionMenuTypes.TRADE_TARGET].push($bind(this,this.tradeTargetConfirm));
 		this.confirmFunctions[menus_MissionMenuTypes.TRADE_ACTION].push($bind(this,this.tradeActionConfirm));
-		this.confirmFunctions[menus_MissionMenuTypes.WEAPON_SELECT].push($bind(this,this.weaponSelectConfirm));
 		this.confirmFunctions[menus_MissionMenuTypes.ATTACK_TARGET].push($bind(this,this.attackTargetConfirm));
 		this.confirmFunctions[menus_MissionMenuTypes.HEAL_TARGET].push($bind(this,this.healTargetConfirm));
+		this.confirmFunctions[menus_MissionMenuTypes.TALK_TARGET].push($bind(this,this.talkTargetConfirm));
 		this.confirmFunctions[menus_MissionMenuTypes.RESCUE_TARGET].push($bind(this,this.rescueTargetConfirm));
 		this.confirmFunctions[menus_MissionMenuTypes.TAKE_TARGET].push($bind(this,this.takeTargetConfirm));
 		this.confirmFunctions[menus_MissionMenuTypes.DROP_TARGET].push($bind(this,this.dropTargetConfirm));
@@ -52770,6 +53168,7 @@ missions_managers_MenuManager.prototype = {
 	}
 	,activateTopMenu: function() {
 		var menuToActivate = this.activeMenuStack[this.activeMenuStack.length - 1];
+		this.openFunctions[menuToActivate.subject.ID]();
 		menuToActivate.activate();
 		menuToActivate.reveal();
 		this.parentState.changeCurrUpdatingObj(menuToActivate);
@@ -52792,121 +53191,173 @@ missions_managers_MenuManager.prototype = {
 		}
 		this.activeMenuStack[this.activeMenuStack.length - 1 - i].reveal();
 	}
+	,defaultOpen: function() {
+	}
+	,unitActionMenuOpen: function() {
+		var whichOptionsActive = [true,true,true,true,true,true,true,true,true];
+		var selectedUnit = this.parentState.getSelectedUnit();
+		if(this.parentState.getValidUnitsInRange(selectedUnit.attackRanges,units_targeting_SimpleTargetTests.enemyUnitTest).length == 0) {
+			whichOptionsActive[menus_cursorMenus_optionEnums_UnitActionMenuOptions.ATTACK] = false;
+		}
+		if(this.parentState.getValidUnitsInRange(selectedUnit.healRanges,units_targeting_SimpleTargetTests.alliedUnitTest).length == 0) {
+			whichOptionsActive[menus_cursorMenus_optionEnums_UnitActionMenuOptions.HEAL] = false;
+		}
+		if(this.parentState.getValidUnitsInRange([1],menus_targetMenus_TalkTargetMenu.talkTargetTest).length == 0) {
+			whichOptionsActive[menus_cursorMenus_optionEnums_UnitActionMenuOptions.TALK] = false;
+		}
+		if(selectedUnit.rescuedUnit != null || this.parentState.getValidUnitsInRange([1],menus_targetMenus_RescueTargetMenu.rescueTargetTest).length == 0) {
+			whichOptionsActive[menus_cursorMenus_optionEnums_UnitActionMenuOptions.RESCUE] = false;
+		}
+		if(selectedUnit.rescuedUnit != null || this.parentState.getValidUnitsInRange([1],menus_targetMenus_TakeTargetMenu.takeTargetTest).length == 0) {
+			whichOptionsActive[menus_cursorMenus_optionEnums_UnitActionMenuOptions.TAKE] = false;
+		}
+		if(selectedUnit.rescuedUnit == null) {
+			whichOptionsActive[menus_cursorMenus_optionEnums_UnitActionMenuOptions.DROP] = false;
+		}
+		if(selectedUnit.inventory.items.length == 0) {
+			whichOptionsActive[menus_cursorMenus_optionEnums_UnitActionMenuOptions.ITEM] = false;
+		}
+		if(this.parentState.getValidUnitsInRange([1],units_targeting_SimpleTargetTests.alliedUnitTest).length == 0) {
+			whichOptionsActive[menus_cursorMenus_optionEnums_UnitActionMenuOptions.TRADE] = false;
+		}
+		this.unitActionMenu.changeMenuOptions(whichOptionsActive);
+	}
+	,attackTargetMenuOpen: function() {
+		this.attackTargetMenu.refreshTargets(this.parentState);
+	}
+	,healTargetMenuOpen: function() {
+		this.healTargetMenu.refreshTargets(this.parentState);
+	}
+	,talkTargetMenuOpen: function() {
+		this.talkTargetMenu.refreshTargets(this.parentState);
+	}
+	,rescueTargetMenuOpen: function() {
+		this.rescueTargetMenu.refreshTargets(this.parentState);
+	}
+	,takeTargetMenuOpen: function() {
+		this.takeTargetMenu.refreshTargets(this.parentState);
+	}
+	,dropTargetMenuOpen: function() {
+		this.dropTargetMenu.refreshTargets(this.parentState);
+	}
+	,tradeTargetMenuOpen: function() {
+		this.tradeTargetMenu.refreshTargets(this.parentState);
+	}
 	,unitConfirm: function() {
-		haxe_Log.trace("Looking at units...",{ fileName : "MenuManager.hx", lineNumber : 492, className : "missions.managers.MenuManager", methodName : "unitConfirm"});
+		haxe_Log.trace("Looking at units...",{ fileName : "MenuManager.hx", lineNumber : 662, className : "missions.managers.MenuManager", methodName : "unitConfirm"});
 		this.popMenuStack();
 	}
 	,statusConfirm: function() {
-		haxe_Log.trace("Looking at status...",{ fileName : "MenuManager.hx", lineNumber : 501, className : "missions.managers.MenuManager", methodName : "statusConfirm"});
+		haxe_Log.trace("Looking at status...",{ fileName : "MenuManager.hx", lineNumber : 671, className : "missions.managers.MenuManager", methodName : "statusConfirm"});
 		this.popMenuStack();
 	}
 	,optionsConfirm: function() {
-		haxe_Log.trace("Looking at options...",{ fileName : "MenuManager.hx", lineNumber : 510, className : "missions.managers.MenuManager", methodName : "optionsConfirm"});
+		haxe_Log.trace("Looking at options...",{ fileName : "MenuManager.hx", lineNumber : 680, className : "missions.managers.MenuManager", methodName : "optionsConfirm"});
 		this.popMenuStack();
 	}
 	,suspendConfirm: function() {
-		haxe_Log.trace("Suspending game...",{ fileName : "MenuManager.hx", lineNumber : 519, className : "missions.managers.MenuManager", methodName : "suspendConfirm"});
+		haxe_Log.trace("Suspending game...",{ fileName : "MenuManager.hx", lineNumber : 689, className : "missions.managers.MenuManager", methodName : "suspendConfirm"});
 		this.popMenuStack();
 	}
 	,endConfirm: function() {
-		haxe_Log.trace("ending turn...",{ fileName : "MenuManager.hx", lineNumber : 528, className : "missions.managers.MenuManager", methodName : "endConfirm"});
+		haxe_Log.trace("ending turn...",{ fileName : "MenuManager.hx", lineNumber : 698, className : "missions.managers.MenuManager", methodName : "endConfirm"});
 		this.popMenuStack();
 	}
 	,attackConfirm: function() {
-		haxe_Log.trace("Attack!",{ fileName : "MenuManager.hx", lineNumber : 540, className : "missions.managers.MenuManager", methodName : "attackConfirm"});
+		haxe_Log.trace("Attack!",{ fileName : "MenuManager.hx", lineNumber : 710, className : "missions.managers.MenuManager", methodName : "attackConfirm"});
 		this.hideMenuStack();
-		this.pushMenuStack(this.weaponSelectMenu);
+		this.pushMenuStack(this.attackTargetMenu);
 	}
 	,healConfirm: function() {
-		haxe_Log.trace("Heal!",{ fileName : "MenuManager.hx", lineNumber : 550, className : "missions.managers.MenuManager", methodName : "healConfirm"});
+		haxe_Log.trace("Heal!",{ fileName : "MenuManager.hx", lineNumber : 720, className : "missions.managers.MenuManager", methodName : "healConfirm"});
 		this.hideMenuStack();
 		this.pushMenuStack(this.healTargetMenu);
 	}
 	,talkConfirm: function() {
-		haxe_Log.trace("Talk!",{ fileName : "MenuManager.hx", lineNumber : 560, className : "missions.managers.MenuManager", methodName : "talkConfirm"});
-		this.clearMenuStack();
+		haxe_Log.trace("Talk!",{ fileName : "MenuManager.hx", lineNumber : 730, className : "missions.managers.MenuManager", methodName : "talkConfirm"});
+		this.hideMenuStack();
+		this.pushMenuStack(this.talkTargetMenu);
 	}
 	,rescueConfirm: function() {
-		haxe_Log.trace("Resucue!",{ fileName : "MenuManager.hx", lineNumber : 569, className : "missions.managers.MenuManager", methodName : "rescueConfirm"});
+		haxe_Log.trace("Resucue!",{ fileName : "MenuManager.hx", lineNumber : 740, className : "missions.managers.MenuManager", methodName : "rescueConfirm"});
 		this.hideMenuStack();
 		this.pushMenuStack(this.rescueTargetMenu);
 	}
 	,takeConfirm: function() {
-		haxe_Log.trace("Take!",{ fileName : "MenuManager.hx", lineNumber : 579, className : "missions.managers.MenuManager", methodName : "takeConfirm"});
+		haxe_Log.trace("Take!",{ fileName : "MenuManager.hx", lineNumber : 750, className : "missions.managers.MenuManager", methodName : "takeConfirm"});
 		this.hideMenuStack();
 		this.pushMenuStack(this.takeTargetMenu);
 	}
 	,dropConfirm: function() {
-		haxe_Log.trace("Drop!",{ fileName : "MenuManager.hx", lineNumber : 589, className : "missions.managers.MenuManager", methodName : "dropConfirm"});
+		haxe_Log.trace("Drop!",{ fileName : "MenuManager.hx", lineNumber : 760, className : "missions.managers.MenuManager", methodName : "dropConfirm"});
 		this.hideMenuStack();
 		this.pushMenuStack(this.dropTargetMenu);
 	}
 	,itemConfirm: function() {
-		haxe_Log.trace("Item!",{ fileName : "MenuManager.hx", lineNumber : 599, className : "missions.managers.MenuManager", methodName : "itemConfirm"});
+		haxe_Log.trace("Item!",{ fileName : "MenuManager.hx", lineNumber : 770, className : "missions.managers.MenuManager", methodName : "itemConfirm"});
 		this.hideMenuStack();
 		this.pushMenuStack(this.unitInvMenu);
 	}
 	,tradeConfirm: function() {
-		haxe_Log.trace("Trade!",{ fileName : "MenuManager.hx", lineNumber : 609, className : "missions.managers.MenuManager", methodName : "tradeConfirm"});
+		haxe_Log.trace("Trade!",{ fileName : "MenuManager.hx", lineNumber : 780, className : "missions.managers.MenuManager", methodName : "tradeConfirm"});
 		this.hideMenuStack();
 		this.pushMenuStack(this.tradeTargetMenu);
 	}
 	,waitConfirm: function() {
-		haxe_Log.trace("Wait!",{ fileName : "MenuManager.hx", lineNumber : 619, className : "missions.managers.MenuManager", methodName : "waitConfirm"});
+		haxe_Log.trace("Wait!",{ fileName : "MenuManager.hx", lineNumber : 790, className : "missions.managers.MenuManager", methodName : "waitConfirm"});
 		this.clearMenuStack();
 	}
 	,unitInvConfirm: function() {
-		haxe_Log.trace("Selected an item...",{ fileName : "MenuManager.hx", lineNumber : 632, className : "missions.managers.MenuManager", methodName : "unitInvConfirm"});
+		haxe_Log.trace("Selected an item...",{ fileName : "MenuManager.hx", lineNumber : 803, className : "missions.managers.MenuManager", methodName : "unitInvConfirm"});
 		this.pushMenuStack(this.itemActionMenu);
 	}
 	,itemEquipConfirm: function() {
-		haxe_Log.trace("Changing equipped item!",{ fileName : "MenuManager.hx", lineNumber : 645, className : "missions.managers.MenuManager", methodName : "itemEquipConfirm"});
+		haxe_Log.trace("Changing equipped item!",{ fileName : "MenuManager.hx", lineNumber : 816, className : "missions.managers.MenuManager", methodName : "itemEquipConfirm"});
 		this.popMenuStack();
 	}
 	,itemUseConfirm: function() {
-		haxe_Log.trace("Using Item",{ fileName : "MenuManager.hx", lineNumber : 654, className : "missions.managers.MenuManager", methodName : "itemUseConfirm"});
+		haxe_Log.trace("Using Item",{ fileName : "MenuManager.hx", lineNumber : 825, className : "missions.managers.MenuManager", methodName : "itemUseConfirm"});
 		this.clearMenuStack();
 	}
 	,itemTradeConfirm: function() {
-		haxe_Log.trace("Preparing to trade...",{ fileName : "MenuManager.hx", lineNumber : 664, className : "missions.managers.MenuManager", methodName : "itemTradeConfirm"});
+		haxe_Log.trace("Preparing to trade...",{ fileName : "MenuManager.hx", lineNumber : 835, className : "missions.managers.MenuManager", methodName : "itemTradeConfirm"});
 		this.hideMenuStack();
 		this.pushMenuStack(this.tradeTargetMenu);
 	}
 	,itemDiscardConfirm: function() {
-		haxe_Log.trace("Throwing away item!",{ fileName : "MenuManager.hx", lineNumber : 674, className : "missions.managers.MenuManager", methodName : "itemDiscardConfirm"});
+		haxe_Log.trace("Throwing away item!",{ fileName : "MenuManager.hx", lineNumber : 845, className : "missions.managers.MenuManager", methodName : "itemDiscardConfirm"});
 		this.popMenuStack();
 	}
 	,tradeTargetConfirm: function() {
-		haxe_Log.trace("Selected trading target...",{ fileName : "MenuManager.hx", lineNumber : 688, className : "missions.managers.MenuManager", methodName : "tradeTargetConfirm"});
+		haxe_Log.trace("Selected trading target...",{ fileName : "MenuManager.hx", lineNumber : 859, className : "missions.managers.MenuManager", methodName : "tradeTargetConfirm"});
 		this.hideMenuStack();
 		this.pushMenuStack(this.tradeActionMenu);
 	}
 	,tradeActionConfirm: function() {
-		haxe_Log.trace("Trading around items!",{ fileName : "MenuManager.hx", lineNumber : 701, className : "missions.managers.MenuManager", methodName : "tradeActionConfirm"});
-	}
-	,weaponSelectConfirm: function() {
-		haxe_Log.trace("Selected weapon...",{ fileName : "MenuManager.hx", lineNumber : 712, className : "missions.managers.MenuManager", methodName : "weaponSelectConfirm"});
-		this.hideMenuStack();
-		this.pushMenuStack(this.attackTargetMenu);
+		haxe_Log.trace("Trading around items!",{ fileName : "MenuManager.hx", lineNumber : 872, className : "missions.managers.MenuManager", methodName : "tradeActionConfirm"});
 	}
 	,attackTargetConfirm: function() {
-		haxe_Log.trace("Beginning attack!",{ fileName : "MenuManager.hx", lineNumber : 725, className : "missions.managers.MenuManager", methodName : "attackTargetConfirm"});
+		haxe_Log.trace("Beginning attack!",{ fileName : "MenuManager.hx", lineNumber : 883, className : "missions.managers.MenuManager", methodName : "attackTargetConfirm"});
 		this.clearMenuStack();
 	}
 	,healTargetConfirm: function() {
-		haxe_Log.trace("Healing target!",{ fileName : "MenuManager.hx", lineNumber : 737, className : "missions.managers.MenuManager", methodName : "healTargetConfirm"});
+		haxe_Log.trace("Healing target!",{ fileName : "MenuManager.hx", lineNumber : 895, className : "missions.managers.MenuManager", methodName : "healTargetConfirm"});
+		this.clearMenuStack();
+	}
+	,talkTargetConfirm: function() {
+		haxe_Log.trace("Selected target to talk to!",{ fileName : "MenuManager.hx", lineNumber : 907, className : "missions.managers.MenuManager", methodName : "talkTargetConfirm"});
 		this.clearMenuStack();
 	}
 	,rescueTargetConfirm: function() {
-		haxe_Log.trace("Rescuing target!",{ fileName : "MenuManager.hx", lineNumber : 749, className : "missions.managers.MenuManager", methodName : "rescueTargetConfirm"});
+		haxe_Log.trace("Rescuing target!",{ fileName : "MenuManager.hx", lineNumber : 918, className : "missions.managers.MenuManager", methodName : "rescueTargetConfirm"});
 		this.clearMenuStack();
 	}
 	,takeTargetConfirm: function() {
-		haxe_Log.trace("Taking target!",{ fileName : "MenuManager.hx", lineNumber : 761, className : "missions.managers.MenuManager", methodName : "takeTargetConfirm"});
+		haxe_Log.trace("Taking target!",{ fileName : "MenuManager.hx", lineNumber : 930, className : "missions.managers.MenuManager", methodName : "takeTargetConfirm"});
 		this.clearMenuStack();
 	}
 	,dropTargetConfirm: function() {
-		haxe_Log.trace("Dropping target!",{ fileName : "MenuManager.hx", lineNumber : 773, className : "missions.managers.MenuManager", methodName : "dropTargetConfirm"});
+		haxe_Log.trace("Dropping target!",{ fileName : "MenuManager.hx", lineNumber : 942, className : "missions.managers.MenuManager", methodName : "dropTargetConfirm"});
 		this.clearMenuStack();
 	}
 	,popCancel: function() {
@@ -52930,7 +53381,7 @@ missions_managers_MenuManager.prototype = {
 			menuToPush = this.unitActionMenu;
 			break;
 		default:
-			haxe_Log.trace("Attempted to open a non-top level menu. Opening mapActionMenu instead...",{ fileName : "MenuManager.hx", lineNumber : 851, className : "missions.managers.MenuManager", methodName : "openTopLevelMenu"});
+			haxe_Log.trace("Attempted to open a non-top level menu. Opening mapActionMenu instead...",{ fileName : "MenuManager.hx", lineNumber : 1020, className : "missions.managers.MenuManager", methodName : "openTopLevelMenu"});
 			menuToPush = this.mapActionMenu;
 		}
 		this.pushMenuStack(menuToPush);
@@ -52939,21 +53390,11 @@ missions_managers_MenuManager.prototype = {
 		if(goToLeft != this.menusOnLeft && goToLeft) {
 			this.mapActionMenu.setPos(this.rootMenuPos.leftX,this.rootMenuPos.topY);
 			this.unitActionMenu.setPos(this.rootMenuPos.leftX,this.rootMenuPos.topY);
-			this.tradeTargetMenu.setPos(this.cornerMenuPos.leftX,this.cornerMenuPos.topY);
 			this.attackTargetMenu.setPos(this.cornerMenuPos.leftX,this.cornerMenuPos.topY);
-			this.healTargetMenu.setPos(this.cornerMenuPos.leftX,this.cornerMenuPos.topY);
-			this.rescueTargetMenu.setPos(this.cornerMenuPos.leftX,this.cornerMenuPos.topY);
-			this.takeTargetMenu.setPos(this.cornerMenuPos.leftX,this.cornerMenuPos.topY);
-			this.dropTargetMenu.setPos(this.cornerMenuPos.leftX,this.cornerMenuPos.topY);
 		} else if(goToLeft != this.menusOnLeft && !goToLeft) {
 			this.unitActionMenu.setPos(this.rootMenuPos.rightX - this.unitActionMenu.boxWidth,this.rootMenuPos.topY);
 			this.mapActionMenu.setPos(this.rootMenuPos.rightX - this.mapActionMenu.boxWidth,this.rootMenuPos.topY);
-			this.tradeTargetMenu.setPos(this.cornerMenuPos.rightX - this.tradeTargetMenu.boxWidth,this.cornerMenuPos.topY);
 			this.attackTargetMenu.setPos(this.cornerMenuPos.rightX - this.attackTargetMenu.boxWidth,this.cornerMenuPos.topY);
-			this.healTargetMenu.setPos(this.cornerMenuPos.rightX - this.healTargetMenu.boxWidth,this.cornerMenuPos.topY);
-			this.rescueTargetMenu.setPos(this.cornerMenuPos.rightX - this.rescueTargetMenu.boxWidth,this.cornerMenuPos.topY);
-			this.takeTargetMenu.setPos(this.cornerMenuPos.rightX - this.takeTargetMenu.boxWidth,this.cornerMenuPos.topY);
-			this.dropTargetMenu.setPos(this.cornerMenuPos.rightX - this.dropTargetMenu.boxWidth,this.cornerMenuPos.topY);
 		}
 		this.menusOnLeft = goToLeft;
 	}
@@ -52965,7 +53406,8 @@ missions_managers_MenuManager.prototype = {
 		case observerPattern_eventSystem_EventTypes.CONFIRM:
 			var menu = notifier;
 			if(this.confirmFunctions[menu.subject.ID].length > 1) {
-				this.confirmFunctions[menu.subject.ID][menu.currMenuOption.id]();
+				var cursorMenu = menu;
+				this.confirmFunctions[cursorMenu.subject.ID][cursorMenu.currMenuOption.id]();
 			} else {
 				this.confirmFunctions[menu.subject.ID][0]();
 			}
@@ -53137,20 +53579,25 @@ missions_managers_UnitManager.prototype = {
 		this.unitTerrainArr = null;
 	}
 	,updateUnitPos: function(unit,row,col) {
-		var oldMoveID = units_movement_MoveIDExtender.newMoveID(unit.mapRow,unit.mapCol);
+		var oldMoveID = units_movement_MoveIDExtender.newMoveID(units_movement_MoveIDExtender.getRow(unit.mapPos),units_movement_MoveIDExtender.getCol(unit.mapPos));
 		var newMoveID = units_movement_MoveIDExtender.newMoveID(row,col);
-		this.unitMap[unit.mapRow][unit.mapCol] = -1;
-		this.teamMap[unit.mapRow][unit.mapCol] = units_TeamID.NONE;
+		this.unitMap[units_movement_MoveIDExtender.getRow(unit.mapPos)][units_movement_MoveIDExtender.getCol(unit.mapPos)] = -1;
+		this.teamMap[units_movement_MoveIDExtender.getRow(unit.mapPos)][units_movement_MoveIDExtender.getCol(unit.mapPos)] = units_TeamID.NONE;
 		this.tileChanges.push(new units_movement_TileChange(oldMoveID,true,unit.teamID));
 		this.unitMap[row][col] = unit.subject.ID;
 		this.teamMap[row][col] = unit.teamID;
 		this.tileChanges.push(new units_movement_TileChange(newMoveID,false,unit.teamID));
-		unit.mapRow = row;
-		unit.mapCol = col;
+		unit.mapPos = newMoveID;
 		this.unitTerrainArr = this.normTerrainMap;
 		this.findMoveAndAttackRange(unit);
 	}
-	,initiateUnitMovement: function() {
+	,initiateUnitMovement: function(row,col) {
+		var newMoveID = units_movement_MoveIDExtender.newMoveID(row,col);
+		this.unitMap[units_movement_MoveIDExtender.getRow(this.selectedUnit.mapPos)][units_movement_MoveIDExtender.getCol(this.selectedUnit.mapPos)] = -1;
+		this.teamMap[units_movement_MoveIDExtender.getRow(this.selectedUnit.mapPos)][units_movement_MoveIDExtender.getCol(this.selectedUnit.mapPos)] = units_TeamID.NONE;
+		this.unitMap[row][col] = this.selectedUnit.subject.ID;
+		this.teamMap[row][col] = this.selectedUnit.teamID;
+		this.selectedUnit.mapPos = newMoveID;
 		if(this.movePath.length != 0 || this.neighborPath == null) {
 			this.hideAllRangeTiles();
 			this.hideAllArrowTiles();
@@ -53158,6 +53605,59 @@ missions_managers_UnitManager.prototype = {
 		} else {
 			this.currMoveFunction = $bind(this,this.pickMoveViaNeighborPath);
 		}
+	}
+	,confirmUnitMove: function() {
+		var oldMoveID = this.selectedUnit.preMoveMapPos;
+		var newMoveID = this.selectedUnit.mapPos;
+		this.tileChanges.push(new units_movement_TileChange(oldMoveID,true,this.selectedUnit.teamID));
+		this.tileChanges.push(new units_movement_TileChange(newMoveID,false,this.selectedUnit.teamID));
+		this.selectedUnit.preMoveMapPos = this.selectedUnit.mapPos;
+		this.unitTerrainArr = this.normTerrainMap;
+		this.findMoveAndAttackRange(this.selectedUnit);
+	}
+	,undoUnitMove: function() {
+		this.unitMap[units_movement_MoveIDExtender.getRow(this.selectedUnit.mapPos)][units_movement_MoveIDExtender.getCol(this.selectedUnit.mapPos)] = -1;
+		this.teamMap[units_movement_MoveIDExtender.getRow(this.selectedUnit.mapPos)][units_movement_MoveIDExtender.getCol(this.selectedUnit.mapPos)] = units_TeamID.NONE;
+		this.unitMap[units_movement_MoveIDExtender.getRow(this.selectedUnit.preMoveMapPos)][units_movement_MoveIDExtender.getCol(this.selectedUnit.preMoveMapPos)] = this.selectedUnit.subject.ID;
+		this.teamMap[units_movement_MoveIDExtender.getRow(this.selectedUnit.preMoveMapPos)][units_movement_MoveIDExtender.getCol(this.selectedUnit.preMoveMapPos)] = this.selectedUnit.teamID;
+		this.selectedUnit.mapPos = this.selectedUnit.preMoveMapPos;
+		this.selectedUnit.set_x(units_movement_MoveIDExtender.getCol(this.selectedUnit.mapPos) * this.parentState.tileSize);
+		this.selectedUnit.set_y(units_movement_MoveIDExtender.getRow(this.selectedUnit.mapPos) * this.parentState.tileSize);
+		this.selectedUnit.animation.play("down");
+	}
+	,getValidUnitsInRange: function(rangesToCheck,testFunc) {
+		var validUnits = [];
+		var _g = 0;
+		while(_g < rangesToCheck.length) {
+			var range = rangesToCheck[_g];
+			++_g;
+			var _g2 = -range;
+			var _g1 = range + 1;
+			while(_g2 < _g1) {
+				var colOffset = _g2++;
+				var _g3 = 0;
+				var _g4 = [-1,1];
+				while(_g3 < _g4.length) {
+					var rowModifier = _g4[_g3];
+					++_g3;
+					var rowOffset = (range - Math.abs(colOffset)) * rowModifier;
+					var neighborLoc = units_movement_MoveIDExtender.getOtherByOffset(this.selectedUnit.mapPos,rowOffset,colOffset);
+					if(neighborLoc != -1) {
+						var neighborUnitID = this.unitMap[units_movement_MoveIDExtender.getRow(neighborLoc)][units_movement_MoveIDExtender.getCol(neighborLoc)];
+						if(neighborUnitID != -1) {
+							var neighborUnit = this.unitArray[neighborUnitID];
+							if(testFunc(this.selectedUnit,neighborUnit)) {
+								validUnits.push(neighborUnit);
+							}
+						}
+					}
+					if(rowOffset == 0) {
+						break;
+					}
+				}
+			}
+		}
+		return validUnits;
 	}
 	,onNotify: function(event,notifier) {
 	}
@@ -53192,7 +53692,7 @@ missions_managers_UnitManager.prototype = {
 		unit.moveTiles = new haxe_ds_IntMap();
 		unit.attackTiles = null;
 		unit.attackTiles = new haxe_ds_IntMap();
-		var startingTile = new units_movement_PossibleMove(units_movement_NeighborDirections.START,0,unit.mapRow,unit.mapCol);
+		var startingTile = new units_movement_PossibleMove(units_movement_NeighborDirections.START,0,units_movement_MoveIDExtender.getRow(unit.mapPos),units_movement_MoveIDExtender.getCol(unit.mapPos));
 		unit.moveTiles.h[startingTile.moveID] = startingTile;
 		startingTile.numTimesInBfQueue++;
 		var movementTiles = this.bfCalcMoveTiles(unit,[startingTile.moveID]);
@@ -53250,7 +53750,8 @@ missions_managers_UnitManager.prototype = {
 					++_g3;
 					var direction = units_movement_NeighborDirections.START;
 					var rowOffset = (range - Math.abs(colOffset)) * rowModifier;
-					var neighborTile = units_movement_MoveIDExtender.getOtherByOffset(startTile,rowOffset,colOffset);
+					var neighborTile = -1;
+					neighborTile = units_movement_MoveIDExtender.getOtherByOffset(startTile,rowOffset,colOffset);
 					if(colOffset == 0) {
 						if(rowOffset < 0) {
 							direction = units_movement_NeighborDirections.UP;
@@ -53276,7 +53777,7 @@ missions_managers_UnitManager.prototype = {
 							direction = units_movement_NeighborDirections.DOWN_RIGHT;
 						}
 					}
-					if(neighborTile != null && testFunc(neighborTile,direction)) {
+					if(neighborTile != -1 && testFunc(neighborTile,direction)) {
 						validNeighbors.push(neighborTile);
 						if(stopAfterValid) {
 							return validNeighbors;
@@ -53487,7 +53988,7 @@ missions_managers_UnitManager.prototype = {
 					}
 				}
 			} else if(currTile.numTimesInBfQueue < 0) {
-				haxe_Log.trace("ERROR: The following tile is in the queue a negative # of times:",{ fileName : "UnitManager.hx", lineNumber : 1242, className : "missions.managers.UnitManager", methodName : "bfCalcMoveTiles", customParams : [currTile]});
+				haxe_Log.trace("ERROR: The following tile is in the queue a negative # of times:",{ fileName : "UnitManager.hx", lineNumber : 1377, className : "missions.managers.UnitManager", methodName : "bfCalcMoveTiles", customParams : [currTile]});
 				break;
 			}
 			++i;
@@ -53602,7 +54103,7 @@ missions_managers_UnitManager.prototype = {
 				colOffset = 1;
 				break;
 			default:
-				haxe_Log.trace("ERROR: Non-orthagonal move provided to updateMoveArrow.",{ fileName : "UnitManager.hx", lineNumber : 1486, className : "missions.managers.UnitManager", methodName : "findNeighborPathToTarget"});
+				haxe_Log.trace("ERROR: Non-orthagonal move provided to updateMoveArrow.",{ fileName : "UnitManager.hx", lineNumber : 1621, className : "missions.managers.UnitManager", methodName : "findNeighborPathToTarget"});
 			}
 			moveTile = this.selectedUnit.moveTiles.h[units_movement_MoveIDExtender.getOtherByOffset(moveTile.moveID,rowOffset,colOffset)];
 		}
@@ -53610,7 +54111,7 @@ missions_managers_UnitManager.prototype = {
 		return orderOfMoves;
 	}
 	,updateMoveArrow: function(newMoveID) {
-		if(units_movement_MoveIDExtender.getRow(newMoveID) == this.selectedUnit.mapRow && units_movement_MoveIDExtender.getCol(newMoveID) == this.selectedUnit.mapCol) {
+		if(units_movement_MoveIDExtender.getRow(newMoveID) == units_movement_MoveIDExtender.getRow(this.selectedUnit.mapPos) && units_movement_MoveIDExtender.getCol(newMoveID) == units_movement_MoveIDExtender.getCol(this.selectedUnit.mapPos)) {
 			this.hideAllArrowTiles();
 			this.clearMovePath();
 		} else {
@@ -53629,25 +54130,25 @@ missions_managers_UnitManager.prototype = {
 					var removedMoveID = this.movePath.pop().moveID;
 					this.totalPathCost -= this.unitTerrainArr[units_movement_MoveIDExtender.getRow(removedMoveID)][units_movement_MoveIDExtender.getCol(removedMoveID)];
 				}
-				var prevLoc = null;
+				var prevLoc = -1;
 				if(this.movePath.length == 1) {
-					prevLoc = units_movement_MoveIDExtender.newMoveID(this.selectedUnit.mapRow,this.selectedUnit.mapCol);
+					prevLoc = units_movement_MoveIDExtender.newMoveID(units_movement_MoveIDExtender.getRow(this.selectedUnit.mapPos),units_movement_MoveIDExtender.getCol(this.selectedUnit.mapPos));
 				} else if(this.movePath.length > 1) {
 					prevLoc = this.movePath[this.movePath.length - 2].moveID;
 				}
 				this.movePath[this.movePath.length - 1].animation.play(this.findMoveArrowAnim(this.movePath[this.movePath.length - 1],prevLoc));
 			} else {
-				var prevLoc1 = null;
+				var prevLoc1 = -1;
 				if(this.movePath.length == 0) {
-					prevLoc1 = units_movement_MoveIDExtender.newMoveID(this.selectedUnit.mapRow,this.selectedUnit.mapCol);
+					prevLoc1 = units_movement_MoveIDExtender.newMoveID(units_movement_MoveIDExtender.getRow(this.selectedUnit.mapPos),units_movement_MoveIDExtender.getCol(this.selectedUnit.mapPos));
 				} else if(this.movePath.length > 0) {
 					prevLoc1 = this.movePath[this.movePath.length - 1].moveID;
 				}
 				if(this.totalPathCost + this.unitTerrainArr[units_movement_MoveIDExtender.getRow(newMoveID)][units_movement_MoveIDExtender.getCol(newMoveID)] <= this.selectedUnit.move && this.selectedUnit.moveTiles.h.hasOwnProperty(newMoveID) && units_movement_MoveIDExtender.getDistFromOther(newMoveID,prevLoc1) == 1) {
 					this.totalPathCost += this.unitTerrainArr[units_movement_MoveIDExtender.getRow(newMoveID)][units_movement_MoveIDExtender.getCol(newMoveID)];
-					var prevPrevLoc = null;
+					var prevPrevLoc = -1;
 					if(this.movePath.length == 1) {
-						prevPrevLoc = units_movement_MoveIDExtender.newMoveID(this.selectedUnit.mapRow,this.selectedUnit.mapCol);
+						prevPrevLoc = units_movement_MoveIDExtender.newMoveID(units_movement_MoveIDExtender.getRow(this.selectedUnit.mapPos),units_movement_MoveIDExtender.getCol(this.selectedUnit.mapPos));
 					} else if(this.movePath.length > 1) {
 						prevLoc1 = this.movePath[this.movePath.length - 1].moveID;
 						prevPrevLoc = this.movePath[this.movePath.length - 2].moveID;
@@ -53682,7 +54183,7 @@ missions_managers_UnitManager.prototype = {
 							colOffset = 1;
 							break;
 						default:
-							haxe_Log.trace("ERROR: Non-orthagonal move provided to updateMoveArrow.",{ fileName : "UnitManager.hx", lineNumber : 1633, className : "missions.managers.UnitManager", methodName : "updateMoveArrow"});
+							haxe_Log.trace("ERROR: Non-orthagonal move provided to updateMoveArrow.",{ fileName : "UnitManager.hx", lineNumber : 1768, className : "missions.managers.UnitManager", methodName : "updateMoveArrow"});
 						}
 						moveTile = this.selectedUnit.moveTiles.h[units_movement_MoveIDExtender.getOtherByOffset(moveTile.moveID,rowOffset,colOffset)];
 					}
@@ -53755,7 +54256,7 @@ missions_managers_UnitManager.prototype = {
 			vertMod = -1;
 			break;
 		default:
-			haxe_Log.trace("ERROR: currMoveDir was not a string representation of a direction.",{ fileName : "UnitManager.hx", lineNumber : 1762, className : "missions.managers.UnitManager", methodName : "moveUnit"});
+			haxe_Log.trace("ERROR: currMoveDir was not a string representation of a direction.",{ fileName : "UnitManager.hx", lineNumber : 1897, className : "missions.managers.UnitManager", methodName : "moveUnit"});
 		}
 		var moveDist = this.remainingMoveDist / this.framesLeftInMove;
 		this.remainingMoveDist -= moveDist;
@@ -53764,11 +54265,6 @@ missions_managers_UnitManager.prototype = {
 		_g1.set_x(_g1.x + horizMod * moveDist);
 		var _g11 = this.selectedUnit;
 		_g11.set_y(_g11.y + vertMod * moveDist);
-	}
-	,undoUnitMove: function() {
-		this.selectedUnit.set_x(this.selectedUnit.mapCol * this.parentState.tileSize);
-		this.selectedUnit.set_y(this.selectedUnit.mapRow * this.parentState.tileSize);
-		this.selectedUnit.animation.play("down");
 	}
 	,update: function(elapsed) {
 		var finishedMoving = false;
@@ -75670,13 +76166,6 @@ haxe_lang_Iterable.__name__ = ["haxe","lang","Iterable"];
 haxe_lang_Iterable.prototype = {
 	__class__: haxe_lang_Iterable
 };
-var units_Inventory = function() {
-};
-$hxClasses["units.Inventory"] = units_Inventory;
-units_Inventory.__name__ = ["units","Inventory"];
-units_Inventory.prototype = {
-	__class__: units_Inventory
-};
 var units_MapCursorUnitTypes = $hxClasses["units.MapCursorUnitTypes"] = { __ename__ : ["units","MapCursorUnitTypes"], __constructs__ : ["PLAYER_ACTIVE","PLAYER_INACTIVE","NOT_PLAYER","NONE"] };
 units_MapCursorUnitTypes.PLAYER_ACTIVE = ["PLAYER_ACTIVE",0];
 units_MapCursorUnitTypes.PLAYER_ACTIVE.toString = $estr;
@@ -75728,6 +76217,12 @@ units_StatChange.__name__ = ["units","StatChange"];
 units_StatChange.prototype = {
 	__class__: units_StatChange
 };
+var utilities_OnMapEntity = function() { };
+$hxClasses["utilities.OnMapEntity"] = utilities_OnMapEntity;
+utilities_OnMapEntity.__name__ = ["utilities","OnMapEntity"];
+utilities_OnMapEntity.prototype = {
+	__class__: utilities_OnMapEntity
+};
 var units_Unit = function(row,col,spriteSheet,ID,teamP) {
 	if(ID == null) {
 		ID = 0;
@@ -75752,8 +76247,8 @@ var units_Unit = function(row,col,spriteSheet,ID,teamP) {
 	this.animation.add("hover",[9,9,9,8,10,11,11,10,10,11,11,8],10);
 	this.animation.add("idle",[12,13,12,13,14,15],2);
 	this.animation.play("idle");
-	this.mapCol = col;
-	this.mapRow = row;
+	this.mapPos = units_movement_MoveIDExtender.newMoveID(row,col);
+	this.preMoveMapPos = this.mapPos;
 	this.subject = new observerPattern_Subject(this,ID);
 	this.canAct = true;
 	this.team = teamP;
@@ -75765,14 +76260,48 @@ var units_Unit = function(row,col,spriteSheet,ID,teamP) {
 		this.teamID = units_TeamID.OTHER;
 	}
 	this.move = 5;
-	this.attackRanges = [1,2];
+	this.weight = 5;
+	this.carry = 5;
+	this.inventory = new units_items_Inventory();
+	this.inventory.items.push(new units_items_WeaponItem([1,2]));
+	this.inventory.items.push(new units_items_WeaponItem([2,3]));
+	this.inventory.items.push(new units_items_WeaponItem([1,3,4]));
+	this.inventory.items.push(new units_items_WeaponItem([1]));
+	this.inventory.items[0].weight = flixel_FlxG.random["int"](1,10);
+	this.inventory.items[1].weight = flixel_FlxG.random["int"](1,10);
+	this.inventory.items[2].weight = flixel_FlxG.random["int"](1,10);
+	this.inventory.items[3].weight = flixel_FlxG.random["int"](1,10);
+	this.inventory.items[0].name = "weapon 0";
+	this.inventory.items[1].name = "weapon 1";
+	this.inventory.items[2].name = "weapon 2";
+	this.inventory.items[3].name = "weapon 3";
+	this.inventory.weaponIndices = [0,1,2,3];
+	this.equippedItem = this.inventory.items[2];
+	this.attackRanges = [1,2,3,4];
+	this.healRanges = [];
+	this.health = flixel_FlxG.random["int"](10,30);
+	this.energy = flixel_FlxG.random["int"](5,25);
+	this.strength = flixel_FlxG.random["int"](1,10);
+	this.agility = flixel_FlxG.random["int"](1,10);
+	this.skill = flixel_FlxG.random["int"](1,10);
+	this.defense = flixel_FlxG.random["int"](1,10);
+	this.intel = flixel_FlxG.random["int"](1,10);
+	this.calcDerivedStats(this.equippedItem);
 };
 $hxClasses["units.Unit"] = units_Unit;
 units_Unit.__name__ = ["units","Unit"];
-units_Unit.__interfaces__ = [observerPattern_Observed];
+units_Unit.__interfaces__ = [utilities_OnMapEntity,observerPattern_Observed];
 units_Unit.__super__ = flixel_FlxSprite;
 units_Unit.prototype = $extend(flixel_FlxSprite.prototype,{
-	attack: function(isCrit) {
+	calcDerivedStats: function(itemToUse) {
+		this.accuracy = this.skill + this.agility + (this.strength - itemToUse.weight);
+		this.evade = this.agility + Math.floor(this.intel / 2) + (this.strength - itemToUse.weight);
+		this.attackCost = Math.max(5 + itemToUse.weight - this.strength,1) | 0;
+		this.attackDamage = this.strength + itemToUse.weight;
+		this.critCost = Math.max(10 - this.intel - this.agility + (itemToUse.weight * 2 - this.strength),1) | 0;
+		this.critDamage = Math.max(this.strength,this.skill) * 2 + itemToUse.weight | 0;
+	}
+	,attack: function(isCrit) {
 		var damage;
 		if(isCrit) {
 			this.energy -= this.critCost;
@@ -75814,14 +76343,6 @@ units_Unit.prototype = $extend(flixel_FlxSprite.prototype,{
 	}
 	,update: function(elapsed) {
 		flixel_FlxSprite.prototype.update.call(this,elapsed);
-		var _this = flixel_FlxG.keys.justPressed;
-		if(_this.keyManager.checkStatus(65,_this.status)) {
-			this.animation.play("idle");
-		}
-		var _this1 = flixel_FlxG.keys.justPressed;
-		if(_this1.keyManager.checkStatus(83,_this1.status)) {
-			this.animation.play("hover");
-		}
 	}
 	,__class__: units_Unit
 });
@@ -75858,6 +76379,59 @@ units_UnitInfo.__name__ = ["units","UnitInfo"];
 units_UnitInfo.prototype = {
 	__class__: units_UnitInfo
 };
+var units_items_Item = function(rangeArr,type) {
+	this.ranges = rangeArr;
+	this.itemType = type;
+};
+$hxClasses["units.items.Item"] = units_items_Item;
+units_items_Item.__name__ = ["units","items","Item"];
+units_items_Item.prototype = {
+	__class__: units_items_Item
+};
+var units_items_EquippableItem = function(rangeArr,type) {
+	this.weight = 4;
+	units_items_Item.call(this,rangeArr,type);
+};
+$hxClasses["units.items.EquippableItem"] = units_items_EquippableItem;
+units_items_EquippableItem.__name__ = ["units","items","EquippableItem"];
+units_items_EquippableItem.__super__ = units_items_Item;
+units_items_EquippableItem.prototype = $extend(units_items_Item.prototype,{
+	__class__: units_items_EquippableItem
+});
+var units_items_Inventory = function() {
+	this.weaponIndices = [];
+	this.items = [];
+};
+$hxClasses["units.items.Inventory"] = units_items_Inventory;
+units_items_Inventory.__name__ = ["units","items","Inventory"];
+units_items_Inventory.prototype = {
+	__class__: units_items_Inventory
+};
+var units_items_ItemTypes = $hxClasses["units.items.ItemTypes"] = { __ename__ : ["units","items","ItemTypes"], __constructs__ : ["WEAPON","HEALING","TOOL","CONSUMABLE","OTHER"] };
+units_items_ItemTypes.WEAPON = ["WEAPON",0];
+units_items_ItemTypes.WEAPON.toString = $estr;
+units_items_ItemTypes.WEAPON.__enum__ = units_items_ItemTypes;
+units_items_ItemTypes.HEALING = ["HEALING",1];
+units_items_ItemTypes.HEALING.toString = $estr;
+units_items_ItemTypes.HEALING.__enum__ = units_items_ItemTypes;
+units_items_ItemTypes.TOOL = ["TOOL",2];
+units_items_ItemTypes.TOOL.toString = $estr;
+units_items_ItemTypes.TOOL.__enum__ = units_items_ItemTypes;
+units_items_ItemTypes.CONSUMABLE = ["CONSUMABLE",3];
+units_items_ItemTypes.CONSUMABLE.toString = $estr;
+units_items_ItemTypes.CONSUMABLE.__enum__ = units_items_ItemTypes;
+units_items_ItemTypes.OTHER = ["OTHER",4];
+units_items_ItemTypes.OTHER.toString = $estr;
+units_items_ItemTypes.OTHER.__enum__ = units_items_ItemTypes;
+var units_items_WeaponItem = function(rangeArr) {
+	units_items_EquippableItem.call(this,rangeArr,units_items_ItemTypes.WEAPON);
+};
+$hxClasses["units.items.WeaponItem"] = units_items_WeaponItem;
+units_items_WeaponItem.__name__ = ["units","items","WeaponItem"];
+units_items_WeaponItem.__super__ = units_items_EquippableItem;
+units_items_WeaponItem.prototype = $extend(units_items_EquippableItem.prototype,{
+	__class__: units_items_WeaponItem
+});
 var units_movement_ArrowTile = function() {
 	this.moveID = 0;
 	this.tileSize = 64;
@@ -75909,7 +76483,7 @@ units_movement_MoveIDExtender.getCol = function(moveID) {
 	return moveID % units_movement_MoveIDExtender.numCols;
 };
 units_movement_MoveIDExtender.getOtherByOffset = function(moveID,rowOffset,colOffset) {
-	var targetMoveID = null;
+	var targetMoveID = -1;
 	var newRow = units_movement_MoveIDExtender.getRow(moveID) + rowOffset;
 	var newCol = units_movement_MoveIDExtender.getCol(moveID) + colOffset;
 	if(newRow >= 0 && newRow < units_movement_MoveIDExtender.numRows && newCol >= 0 && newCol < units_movement_MoveIDExtender.numCols) {
@@ -75982,6 +76556,42 @@ $hxClasses["units.movement.TileChange"] = units_movement_TileChange;
 units_movement_TileChange.__name__ = ["units","movement","TileChange"];
 units_movement_TileChange.prototype = {
 	__class__: units_movement_TileChange
+};
+var units_targeting_SimpleTargetTests = function() {
+};
+$hxClasses["units.targeting.SimpleTargetTests"] = units_targeting_SimpleTargetTests;
+units_targeting_SimpleTargetTests.__name__ = ["units","targeting","SimpleTargetTests"];
+units_targeting_SimpleTargetTests.selfUnitTest = function(selectedUnit,neighborUnit) {
+	return selectedUnit == neighborUnit;
+};
+units_targeting_SimpleTargetTests.otherUnitTest = function(selectedUnit,neighborUnit) {
+	return selectedUnit != neighborUnit;
+};
+units_targeting_SimpleTargetTests.alliedUnitTest = function(selectedUnit,neighborUnit) {
+	if(selectedUnit.teamID == neighborUnit.teamID) {
+		return selectedUnit != neighborUnit;
+	} else {
+		return false;
+	}
+};
+units_targeting_SimpleTargetTests.enemyUnitTest = function(selectedUnit,neighborUnit) {
+	return selectedUnit.teamID != neighborUnit.teamID;
+};
+units_targeting_SimpleTargetTests.self_allyUnitTest = function(selectedUnit,neighborUnit) {
+	return selectedUnit.teamID == neighborUnit.teamID;
+};
+units_targeting_SimpleTargetTests.self_enemyUnitTest = function(selectedUnit,neighborUnit) {
+	if(selectedUnit.teamID == neighborUnit.teamID) {
+		return selectedUnit == neighborUnit;
+	} else {
+		return true;
+	}
+};
+units_targeting_SimpleTargetTests.self_otherUnitTest = function(selectedUnit,neighborUnit) {
+	return true;
+};
+units_targeting_SimpleTargetTests.prototype = {
+	__class__: units_targeting_SimpleTargetTests
 };
 var utilities_PossiblePosTracker = function(leftPosX,rightPosX,topPosY,bottomPosY) {
 	this.leftX = leftPosX;
@@ -78602,7 +79212,6 @@ lime_utils__$Int32Array_Int32Array_$Impl_$.BYTES_PER_ELEMENT = 4;
 lime_utils__$UInt16Array_UInt16Array_$Impl_$.BYTES_PER_ELEMENT = 2;
 lime_utils__$UInt32Array_UInt32Array_$Impl_$.BYTES_PER_ELEMENT = 4;
 lime_utils__$UInt8Array_UInt8Array_$Impl_$.BYTES_PER_ELEMENT = 1;
-menus_MenuOption.cursorSideLength = 15;
 menus_MissionMenuTypes.NONE = -1;
 menus_MissionMenuTypes.MAP_ACTION = 0;
 menus_MissionMenuTypes.UNIT_ACTION = 1;
@@ -78610,13 +79219,35 @@ menus_MissionMenuTypes.UNIT_INVENTORY = 2;
 menus_MissionMenuTypes.ITEM_ACTION = 3;
 menus_MissionMenuTypes.TRADE_TARGET = 4;
 menus_MissionMenuTypes.TRADE_ACTION = 5;
-menus_MissionMenuTypes.WEAPON_SELECT = 6;
-menus_MissionMenuTypes.ATTACK_TARGET = 7;
-menus_MissionMenuTypes.HEAL_TARGET = 8;
+menus_MissionMenuTypes.ATTACK_TARGET = 6;
+menus_MissionMenuTypes.HEAL_TARGET = 7;
+menus_MissionMenuTypes.TALK_TARGET = 8;
 menus_MissionMenuTypes.RESCUE_TARGET = 9;
 menus_MissionMenuTypes.TAKE_TARGET = 10;
 menus_MissionMenuTypes.DROP_TARGET = 11;
 menus_MissionMenuTypes.NUM_OF_MENUS = 12;
+menus_cursorMenus_MenuOption.cursorSideLength = 15;
+menus_cursorMenus_optionEnums_UnitActionMenuOptions.ATTACK = 0;
+menus_cursorMenus_optionEnums_UnitActionMenuOptions.HEAL = 1;
+menus_cursorMenus_optionEnums_UnitActionMenuOptions.TALK = 2;
+menus_cursorMenus_optionEnums_UnitActionMenuOptions.RESCUE = 3;
+menus_cursorMenus_optionEnums_UnitActionMenuOptions.TAKE = 4;
+menus_cursorMenus_optionEnums_UnitActionMenuOptions.DROP = 5;
+menus_cursorMenus_optionEnums_UnitActionMenuOptions.ITEM = 6;
+menus_cursorMenus_optionEnums_UnitActionMenuOptions.TRADE = 7;
+menus_cursorMenus_optionEnums_UnitActionMenuOptions.WAIT = 8;
+menus_targetMenus_InfoWindowRows.HEALTH = 0;
+menus_targetMenus_InfoWindowRows.ENERGY = 1;
+menus_targetMenus_InfoWindowRows.EVADE_COST = 2;
+menus_targetMenus_InfoWindowRows.ATTACK_COST = 3;
+menus_targetMenus_InfoWindowRows.ATTACK_DAMAGE = 4;
+menus_targetMenus_InfoWindowRows.CRIT_COST = 5;
+menus_targetMenus_InfoWindowRows.CRIT_DAMAGE = 6;
+menus_targetMenus_InfoWindowRows.NUM_ROWS = 7;
+menus_targetMenus_InfoWindowCols.PLAYER_INFO = 0;
+menus_targetMenus_InfoWindowCols.LABEL = 1;
+menus_targetMenus_InfoWindowCols.ENEMY_INFO = 2;
+menus_targetMenus_InfoWindowCols.NUM_COLS = 3;
 missions_TerrainTypes.NONE = -1;
 missions_TerrainTypes.PLAINS = 0;
 missions_TerrainTypes.FOREST = 1;
