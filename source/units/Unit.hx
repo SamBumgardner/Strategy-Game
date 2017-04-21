@@ -4,8 +4,16 @@ import flixel.FlxSprite;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import observerPattern.Observed;
 import observerPattern.Subject;
+import units.items.EquippableItem;
+import units.items.Inventory;
+import units.items.Item;
+import units.items.Item;
+import units.items.WeaponItem;
 import units.movement.MoveID;
 import units.movement.PossibleMove;
+import utilities.OnMapEntity;
+
+using units.movement.MoveIDExtender;
 
 /**
  * Needs to have the following:
@@ -66,9 +74,13 @@ import units.movement.PossibleMove;
  * 
  * 	equip a weapon (involves updating derived stats and rearranging inventory)
  * 
+ * 
+ * 
+ * NOTE: Need to update documentation.
+ * 
  * @author Samuel Bumgardner
  */
-class Unit extends FlxSprite implements Observed
+class Unit extends FlxSprite implements Observed implements OnMapEntity
 {
 	public var spriteHeight(default, never):Int = 96;
 	public var spriteWidth(default, never):Int = 128;
@@ -109,10 +121,20 @@ class Unit extends FlxSprite implements Observed
 	
 	// Inventory
 	
-	private var inventory:Inventory;
+	public var inventory(default, null):Inventory;
 	
 	// List of integer ranges this unit can attack from, based on contents of inventory.
 	public var attackRanges:Array<Int>;
+	
+	// List of integer ranges this unit can heal, based on contents of inventory.
+	public var healRanges:Array<Int>;
+	
+	public var equippedItem:EquippableItem;
+	
+	
+	// Rescued info
+	
+	public var rescuedUnit:Unit;
 	
 	//
 	
@@ -120,8 +142,11 @@ class Unit extends FlxSprite implements Observed
 	
 	//
 	
-	public var mapRow:Int;
-	public var mapCol:Int;
+	public var mapPos:MoveID;
+	
+	//
+	
+	public var preMoveMapPos:MoveID;
 	
 	
 	//
@@ -173,8 +198,8 @@ class Unit extends FlxSprite implements Observed
 		animation.play("idle");
 		
 		// Cannot set mapCol = X / tileSize because crashes on Neko.
-		mapCol = col;
-		mapRow = row;
+		mapPos = MoveIDExtender.newMoveID(row, col);
+		preMoveMapPos = mapPos;
 		
 		subject = new Subject(this, ID);
 		
@@ -188,9 +213,57 @@ class Unit extends FlxSprite implements Observed
 		else if (team == TeamType.OTHER)
 			teamID = TeamID.OTHER;
 		move = 5;
-		attackRanges = [1,2];
+		
+		weight = 5;
+		carry = 5;
+		
+		inventory = new Inventory();
+		inventory.items.push(new WeaponItem([1, 2]));
+		inventory.items.push(new WeaponItem([2, 3]));
+		inventory.items.push(new WeaponItem([1, 3, 4]));
+		inventory.items.push(new WeaponItem([1]));
+		
+		(cast inventory.items[0]).weight = FlxG.random.int(1, 10);
+		(cast inventory.items[1]).weight = FlxG.random.int(1, 10);
+		(cast inventory.items[2]).weight = FlxG.random.int(1, 10);
+		(cast inventory.items[3]).weight = FlxG.random.int(1, 10);
+		
+		inventory.items[0].name = "weapon 0";
+		inventory.items[1].name = "weapon 1";
+		inventory.items[2].name = "weapon 2";
+		inventory.items[3].name = "weapon 3";
+		
+		inventory.weaponIndices = [0, 1, 2, 3];
+		
+		
+		equippedItem = cast inventory.items[2];
+		
+		// Should actually display the union of all attack ranges in the backpack.
+		// Instead, this just assumes that the equipped item is just a weapon.
+		attackRanges = [1, 2, 3, 4];
+		healRanges = [];
+		
+		health = FlxG.random.int(10, 30);
+		energy = FlxG.random.int(5, 25);
+		
+		strength = FlxG.random.int(1, 10);
+		agility = FlxG.random.int(1, 10);
+		skill = FlxG.random.int(1, 10);
+		defense = FlxG.random.int(1, 10);
+		intel = FlxG.random.int(1, 10);
+		
+		calcDerivedStats(equippedItem);
 	}
 	
+	public function calcDerivedStats(itemToUse:EquippableItem):Void
+	{
+		accuracy = skill + agility + (strength - itemToUse.weight);
+		evade = agility + Math.floor(intel / 2) + (strength - itemToUse.weight);
+		attackCost = Std.int(Math.max(5 + itemToUse.weight - strength, 1));
+		attackDamage = strength + itemToUse.weight;
+		critCost = Std.int(Math.max(10 - intel - agility + (itemToUse.weight * 2 - strength), 1));
+		critDamage = Std.int(Math.max(strength, skill) * 2 + itemToUse.weight);
+	}
 	
 	public function attack(isCrit:Bool):Int
 	{
@@ -272,15 +345,6 @@ class Unit extends FlxSprite implements Observed
 	override public function update(elapsed:Float):Void 
 	{
 		super.update(elapsed);
-		
-		if (FlxG.keys.justPressed.A)
-		{
-			animation.play("idle");
-		}
-		if (FlxG.keys.justPressed.S)
-		{
-			animation.play("hover");
-		}
 	}
 	
 }

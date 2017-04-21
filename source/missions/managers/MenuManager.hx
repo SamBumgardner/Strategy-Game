@@ -2,16 +2,28 @@ package missions.managers;
 
 import flixel.FlxG;
 import flixel.group.FlxGroup;
-import menus.BasicMenu;
+import menus.cursorMenus.BasicMenu;
+import menus.cursorMenus.CursorMenuTemplate;
 import menus.MenuTemplate;
 import menus.MissionMenuCreator;
 import menus.MissionMenuTypes;
-import menus.ResizableBasicMenu;
+import menus.cursorMenus.ResizableBasicMenu;
+import menus.cursorMenus.optionEnums.UnitActionMenuOptions;
+import menus.targetMenus.AttackTargetMenu;
+import menus.targetMenus.DropTargetMenu;
+import menus.targetMenus.HealTargetMenu;
+import menus.targetMenus.RescueTargetMenu;
+import menus.targetMenus.TakeTargetMenu;
+import menus.targetMenus.TalkTargetMenu;
+import menus.targetMenus.TargetMenuTemplate;
+import menus.targetMenus.TradeTargetMenu;
 import missions.MissionState;
 import observerPattern.Observed;
 import observerPattern.Observer;
 import observerPattern.eventSystem.EventTypes;
 import observerPattern.eventSystem.InputEvent;
+import units.Unit;
+import units.targeting.SimpleTargetTests;
 import utilities.PossiblePosTracker;
 
 using observerPattern.eventSystem.EventExtender;
@@ -60,7 +72,7 @@ class MenuManager implements Observer
 	/**
 	 * Menu used to select which other unit to trade with.
 	 */
-	private var tradeTargetMenu:ResizableBasicMenu;
+	private var tradeTargetMenu:TradeTargetMenu;
 	
 	/**
 	 * Menu used to trade items between two units.
@@ -68,34 +80,34 @@ class MenuManager implements Observer
 	private var tradeActionMenu:ResizableBasicMenu;
 	
 	/**
-	 * Menu used to select which weapon to use in combat.
-	 */
-	private var weaponSelectMenu:ResizableBasicMenu;
-	
-	/**
 	 * Menu used to select which enemy unit to attack.
 	 */
-	private var attackTargetMenu:ResizableBasicMenu;
+	private var attackTargetMenu:AttackTargetMenu;
 	
 	/**
 	 * Menu used to select which allied unit to heal.
 	 */
-	private var healTargetMenu:ResizableBasicMenu;
+	private var healTargetMenu:HealTargetMenu;
+	
+	/**
+	 * Menu used to select which adjacent unit to talk to.
+	 */
+	private var talkTargetMenu:TalkTargetMenu;
 	
 	/**
 	 * Menu used to select which allied unit to rescue.
 	 */
-	private var rescueTargetMenu:ResizableBasicMenu;
+	private var rescueTargetMenu:RescueTargetMenu;
 	
 	/**
 	 * Menu used to select which rescued unit to take.
 	 */
-	private var takeTargetMenu:ResizableBasicMenu;
+	private var takeTargetMenu:TakeTargetMenu;
 	
 	/**
 	 * Menu used to select where to drop a rescued unit.
 	 */
-	private var dropTargetMenu:ResizableBasicMenu;
+	private var dropTargetMenu:DropTargetMenu;
 	
 	/**
 	 * X and Y coordinates that "root" level menus (unitAction & mapAction) should use to set 
@@ -133,7 +145,14 @@ class MenuManager implements Observer
 	private var activeMenuStack:Array<MenuTemplate> = new Array<MenuTemplate>();
 	
 	/**
-	 * Array containing al functions that may need to be called as a result of the "cancel"
+	 * Array containing all functions that need to be called as a menu opens,
+	 * 	to refresh their available options to whatever they should be in their
+	 * 	current state.
+	 */
+	private var openFunctions:Array<Void->Void> = new Array<Void->Void>();
+	
+	/**
+	 * Array containing all functions that may need to be called as a result of the "cancel"
 	 * 	input being pressed inside of a menu.
 	 * 
 	 * Each menu has one cancel function, so a single array is all that is needed.
@@ -234,10 +253,6 @@ class MenuManager implements Observer
 			MissionMenuTypes.TRADE_ACTION);
 		tradeActionMenu.subject.addObserver(this);
 		
-		weaponSelectMenu = MissionMenuCreator.makeWeaponSelectMenu(0, 0, 
-			MissionMenuTypes.WEAPON_SELECT);
-		weaponSelectMenu.subject.addObserver(this);
-		
 		attackTargetMenu = MissionMenuCreator.makeAttackTargetMenu(cornerMenuPos.leftX,
 			cornerMenuPos.topY, MissionMenuTypes.ATTACK_TARGET);
 		attackTargetMenu.subject.addObserver(this);
@@ -245,6 +260,10 @@ class MenuManager implements Observer
 		healTargetMenu = MissionMenuCreator.makeHealTargetMenu(cornerMenuPos.leftX,
 			cornerMenuPos.topY, MissionMenuTypes.HEAL_TARGET);
 		healTargetMenu.subject.addObserver(this);
+		
+		talkTargetMenu = MissionMenuCreator.makeTalkTargetMenu(cornerMenuPos.leftX,
+			cornerMenuPos.topY, MissionMenuTypes.TALK_TARGET);
+		talkTargetMenu.subject.addObserver(this);
 		
 		rescueTargetMenu = MissionMenuCreator.makeRescueTargetMenu(cornerMenuPos.leftX,
 			cornerMenuPos.topY, MissionMenuTypes.RESCUE_TARGET);
@@ -266,15 +285,17 @@ class MenuManager implements Observer
 	 */
 	private function fillTotalFlxGrp():Void
 	{
+		totalFlxGrp.add(TargetMenuTemplate.targetCursor.totalFlxGrp);
+		
 		totalFlxGrp.add(mapActionMenu.totalFlxGrp);
 		totalFlxGrp.add(unitActionMenu.totalFlxGrp);
 		totalFlxGrp.add(unitInvMenu.totalFlxGrp);
 		totalFlxGrp.add(itemActionMenu.totalFlxGrp);
 		totalFlxGrp.add(tradeTargetMenu.totalFlxGrp);
 		totalFlxGrp.add(tradeActionMenu.totalFlxGrp);
-		totalFlxGrp.add(weaponSelectMenu.totalFlxGrp);
 		totalFlxGrp.add(attackTargetMenu.totalFlxGrp);
 		totalFlxGrp.add(healTargetMenu.totalFlxGrp);
+		totalFlxGrp.add(talkTargetMenu.totalFlxGrp);
 		totalFlxGrp.add(rescueTargetMenu.totalFlxGrp);
 		totalFlxGrp.add(takeTargetMenu.totalFlxGrp);
 		totalFlxGrp.add(dropTargetMenu.totalFlxGrp);
@@ -288,14 +309,27 @@ class MenuManager implements Observer
 		// Initial setup
 		for (i in 0...MissionMenuTypes.NUM_OF_MENUS)
 		{
+			openFunctions.push(defaultOpen);
 			cancelFunctions.push(popCancel);
 			confirmFunctions.push(new Array<Void->Void>());
 		}
+		
+		// non-default open menu functions setup.
+		
+		openFunctions[MissionMenuTypes.UNIT_ACTION] = unitActionMenuOpen;
+		openFunctions[MissionMenuTypes.ATTACK_TARGET] = attackTargetMenuOpen;
+		openFunctions[MissionMenuTypes.HEAL_TARGET] = healTargetMenuOpen;
+		openFunctions[MissionMenuTypes.TALK_TARGET] = talkTargetMenuOpen;
+		openFunctions[MissionMenuTypes.RESCUE_TARGET] = rescueTargetMenuOpen;
+		openFunctions[MissionMenuTypes.TAKE_TARGET] = takeTargetMenuOpen;
+		openFunctions[MissionMenuTypes.TRADE_TARGET] = tradeTargetMenuOpen;
+		
 		
 		// non-default cancel functions
 		cancelFunctions[MissionMenuTypes.UNIT_ACTION] = unitActionMenuCancel;
 		cancelFunctions[MissionMenuTypes.TRADE_TARGET] = tradeMenuCancel;
 		cancelFunctions[MissionMenuTypes.TRADE_ACTION] = tradeMenuCancel;
+		
 		
 		// confirm function setup.
 		
@@ -331,9 +365,9 @@ class MenuManager implements Observer
 		confirmFunctions[MissionMenuTypes.UNIT_INVENTORY].push(unitInvConfirm);
 		confirmFunctions[MissionMenuTypes.TRADE_TARGET].push(tradeTargetConfirm);
 		confirmFunctions[MissionMenuTypes.TRADE_ACTION].push(tradeActionConfirm);
-		confirmFunctions[MissionMenuTypes.WEAPON_SELECT].push(weaponSelectConfirm);
 		confirmFunctions[MissionMenuTypes.ATTACK_TARGET].push(attackTargetConfirm);
 		confirmFunctions[MissionMenuTypes.HEAL_TARGET].push(healTargetConfirm);
+		confirmFunctions[MissionMenuTypes.TALK_TARGET].push(talkTargetConfirm);
 		confirmFunctions[MissionMenuTypes.RESCUE_TARGET].push(rescueTargetConfirm);
 		confirmFunctions[MissionMenuTypes.TAKE_TARGET].push(takeTargetConfirm);
 		confirmFunctions[MissionMenuTypes.DROP_TARGET].push(dropTargetConfirm);
@@ -362,6 +396,7 @@ class MenuManager implements Observer
 		{
 			activeMenuStack[activeMenuStack.length - 2].deactivate();
 		}
+		
 		activateTopMenu();
 	}
 	
@@ -440,6 +475,10 @@ class MenuManager implements Observer
 	private function activateTopMenu():Void
 	{
 		var menuToActivate:MenuTemplate = activeMenuStack[activeMenuStack.length - 1];
+		
+		// Call the menu's corresponding open function.
+		openFunctions[menuToActivate.subject.ID](); 
+		
 		menuToActivate.activate();
 		menuToActivate.reveal();
 		
@@ -475,6 +514,137 @@ class MenuManager implements Observer
 		
 		// Reveal the menu with the searched for ID, or the bottom menu in the stack.
 		activeMenuStack[activeMenuStack.length - 1 - i].reveal();
+	}
+	
+	
+	///////////////////////////////////////
+	//        MENU OPEN FUNCTIONS        //
+	///////////////////////////////////////
+	
+	/**
+	 * Default open behavior: do nothing out of the ordinary.
+	 */
+	private function defaultOpen():Void{}
+	
+	/**
+	 * Checks which of the unitActionMenu's options should be visible this time.
+	 */
+	private function unitActionMenuOpen():Void
+	{
+		// Start with all 9 possible options set to be displayed.
+		var whichOptionsActive:Array<Bool> = [true, true, true, true, true, 
+		                                      true, true, true, true];
+		
+		var selectedUnit:Unit = parentState.getSelectedUnit();
+		
+		// Checking ATTACK option...
+		// 	If there are no enemies in range of any of the unit's weapons, no attacking.
+		if (parentState.getValidUnitsInRange(selectedUnit.attackRanges, 
+			SimpleTargetTests.enemyUnitTest).length == 0)
+		{
+			whichOptionsActive[UnitActionMenuOptions.ATTACK] = false;
+		}
+		
+		// Checking HEAL option...
+		// 	If there are no allies in range of the unit's healing items, no healing.
+		if (parentState.getValidUnitsInRange(selectedUnit.healRanges,
+			SimpleTargetTests.alliedUnitTest).length == 0)
+		{
+			whichOptionsActive[UnitActionMenuOptions.HEAL] = false;
+		}
+		
+		// Checking TALK option...
+		// 	If there are no talking units adjacent to the selected unit, no talking.
+		// 	If there are adjacent talking units, need to make sure they can talk to this unit.
+		if (parentState.getValidUnitsInRange([1], TalkTargetMenu.talkTargetTest).length == 0)
+		{
+			whichOptionsActive[UnitActionMenuOptions.TALK] = false;
+		}
+		
+		// Checking RESCUE option...
+		// 	If the selected unit is already carrying a rescued ally, cannot rescue.
+		// 	If no adjacent ally has a weight lower than this unit's carry, cannot rescue.
+		if (selectedUnit.rescuedUnit != null || parentState.getValidUnitsInRange([1], 
+			RescueTargetMenu.rescueTargetTest).length == 0)
+		{
+			whichOptionsActive[UnitActionMenuOptions.RESCUE] = false;
+		}
+		
+		// Checking TAKE option...
+		// 	If the selected unit is already rescuing someone, cannot take.
+		//  If the selected unit is not adjacent to any allies, cannot take.
+		// 	If the selected unit is not adjacent to any mid-rescue units, cannot take.
+		//  If the selected unit does not have a higher carry stat than the adjacent 
+		// 		rescued unit, cannot take.
+		if (selectedUnit.rescuedUnit != null || parentState.getValidUnitsInRange([1],
+			TakeTargetMenu.takeTargetTest).length == 0)
+		{
+			whichOptionsActive[UnitActionMenuOptions.TAKE] = false;
+		}
+		
+		// Checking DROP option...
+		// If the selected unit isn't carrying a rescued ally, no drop option.
+		// If there is no adjacent terrain that the other unit can stand in, no drop option.
+		if (selectedUnit.rescuedUnit == null)
+		{
+			// Still need to implement check for dropability in other terrain.
+			whichOptionsActive[UnitActionMenuOptions.DROP] = false;
+		}
+		
+		
+		// Checking ITEM option...
+		// 	If the selected unit has no items, no item option.
+		if (selectedUnit.inventory.items.length == 0)
+		{
+			whichOptionsActive[UnitActionMenuOptions.ITEM] = false;
+		}
+		
+		// Checking TRADE option...
+		// 	If the selected unit isn't adjacent to any allies, cannot trade.
+		if (parentState.getValidUnitsInRange([1], SimpleTargetTests.alliedUnitTest).length == 0)
+		{
+			whichOptionsActive[UnitActionMenuOptions.TRADE] = false;
+		}
+		
+		unitActionMenu.changeMenuOptions(whichOptionsActive);
+	}
+	
+	/**
+	 * Refreshes the set of available targets based on the selected unit's current weapon.
+	 */
+	private function attackTargetMenuOpen():Void
+	{
+		attackTargetMenu.refreshTargets(parentState);
+	}
+	
+	private function healTargetMenuOpen():Void
+	{
+		healTargetMenu.refreshTargets(parentState);
+	}
+	
+	private function talkTargetMenuOpen():Void
+	{
+		talkTargetMenu.refreshTargets(parentState);
+	}
+	
+	private function rescueTargetMenuOpen():Void
+	{
+		rescueTargetMenu.refreshTargets(parentState);
+	}
+	
+	private function takeTargetMenuOpen():Void
+	{
+		takeTargetMenu.refreshTargets(parentState);
+	}
+	
+	private function dropTargetMenuOpen():Void
+	{
+		dropTargetMenu.refreshTargets(parentState);
+	}
+	
+	private function tradeTargetMenuOpen():Void
+	{
+		tradeTargetMenu.refreshTargets(parentState);
 	}
 	
 	
@@ -539,7 +709,7 @@ class MenuManager implements Observer
 	{
 		trace("Attack!");
 		hideMenuStack();
-		pushMenuStack(weaponSelectMenu);
+		pushMenuStack(attackTargetMenu);
 	}
 	
 	/**
@@ -558,7 +728,8 @@ class MenuManager implements Observer
 	private function talkConfirm():Void
 	{
 		trace("Talk!");
-		clearMenuStack();
+		hideMenuStack();
+		pushMenuStack(talkTargetMenu);
 	}
 	
 	/**
@@ -702,19 +873,6 @@ class MenuManager implements Observer
 	}
 	
 	
-	// weaponSelectMenu confirm function //
-	
-	/**
-	 * Called when any option in the weaponSelectMenu is selected.
-	 */
-	private function weaponSelectConfirm():Void
-	{
-		trace("Selected weapon...");
-		hideMenuStack();
-		pushMenuStack(attackTargetMenu);
-	}
-	
-	
 	// attackTargetMenu confirm function //
 	
 	/**
@@ -738,6 +896,17 @@ class MenuManager implements Observer
 		clearMenuStack();
 	}
 	
+	
+	// talkTargetMenu confirm function //
+	
+	/**
+	 * Called when any option in the talkTargetMenu is selected.
+	 */
+	private function talkTargetConfirm():Void
+	{
+		trace("Selected target to talk to!");
+		clearMenuStack();
+	}
 	
 	// rescueTargetMenu confirm function //
 	
@@ -872,12 +1041,13 @@ class MenuManager implements Observer
 			mapActionMenu.setPos(rootMenuPos.leftX, rootMenuPos.topY);
 			unitActionMenu.setPos(rootMenuPos.leftX, rootMenuPos.topY);
 			
-			tradeTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
+			//tradeTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 			attackTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
-			healTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
-			rescueTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
-			takeTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
-			dropTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
+			//healTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
+			//talkTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
+			//rescueTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
+			//takeTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
+			//dropTargetMenu.setPos(cornerMenuPos.leftX, cornerMenuPos.topY);
 		}
 		else if (goToLeft != menusOnLeft && !goToLeft)
 		{
@@ -885,18 +1055,20 @@ class MenuManager implements Observer
 				rootMenuPos.topY);
 			mapActionMenu.setPos(rootMenuPos.rightX - mapActionMenu.boxWidth, rootMenuPos.topY);
 			
-			tradeTargetMenu.setPos(cornerMenuPos.rightX - tradeTargetMenu.boxWidth, 
-				cornerMenuPos.topY);
+			//tradeTargetMenu.setPos(cornerMenuPos.rightX - tradeTargetMenu.boxWidth, 
+			//	cornerMenuPos.topY);
 			attackTargetMenu.setPos(cornerMenuPos.rightX - attackTargetMenu.boxWidth, 
 				cornerMenuPos.topY);
-			healTargetMenu.setPos(cornerMenuPos.rightX - healTargetMenu.boxWidth, 
-				cornerMenuPos.topY);
-			rescueTargetMenu.setPos(cornerMenuPos.rightX - rescueTargetMenu.boxWidth, 
-				cornerMenuPos.topY);
-			takeTargetMenu.setPos(cornerMenuPos.rightX - takeTargetMenu.boxWidth, 
-				cornerMenuPos.topY);
-			dropTargetMenu.setPos(cornerMenuPos.rightX - dropTargetMenu.boxWidth, 
-				cornerMenuPos.topY);
+			//healTargetMenu.setPos(cornerMenuPos.rightX - healTargetMenu.boxWidth, 
+			//	cornerMenuPos.topY);
+			//talkTargetMenu.setPos(cornerMenuPos.rightX - healTargetMenu.boxWidth, 
+			//	cornerMenuPos.topY);
+			//rescueTargetMenu.setPos(cornerMenuPos.rightX - rescueTargetMenu.boxWidth, 
+			//	cornerMenuPos.topY);
+			//takeTargetMenu.setPos(cornerMenuPos.rightX - takeTargetMenu.boxWidth, 
+			//	cornerMenuPos.topY);
+			//dropTargetMenu.setPos(cornerMenuPos.rightX - dropTargetMenu.boxWidth, 
+			//	cornerMenuPos.topY);
 		}
 		
 		menusOnLeft = goToLeft;
@@ -930,9 +1102,11 @@ class MenuManager implements Observer
 			case EventTypes.CONFIRM:
 			{
 				var menu:MenuTemplate = cast notifier;
+				// At the moment, only cursor-type menus have multiple confirm functions.
 				if (confirmFunctions[menu.subject.ID].length > 1)
 				{
-					confirmFunctions[menu.subject.ID][menu.currMenuOption.id]();
+					var cursorMenu:CursorMenuTemplate = cast menu;
+					confirmFunctions[cursorMenu.subject.ID][cursorMenu.currMenuOption.id]();
 				}
 				else
 				{

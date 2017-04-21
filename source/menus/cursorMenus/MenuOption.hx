@@ -1,4 +1,4 @@
-package menus;
+package menus.cursorMenus;
 import flixel.FlxBasic;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;

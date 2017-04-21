@@ -1,4 +1,4 @@
-package units;
+package units.items;
 
 /**
  * Inventory for a unit
@@ -20,6 +20,9 @@ package units;
 class Inventory
 {
 
+	public var items:Array<Item> = new Array<Item>();
+	public var weaponIndices:Array<Int> = new Array<Int>();
+	
 	public function new() 
 	{
 		
