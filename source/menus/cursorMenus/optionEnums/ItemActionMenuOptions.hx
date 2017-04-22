@@ -1,4 +1,4 @@
-package menus.optionEnums;
+package menus.cursorMenus.optionEnums;
 
 /**
  * Enum for the different ways a unit can interact with items in its inventory.

@@ -1,5 +1,4 @@
 package units.items;
-import units.Unit;
 
 /**
  * Inventory for a unit
@@ -33,20 +32,19 @@ class Inventory
 	/**
 	 * 
 	 */
-	public var items:Array<Item>;
-	
-	/**
-	 * 
-	 */
 	public var owner:Unit;
 	
+
+	public var items:Array<Item> = new Array<Item>();
+	public var weaponIndices:Array<Int> = new Array<Int>();
 	
 	public function new() 
 	{
 		if (dummyItem == null)
 		{
-			dummyItem = new Item();
+			dummyItem = new Item([], ItemTypes.OTHER);
 		}
+		
 	}
 	
 	/**
@@ -58,7 +56,7 @@ class Inventory
 	{
 		if (items.length < maxSize)
 		{
-			items.push(dummyItem)
+			items.push(dummyItem);
 		}
 	}
 	

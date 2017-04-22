@@ -1,7 +1,8 @@
-package menus;
+package menus.cursorMenus;
 
 import boxes.ResizableBox;
 import flixel.text.FlxText;
+import menus.cursorMenus.BasicMenu;
 import observerPattern.Observed;
 import utilities.HideableEntity;
 import utilities.UpdatingEntity;

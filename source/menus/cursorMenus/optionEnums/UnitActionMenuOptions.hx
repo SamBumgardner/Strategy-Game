@@ -1,4 +1,4 @@
-package menus.optionEnums;
+package menus.cursorMenus.optionEnums;
 
 /**
  * Enum for the different actions a unit may be able to perform after movement.

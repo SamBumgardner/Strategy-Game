@@ -486,29 +486,31 @@ class UnitManager implements Observer
 	}
 	
 	/**
+	 * Updates a unit's logical (not visual) position on the map to the specified
+	 * 	row and column location.
+	 * 
 	 * Depends on a unit already existing on the map.
 	 * May need rewriting later to handle units getting
 	 * dropped after being rescued.
 	 * 
-	 * @param	unit
-	 * @param	row
-	 * @param	col
+	 * @param	unit	The unit whose logical variables should be changed.
+	 * @param	row 	The row location of the unit's new logical position.
+	 * @param	col 	The col location of the unit's new logical position.
 	 */
 	public function updateUnitPos(unit:Unit, row:Int, col:Int):Void
 	{
-		var oldMoveID:MoveID = MoveIDExtender.newMoveID(unit.mapRow, unit.mapCol);
+		var oldMoveID:MoveID = MoveIDExtender.newMoveID(unit.mapPos.getRow(), unit.mapPos.getCol());
 		var newMoveID:MoveID = MoveIDExtender.newMoveID(row, col);
 		
-		unitMap[unit.mapRow][unit.mapCol] = -1;
-		teamMap[unit.mapRow][unit.mapCol] = TeamID.NONE;
+		unitMap[unit.mapPos.getRow()][unit.mapPos.getCol()] = -1;
+		teamMap[unit.mapPos.getRow()][unit.mapPos.getCol()] = TeamID.NONE;
 		tileChanges.push(new TileChange(oldMoveID, true, unit.teamID));
 		
 		unitMap[row][col] = unit.subject.ID;
 		teamMap[row][col] = unit.teamID;
 		tileChanges.push(new TileChange(newMoveID, false, unit.teamID));
 		
-		unit.mapRow = row;
-		unit.mapCol = col;
+		unit.mapPos = newMoveID;
 		
 		// TEMP CODE: Remove later
 		unitTerrainArr = normTerrainMap;
@@ -517,9 +519,28 @@ class UnitManager implements Observer
 	
 	/**
 	 * Begins movement for the selected unit.
+	 * 
+	 * It handles the first half of updating the unit's logical position and
+	 * 	sets up the necessary variables so the unit can begin updating its
+	 * 	visual position as well.
+	 * 
+	 * @param	row	The row location that the selected unit should move to.
+	 * @param	col	The col location that the selected unit should move to.
 	 */
-	public function initiateUnitMovement():Void
+	public function initiateUnitMovement(row:Int, col:Int):Void
 	{
+		// Adjust unit's logical position.
+		var newMoveID:MoveID = MoveIDExtender.newMoveID(row, col);
+		
+		unitMap[selectedUnit.mapPos.getRow()][selectedUnit.mapPos.getCol()] = -1;
+		teamMap[selectedUnit.mapPos.getRow()][selectedUnit.mapPos.getCol()] = TeamID.NONE;
+		
+		unitMap[row][col] = selectedUnit.subject.ID;
+		teamMap[row][col] = selectedUnit.teamID;
+		
+		selectedUnit.mapPos = newMoveID;
+		
+		// Begin changing unit's visual position.
 		if (movePath.length != 0 || neighborPath == null)
 		{
 			hideAllRangeTiles();
@@ -530,6 +551,120 @@ class UnitManager implements Observer
 		{
 			currMoveFunction = pickMoveViaNeighborPath;
 		}
+	}
+	
+	/**
+	 * Finalizes the selected unit's logical movement, completing the changes that
+	 * 	begain in initiateUnitMovement().
+	 */
+	public function confirmUnitMove():Void
+	{
+		var oldMoveID:MoveID = selectedUnit.preMoveMapPos;
+		var newMoveID:MoveID = selectedUnit.mapPos;
+		
+		tileChanges.push(new TileChange(oldMoveID, true, selectedUnit.teamID));
+		
+		tileChanges.push(new TileChange(newMoveID, false, selectedUnit.teamID));
+		
+		selectedUnit.preMoveMapPos = selectedUnit.mapPos;
+		
+		// TEMP CODE: Remove later
+		unitTerrainArr = normTerrainMap;
+		findMoveAndAttackRange(selectedUnit);
+	}
+	
+	/**
+	 * Resets the selected unit's x & y values and logical position variables to match its 
+	 *  old row/col position. Also changes its animation back to "down".
+	 * 
+	 * Used to cancel a unit's movement and let the player go back to deciding a different
+	 * 	destination for the unit.
+	 * 
+	 * Won't be used for non-player controlled units.
+	 */
+	public function undoUnitMove():Void
+	{
+		// Change unit & team maps back to the unit's old position.
+		unitMap[selectedUnit.mapPos.getRow()][selectedUnit.mapPos.getCol()] = -1;
+		teamMap[selectedUnit.mapPos.getRow()][selectedUnit.mapPos.getCol()] = TeamID.NONE;
+		
+		unitMap[selectedUnit.preMoveMapPos.getRow()][selectedUnit.preMoveMapPos.getCol()] = 
+			selectedUnit.subject.ID;
+		teamMap[selectedUnit.preMoveMapPos.getRow()][selectedUnit.preMoveMapPos.getCol()] = 
+			selectedUnit.teamID;
+		
+		// Set the unit's mapPos back to its old value
+		selectedUnit.mapPos = selectedUnit.preMoveMapPos;
+		
+		// Jump the unit sprite back to its old position.
+		selectedUnit.x = selectedUnit.mapPos.getCol() * parentState.tileSize;
+		selectedUnit.y = selectedUnit.mapPos.getRow() * parentState.tileSize;
+		
+		// Or play whatever default move direction the character should use.
+		selectedUnit.animation.play("down");
+	}
+	
+	/**
+	 * Identifies the group of units within "range" of the current selected unit that
+	 * 	pass the provided test function. Will often be used by target-type menus to 
+	 * 	identify the set of targets they can look at.
+	 * 
+	 * @param	rangesToCheck	An array of neighbor distances to check. [1] means only check
+	 * 							1-distance away neighbors, [1,2] means check both 1- and 
+	 * 							2-distance away neighbors, etc.
+	 * @param	testFunc     	A function that returns true if the neighbor Unit should be 
+	 * 							included in the returned array of valid Units. The first
+	 *                       	argument should be for the currently selected unit, and
+	 *       	             	the second argument should be for the neighbor to be checked.
+	 * 
+	 * @return	An array containing all valid Unit objects within range.
+	 */
+	public function getValidUnitsInRange(rangesToCheck:Array<Int>, 
+		testFunc:Unit->Unit->Bool):Array<Unit>
+	{
+		var validUnits:Array<Unit> = new Array<Unit>();
+		for (range in rangesToCheck)
+		{
+			for (colOffset in -range...(range+1))
+			{
+				for (rowModifier in [-1, 1])
+				{
+					var rowOffset:Int = cast (range - Math.abs(colOffset)) * rowModifier;
+					
+					var startTile = selectedUnit.mapPos;
+					
+					var neighborLoc:MoveID = startTile.getOtherByOffset(rowOffset, colOffset);
+					
+					// If the neighbor location is in the map...
+					if (neighborLoc != -1)
+					{
+						// Look up the id of the unit at neighbor location.
+						var neighborUnitID:Int = unitMap[neighborLoc.getRow()]
+							[neighborLoc.getCol()];
+						
+						// If the neighboring tile does contain a unit...
+						if (neighborUnitID != -1) 
+						{
+							var neighborUnit:Unit = unitArray[neighborUnitID];
+							
+							// Check if the found unit passes the provided test.
+							if (testFunc(selectedUnit, neighborUnit))
+							{
+								validUnits.push(neighborUnit);
+							}
+						}
+					}
+					
+					// Prevent checking the same square twice when rowOffset is 0.
+					if (rowOffset == 0)
+					{
+						break;
+					}
+				}
+			}
+		}
+		
+		return validUnits;
 	}
 	
 	/**
@@ -637,7 +772,7 @@ class UnitManager implements Observer
 		unit.attackTiles = null;
 		unit.attackTiles = new Map<MoveID, Bool>();
 		
-		var startingTile:PossibleMove = new PossibleMove(START, 0, unit.mapRow, unit.mapCol);
+		var startingTile:PossibleMove = new PossibleMove(START, 0, unit.mapPos.getRow(), unit.mapPos.getCol());
 		unit.moveTiles.set(startingTile.moveID, startingTile);
 		
 		startingTile.numTimesInBfQueue++;
@@ -744,7 +879,7 @@ class UnitManager implements Observer
 				{
 					var direction:NeighborDirections = NeighborDirections.START;
 					var rowOffset:Int = cast (range - Math.abs(colOffset)) * rowModifier;
-					var neighborTile:MoveID;
+					var neighborTile:MoveID = -1;
 					neighborTile = startTile.getOtherByOffset(rowOffset, colOffset);
 					
 					if (colOffset == 0)
@@ -777,7 +912,7 @@ class UnitManager implements Observer
 					}
 					
 					// If the neighboring tile was outside the map's bounds, it will be null.
-					if (neighborTile != null && testFunc(neighborTile, direction))
+					if (neighborTile != -1 && testFunc(neighborTile, direction))
 					{
 						validNeighbors.push(neighborTile);
 						
@@ -1509,8 +1644,8 @@ class UnitManager implements Observer
 	 */
 	public function updateMoveArrow(newMoveID:MoveID):Void
 	{
-		if (newMoveID.getRow() == selectedUnit.mapRow && 
-			newMoveID.getCol() == selectedUnit.mapCol)
+		if (newMoveID.getRow() == selectedUnit.mapPos.getRow() && 
+			newMoveID.getCol() == selectedUnit.mapPos.getCol())
 		{
 			// Cursor returned to starting space, clear the array and path cost.
 			hideAllArrowTiles();
@@ -1542,11 +1677,11 @@ class UnitManager implements Observer
 				}
 				// and change the new end-of-arrow sprite to the appropriate arrow end.
 				
-				var prevLoc:MoveID = null;
+				var prevLoc:MoveID = -1;
 				
 				if (movePath.length == 1)
 				{
-					prevLoc = MoveIDExtender.newMoveID(selectedUnit.mapRow, selectedUnit.mapCol);
+					prevLoc = MoveIDExtender.newMoveID(selectedUnit.mapPos.getRow(), selectedUnit.mapPos.getCol());
 				}
 				else if (movePath.length > 1)
 				{
@@ -1559,11 +1694,11 @@ class UnitManager implements Observer
 			else
 			{
 				// Sets up prevLoc variable, which is needed in the upcoming if statement. 
-				var prevLoc:MoveID = null;
+				var prevLoc:MoveID = -1;
 				
 				if (movePath.length == 0)
 				{
-					prevLoc = MoveIDExtender.newMoveID(selectedUnit.mapRow, selectedUnit.mapCol);
+					prevLoc = MoveIDExtender.newMoveID(selectedUnit.mapPos.getRow(), selectedUnit.mapPos.getCol());
 				}
 				else if (movePath.length > 0)
 				{
@@ -1580,12 +1715,12 @@ class UnitManager implements Observer
 					// The arrow should be extended according to the direction of movement.
 					totalPathCost += unitTerrainArr[newMoveID.getRow()][newMoveID.getCol()];
 					
-					var prevPrevLoc:MoveID = null;
+					var prevPrevLoc:MoveID = -1;
 					
 					if (movePath.length == 1)
 					{
 						prevPrevLoc = 
-							MoveIDExtender.newMoveID(selectedUnit.mapRow, selectedUnit.mapCol);
+							MoveIDExtender.newMoveID(selectedUnit.mapPos.getRow(), selectedUnit.mapPos.getCol());
 					}
 					else if (movePath.length > 1)
 					{
@@ -1776,22 +1911,6 @@ class UnitManager implements Observer
 		selectedUnit.y += vertMod * moveDist;
 	}
 	
-	/**
-	 * Resets the selected unit's x & y values to match its logical row/col position and
-	 * 	changes its animation back to "down".
-	 * 
-	 * Used to cancel a unit's movement and let the player go back to deciding a different
-	 * 	destination for the unit.
-	 * 
-	 * Won't be used for non-player controlled units.
-	 */
-	public function undoUnitMove():Void
-	{
-		selectedUnit.x = selectedUnit.mapCol * parentState.tileSize;
-		selectedUnit.y = selectedUnit.mapRow * parentState.tileSize;
-		// Or play whatever default move direction the character should use.
-		selectedUnit.animation.play("down");
-	}
 	
 	/////////////////////
 	// UPDATE FUNCTION //

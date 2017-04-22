@@ -1,4 +1,13 @@
 package menus;
+import menus.cursorMenus.BasicMenu;
+import menus.cursorMenus.ResizableBasicMenu;
+import menus.targetMenus.AttackTargetMenu;
+import menus.targetMenus.DropTargetMenu;
+import menus.targetMenus.HealTargetMenu;
+import menus.targetMenus.RescueTargetMenu;
+import menus.targetMenus.TakeTargetMenu;
+import menus.targetMenus.TalkTargetMenu;
+import menus.targetMenus.TradeTargetMenu;
 
 /**
  * A collection of public static functions used to generate all menus
@@ -28,6 +37,8 @@ package menus;
  * 		rescue target
  * 		take target
  * 		drop target
+ * 
+ * NOTE: Need to update documentation.
  * 
  * @author Samuel Bumgardner
  */
@@ -118,9 +129,9 @@ class MissionMenuCreator
 	 * @return	A ResizeableBasicMenu with all of the options needed by the map action menu.
 	 */
 	public static function makeTradeTargetMenu(?X:Float = 0, ?Y:Float = 0, 
-		?ID:Int = 0):ResizableBasicMenu
+		?ID:Int = 0):TradeTargetMenu
 	{
-		return new ResizableBasicMenu(X, Y, ["Target 1", "Target 2"], ID);
+		return new TradeTargetMenu(ID);
 	}
 	
 	/**
@@ -139,21 +150,6 @@ class MissionMenuCreator
 	}
 	
 	/**
-	 * Temporary placeholder, should be an inventory-type menu that only displays weapons.
-	 * Still functions in a menu-like way outside of that, though.
-	 * 
-	 * @param	X	The desired X position of the newly created menu.
-	 * @param	Y	The desired Y position of the newly created menu.
-	 * @param	ID	The desired ID for the newly created menu.
-	 * @return	A ResizeableBasicMenu with all of the options needed by the map action menu.
-	 */
-	public static function makeWeaponSelectMenu(?X:Float = 0, ?Y:Float = 0, 
-		?ID:Int = 0):ResizableBasicMenu
-	{
-		return new ResizableBasicMenu(X, Y, ["Weapon 1", "Weapon 2", "Weapon 3"], ID);
-	}
-	
-	/**
 	 * Temporary placeholder, target menus should involve a cursor highlighting the 
 	 *  unit on the map rather than a normal menu structure.
 	 * 
@@ -163,9 +159,9 @@ class MissionMenuCreator
 	 * @return	A ResizeableBasicMenu with all of the options needed by the map action menu.
 	 */
 	public static function makeAttackTargetMenu(?X:Float = 0, ?Y:Float = 0, 
-		?ID:Int = 0):ResizableBasicMenu
+		?ID:Int = 0):AttackTargetMenu
 	{
-		return new ResizableBasicMenu(X, Y, ["Target 1", "Target 2"], ID);
+		return new AttackTargetMenu(ID);
 	}
 	
 	/**
@@ -178,9 +174,24 @@ class MissionMenuCreator
 	 * @return	A ResizeableBasicMenu with all of the options needed by the map action menu.
 	 */
 	public static function makeHealTargetMenu(?X:Float = 0, ?Y:Float = 0, 
-		?ID:Int = 0):ResizableBasicMenu
+		?ID:Int = 0):HealTargetMenu
 	{
-		return new ResizableBasicMenu(X, Y, ["Target 1", "Target 2"], ID);
+		return new HealTargetMenu(ID);
+	}
+	
+	/**
+	 * Temporary placeholder, target menus should involve a cursor highlighting the 
+	 *  unit on the map rather than a normal menu structure.
+	 * 
+	 * @param	X	The desired X position of the newly created menu.
+	 * @param	Y	The desired Y position of the newly created menu.
+	 * @param	ID	The desired ID for the newly created menu.
+	 * @return	A ResizeableBasicMenu with all of the options needed by the map action menu.
+	 */
+	public static function makeTalkTargetMenu(?X:Float = 0, ?Y:Float = 0,
+		?ID:Int = 0):TalkTargetMenu
+	{
+		return new TalkTargetMenu(ID);
 	}
 	
 	/**
@@ -193,9 +204,9 @@ class MissionMenuCreator
 	 * @return	A ResizeableBasicMenu with all of the options needed by the map action menu.
 	 */
 	public static function makeRescueTargetMenu(?X:Float = 0, ?Y:Float = 0, 
-		?ID:Int = 0):ResizableBasicMenu
+		?ID:Int = 0):RescueTargetMenu
 	{
-		return new ResizableBasicMenu(X, Y, ["Target 1", "Target 2"], ID);
+		return new RescueTargetMenu(ID);
 	}
 	
 	/**
@@ -208,9 +219,9 @@ class MissionMenuCreator
 	 * @return	A ResizeableBasicMenu with all of the options needed by the map action menu.
 	 */
 	public static function makeTakeTargetMenu(?X:Float = 0, ?Y:Float = 0, 
-		?ID:Int = 0):ResizableBasicMenu
+		?ID:Int = 0):TakeTargetMenu
 	{
-		return new ResizableBasicMenu(X, Y, ["Target 1", "Target 2"], ID);
+		return new TakeTargetMenu(ID);
 	}
 	
 	/**
@@ -223,8 +234,8 @@ class MissionMenuCreator
 	 * @return	A ResizeableBasicMenu with all of the options needed by the map action menu.
 	 */
 	public static function makeDropTargetMenu(?X:Float = 0, ?Y:Float = 0, 
-		?ID:Int = 0):ResizableBasicMenu
+		?ID:Int = 0):DropTargetMenu
 	{
-		return new ResizableBasicMenu(X, Y, ["Target 1", "Target 2"], ID);
+		return new DropTargetMenu(ID);
 	}
 }

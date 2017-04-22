@@ -297,6 +297,9 @@ class MapCursor implements UpdatingEntity implements HideableEntity implements O
 	{
 		row = newRow;
 		col = newCol;
+		framesLeftInMove = framesPerMove;
+		isMoving = true;
+		subject.notify(EventTypes.MOVE);
 	}
 	
 	/**

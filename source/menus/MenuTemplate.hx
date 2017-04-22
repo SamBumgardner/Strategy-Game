@@ -26,12 +26,8 @@ import utilities.UpdatingEntity;
  * 	- Containing MenuOptions.
  * 	- Hiding menu and all components.
  * 	- Activating/Deactivating menu.
- * 	- Reacting to user "action" input.
+ * 	- Reacting to user "move" and "action" input.
  * 		- Uses observer pattern-style system, using its Subject component to notify observers.
- * 	- Cursor creation.
- * 		- Includes side-to-side bouncing motion and moving between menu options.
- * 	- Cursor movement.
- * 		- Includes tracking the current menu option for movement and action input purposes.
  * 	- Menu movement.
  * 		- Includes moving all menu components to match.
  * 
@@ -74,54 +70,6 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	 * FlxGroup that holds all HaxeFlixel-inheriting components used by this menu.
 	 */
 	public var totalFlxGrp(default, null):FlxGroup = new FlxGroup();
-	
-	/**
-	 * FlxGroup that only holds the HaxeFlixel components from this menu's MenuOptions.
-	 */
-	private var optionFlxGrp:FlxGroup = new FlxGroup();
-	
-	/**
-	 * Array of menuOption objects. At the moment, this is just used to find the
-	 *  first menu option whenever the menu is re-opened (so the cursor always starts
-	 *  at the same position every time). 
-	 * 
-	 * If it ends up not being used for anything else in this template, then it will
-	 *  be removed from here and added to any child classes that specifically need this
-	 *  functionality.
-	 */
-	private var menuOptionArr:Array<MenuOption> = new Array<MenuOption>();
-	
-	/**
-	 * The menu option that the cursor is currently selecting/hovering over.
-	 */
-	public var currMenuOption(default, null):MenuOption;
-	
-	/**
-	 * The AnchoredSprite used as the menu's bouncing cursor.
-	 */
-	private var menuCursor:AnchoredSprite;
-	
-	/**
-	 * Variables used to set up and manage the menuCursor's tweening. 
-	 * The NumTween is what makes the menuCursor bounce left and right
-	 * 	while it's visible.
-	 */
-	private var menuCursorTween:NumTween;
-	private var bounceDistance(default, never):Int = 15;
-	
-	/**
-	 * Constant value that indicates how many frames the menuCursor should take to
-	 * 	complete any movement. When the cursor begins movement, its framesLeftinMove
-	 * 	variable should be set equal to this.
-	 */
-	private var framesPerMove(default, never):Int = 4;
-	
-	/**
-	 * Frame counter that tracks how many frames that the menuCursor has left during
-	 * 	its current movement. When it is equal to 0, the menuCursor should be at its
-	 * 	destination.
-	 */
-	private var framesLeftInMove:Int = 0;
 	
 	/**
 	 * Sound effects to be played after cursor actions.
@@ -167,7 +115,7 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	 * 
 	 * See the BasicMenu class for an example implementation of this function.
 	 */
-	private function addAllFlxGrps():Void{}
+	private function addAllFlxGrps():Void {}
 	
 	/**
 	 * Sets the scroll factors of all sprites in totalFlxGrp to (0, 0).
@@ -212,12 +160,6 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 		// Move all HaxeFlixel-inheriting components.
 		totalFlxGrp.forEach(moveObject.bind(_, xDiff, yDiff), true);
 		
-		// Move cursor positions for all MenuOptions.
-		for (menuOption in menuOptionArr)
-		{
-			menuOption.moveCursorPos(xDiff, yDiff);
-		}
-		
 		// Set menu's logical x & y values.
 		x = newX;
 		y = newY;
@@ -251,7 +193,6 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	public function hide():Void
 	{
 		totalFlxGrp.forEach(hideSprite, true);
-		menuCursorTween.active = false;
 	}
 	
 	/**
@@ -282,33 +223,18 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	{
 		totalFlxGrp.forEach(revealSprite, true);
 		
-		menuCursorTween.active = true;
-		
 		resetMenu();
 	}
 	
 	/**
 	 * Helper function for reveal().
-	 * Also is responsible for resetting the menu's variables and appearance back to their
-	 * 	starting states. This includes hiding the background highlight graphic of all menu
-	 * 	options that are not initially hovered over in the menu.
+	 * Is responsible for resetting the menu's variables and appearance back to their
+	 * 	starting states. 
 	 * 
-	 * NOTE: Assumes that there is at least one entry in menuOptionArr.
+	 * The body of this function is left empty, and is expected to be overloaded and used
+	 * 	by all child classes in whatever manner is appropriate for that particular menu.
 	 */
-	private function resetMenu():Void
-	{
-		currMenuOption = menuOptionArr[0];
-		menuCursor.setAnchor(currMenuOption.cursorPos.x, currMenuOption.cursorPos.y);
-		menuCursor.jumpToAnchor();
-		
-		for (menuOption in menuOptionArr)
-		{
-			if (menuOption != currMenuOption && menuOption.bgHighlight != null)
-			{
-				hideSprite(menuOption.bgHighlight);
-			}
-		}
-	}
+	private function resetMenu():Void {}
 	
 	/**
 	 * Helper function for reveal().
@@ -351,130 +277,25 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	
 	
 	///////////////////////////////////////
-	//        BASIC CURSOR SETUP         //
-	///////////////////////////////////////
-	
-	/**
-	 * Creates the cursor anchor sprite and sets up a tween for it using cursorBounceFunc().
-	 * menuCursor must still be added to totalFlxGrp after this function is finished, however.
-	 */
-	private function initBasicCursor():Void
-	{
-		menuCursor = new AnchoredSprite(0, 0, AssetPaths.menu_cursor_simple__png);
-		menuCursorTween = FlxTween.num(0, bounceDistance, .75, {ease: FlxEase.circInOut, 
-			type: FlxTween.LOOPING}, cursorBounceFunc.bind(menuCursor));
-	}
-	
-	/**
-	 * Tween function for use in a NumTween created in initBasicCursor().
-	 * 
-	 * Because HaxeFlixel doesn't allow looping chained tweens, I had to do a bit of a hacky
-	 *  function here to make the whole movement in a single tween. Basically, when the bounce
-	 *  is half over (offsetValue > corner.width /2) offsetValue is changed so it counts back to
-	 *  zero, making the first half move the cursor to the right, and the second half expand it
-	 *  again.
-	 * 
-	 * @param	cursor		The cursor object that is being tweened.
-	 * @param	offsetValue	How far the cursor should be offset from its anchor.
-	 */
-	private function cursorBounceFunc(cursor:AnchoredSprite, offsetValue:Float):Void
-	{
-		if (offsetValue > bounceDistance / 2)
-		{
-			offsetValue = bounceDistance - offsetValue;
-		}
-		
-		var offsetX:Float = offsetValue;
-		
-		cursor.x = cursor.getAnchorX() + offsetX;
-		cursor.y = cursor.getAnchorY();
-	}
-	
-	
-	///////////////////////////////////////
-	//          CURSOR MOVEMENT          //
+	//         MOVEMENT RESPONSE         //
 	///////////////////////////////////////
 	
 	/**
 	 * Recieves a set of boolean input values and determines if movement should occur.
 	 * If the movment is "held", it may follow an alternative set of rules.
+	 * 
+	 * This function should be overriden by all child classes to set up their desired
+	 * 	functionailty.
+	 * 
+	 * @param	vertMove	indicates presence and direction of vertical movement input.
+	 * @param	horizMove	indicates presence and direction of horizontal movement input.
+	 * @param	heldMove	indicates whether the movement input was "held" or pressed this frame.
 	 */
-	private function moveCursor(vertMove:Int, horizMove:Int, heldMove:Bool):Void
-	{
-		if (!heldMove || framesLeftInMove == 0)
-		{
-			currMenuOption.cursorExited();
-			
-			if (vertMove > 0)
-			{
-				if (currMenuOption.downOption != null && 
-					(!heldMove || !currMenuOption.downIsWrap))
-				{
-					currMenuOption = currMenuOption.downOption;
-					moveSound.play(true);
-				}
-			}
-			else if (vertMove < 0)
-			{
-				if (currMenuOption.upOption != null && 
-					(!heldMove || !currMenuOption.upIsWrap))
-				{
-					currMenuOption = currMenuOption.upOption;
-					moveSound.play(true);
-				}
-			}
-			
-			if (horizMove > 0)
-			{
-				if (currMenuOption.rightOption != null && 
-					(!heldMove || !currMenuOption.rightIsWrap))
-				{
-					currMenuOption = currMenuOption.rightOption;
-					moveSound.play(true);
-				}
-			}
-			else if (horizMove < 0)
-			{
-				if (currMenuOption.leftOption != null && 
-					(!heldMove || !currMenuOption.leftIsWrap))
-				{
-					currMenuOption = currMenuOption.leftOption;
-					moveSound.play(true);
-				}
-			}
-			currMenuOption.cursorEntered();
-			framesLeftInMove = framesPerMove;
-		}
-	}
-	
-	
-	/**
-	 * Moves the cursor's corners toward the cursor's position incrementally.
-	 */
-	private function moveCursorAnchors():Void
-	{
-		if (framesLeftInMove > 0)
-		{
-			var horizMove:Int	= 0;
-			var vertMove:Int	= 0;
-			
-			var xDiff:Int = Math.floor(currMenuOption.cursorPos.x) - 
-				Math.floor(menuCursor.getAnchorX());
-			var yDiff:Int = Math.floor(currMenuOption.cursorPos.y) - 
-				Math.floor(menuCursor.getAnchorY());
-			
-			horizMove = cast xDiff / framesLeftInMove;
-			vertMove = cast yDiff / framesLeftInMove;
-			
-			menuCursor.setAnchor(menuCursor.getAnchorX() + horizMove,
-				menuCursor.getAnchorY() + vertMove);
-			framesLeftInMove--;
-		}
-	}
+	private function moveResponse(vertMove:Int, horizMove:Int, heldMove:Bool):Void {}
 	
 	
 	///////////////////////////////////////
-	//          CURSOR ACTIONS           //
+	//          ACTION RESPONSE          //
 	///////////////////////////////////////
 	
 	/**
@@ -487,38 +308,13 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	 * 	menus may not need to notify PAINT, NEXT, or INFO events. If it is overridden with
 	 * 	the intent to replace this function, make sure to NOT call super.doCursorAction();
 	 * 
-	 * @param	pressedKeys	Indicates which keys were pressed. Use KeyIndex enum (from ActionInputHandler) to identify what type of input each index corresponds to.
-	 * @param	heldAction	Whether the provided set of pressed keys were held down for a length of time (true) or just pressed (false).
+	 * @param	pressedKeys	Indicates which keys were pressed. Use KeyIndex enum (from 
+	 * 			ActionInputHandler) to identify what type of input each index corresponds to.
+	 * 
+	 * @param	heldAction	Whether the provided set of pressed keys were held down for a 
+	 * 			length of time (true) or just pressed (false).
 	 */
-	private function doCursorAction(pressedKeys:Array<Bool>, heldAction:Bool)
-	{
-		if (!heldAction)
-		{
-			// Could also be done with a loop, but this ends up being easier to understand.
-			if (pressedKeys[KeyIndex.CONFIRM])
-			{
-				confirmSound.play(true);
-				subject.notify(EventTypes.CONFIRM);
-			}
-			else if (pressedKeys[KeyIndex.CANCEL])
-			{
-				cancelSound.play(true);
-				subject.notify(EventTypes.CANCEL);
-			}
-			else if (pressedKeys[KeyIndex.PAINT])
-			{
-				subject.notify(EventTypes.PAINT);
-			}
-			else if (pressedKeys[KeyIndex.NEXT])
-			{
-				subject.notify(EventTypes.NEXT);
-			}
-			else if (pressedKeys[KeyIndex.INFO])
-			{
-				subject.notify(EventTypes.INFO);
-			}
-		}
-	}
+	private function actionResponse(pressedKeys:Array<Bool>, heldAction:Bool):Void {}
 	
 	
 	///////////////////////////////////////
@@ -540,14 +336,13 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	{
 		if (active)
 		{
-			MoveInputHandler.handleMovement(elapsed, moveCursor);
+			MoveInputHandler.handleMovement(elapsed, moveResponse);
 			
 			while (active && 
 				ActionInputHandler.actionBuffer.length > ActionInputHandler.numInputsUsed)
 			{
-				ActionInputHandler.useBufferedInput(doCursorAction);
+				ActionInputHandler.useBufferedInput(actionResponse);
 			}
-			moveCursorAnchors();
 		}
 	}
 }
