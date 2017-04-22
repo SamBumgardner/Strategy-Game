@@ -341,6 +341,24 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	}
 	
 	
+	public function equipItem():Void
+	{
+		
+	}
+	
+	public function attackTarget(target:Unit):Void
+	{
+		
+	}
+	
+	public function useItem(target:Unit, item:Item):Void
+	{
+		item.use(unitManager.selectedUnit, target);
+	}
+	
+	
+	
+	
 	override public function update(elapsed:Float):Void 
 	{
 		super.update(elapsed);
