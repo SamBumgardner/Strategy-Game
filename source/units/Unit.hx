@@ -341,9 +341,14 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	}
 	
 	
-	public function equipItem():Void
+	public function equipItem(equipIndex:Int):Void
 	{
+		var tempItem:Item = inventory.items[0];
+		inventory.items[0] = inventory.items[equipIndex];
+		inventory.items[equipIndex] = tempItem;
 		
+		// Cast the item to EquippedItem type.
+		equippedItem = cast inventory.items[0];
 	}
 	
 	public function attackTarget(target:Unit):Void
