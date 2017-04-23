@@ -328,6 +328,7 @@ class MenuManager implements Observer
 		
 		// non-default cancel functions
 		cancelFunctions[MissionMenuTypes.UNIT_ACTION] = unitActionMenuCancel;
+		cancelFunctions[MissionMenuTypes.ITEM_ACTION] = itemActionCancel;
 		cancelFunctions[MissionMenuTypes.TRADE_TARGET] = tradeMenuCancel;
 		cancelFunctions[MissionMenuTypes.TRADE_ACTION] = tradeMenuCancel;
 		
@@ -970,6 +971,15 @@ class MenuManager implements Observer
 	private function unitActionMenuCancel():Void
 	{
 		popMenuStack();
+	}
+	
+	/**
+	 * 
+	 */
+	private function itemActionCancel():Void
+	{
+		popMenuStack();
+		unitInvMenu.rememberHoveredItem();
 	}
 	
 	/**

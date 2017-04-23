@@ -215,4 +215,23 @@ class InventoryMenu extends CursorMenuTemplate implements VarSizedBox
 		resizableBox.resize(boxWidth, boxHeight);
 	}
 	
+	override private function moveResponse(vertMove:Int, horizMove:Int, heldMove:Bool):Void
+	{
+		super.moveResponse(vertMove, horizMove, heldMove);
+		hoveredItemIndex = currMenuOption.id;
+	}
+	
+	public function rememberHoveredItem():Void
+	{
+		// If the old hovered item is still an active option,
+		if (menuOptionArr[hoveredItemIndex].label.visible == true)
+		{
+			currMenuOption.cursorExited();
+			currMenuOption = menuOptionArr[hoveredItemIndex];
+			currMenuOption.cursorEntered();
+			
+			menuCursor.setAnchor(currMenuOption.cursorPos.x, currMenuOption.cursorPos.y);
+			menuCursor.jumpToAnchor();
+		}
+	}
 }
