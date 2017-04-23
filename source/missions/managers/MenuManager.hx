@@ -7,6 +7,7 @@ import menus.cursorMenus.CursorMenuTemplate;
 import menus.MenuTemplate;
 import menus.MissionMenuCreator;
 import menus.MissionMenuTypes;
+import menus.cursorMenus.InventoryMenu;
 import menus.cursorMenus.ResizableBasicMenu;
 import menus.cursorMenus.optionEnums.UnitActionMenuOptions;
 import menus.targetMenus.AttackTargetMenu;
@@ -62,7 +63,7 @@ class MenuManager implements Observer
 	/**
 	 * Menu used to display unit inventory menu.
 	 */
-	private var unitInvMenu:ResizableBasicMenu;
+	private var unitInvMenu:InventoryMenu;
 	
 	/**
 	 * Menu used to select how to interact with an item in a unit's inventory.
