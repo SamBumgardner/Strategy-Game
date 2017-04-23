@@ -227,10 +227,10 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		(cast inventory.items[2]).weight = FlxG.random.int(1, 10);
 		(cast inventory.items[3]).weight = FlxG.random.int(1, 10);
 		
-		inventory.items[0].name = "weapon 0";
-		inventory.items[1].name = "weapon 1";
-		inventory.items[2].name = "weapon 2";
-		inventory.items[3].name = "weapon 3";
+		inventory.items[0].name = "Javelin";
+		inventory.items[1].name = "Longbow";
+		inventory.items[2].name = "Chakram";
+		inventory.items[3].name = "Quarterstaff";
 		
 		inventory.weaponIndices = [0, 1, 2, 3];
 		
