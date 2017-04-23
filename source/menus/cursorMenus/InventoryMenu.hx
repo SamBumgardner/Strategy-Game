@@ -107,7 +107,7 @@ class InventoryMenu extends CursorMenuTemplate implements VarSizedBox
 		for (i in 0...maxInventorySlots)
 		{
 			var slotX:Float = X + cornerSize / 2;
-			var slotY:Float = Y + cornerSize / 2 + itemSlotInterval * i - 4;
+			var slotY:Float = Y + cornerSize / 2 + itemSlotInterval * i;
 			
 			itemSlotsGrp.add(new InventorySlot(slotX, slotY));
 			

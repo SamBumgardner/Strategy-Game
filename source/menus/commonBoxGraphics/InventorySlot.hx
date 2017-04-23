@@ -22,6 +22,8 @@ class InventorySlot extends FlxSprite implements VarSizedBox
 	public var boxHeight(default, null):Int = 48;
 	public var boxSpriteSheet(default, null):FlxGraphicAsset = AssetPaths.inv_slot__png;
 	
+	public var graphicOffset:Int = 4;
+	
 	public static var sharedGraphic:FlxSprite;
 	
 	public function new(?X:Float=0, ?Y:Float=0) 
@@ -36,6 +38,7 @@ class InventorySlot extends FlxSprite implements VarSizedBox
 		
 		loadGraphicFromSprite(sharedGraphic);
 		active = false;
+		offset.y = graphicOffset;
 	}
 	
 }
