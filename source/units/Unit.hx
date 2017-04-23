@@ -353,7 +353,7 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	
 	public function useItem(target:Unit, item:Item):Void
 	{
-		item.use(unitManager.selectedUnit, target);
+		item.use(this, target);
 	}
 	
 	
