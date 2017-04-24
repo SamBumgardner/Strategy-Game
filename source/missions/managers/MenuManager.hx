@@ -9,6 +9,7 @@ import menus.MissionMenuCreator;
 import menus.MissionMenuTypes;
 import menus.cursorMenus.InventoryMenu;
 import menus.cursorMenus.ResizableBasicMenu;
+import menus.cursorMenus.TradeMenu;
 import menus.cursorMenus.optionEnums.UnitActionMenuOptions;
 import menus.targetMenus.AttackTargetMenu;
 import menus.targetMenus.DropTargetMenu;
@@ -78,7 +79,7 @@ class MenuManager implements Observer
 	/**
 	 * Menu used to trade items between two units.
 	 */
-	private var tradeActionMenu:ResizableBasicMenu;
+	private var tradeActionMenu:TradeMenu;
 	
 	/**
 	 * Menu used to select which enemy unit to attack.
@@ -324,6 +325,7 @@ class MenuManager implements Observer
 		openFunctions[MissionMenuTypes.RESCUE_TARGET] = rescueTargetMenuOpen;
 		openFunctions[MissionMenuTypes.TAKE_TARGET] = takeTargetMenuOpen;
 		openFunctions[MissionMenuTypes.TRADE_TARGET] = tradeTargetMenuOpen;
+		openFunctions[MissionMenuTypes.TRADE_ACTION] = tradeActionMenuOpen;
 		
 		
 		// non-default cancel functions
@@ -649,6 +651,13 @@ class MenuManager implements Observer
 		tradeTargetMenu.refreshTargets(parentState);
 	}
 	
+	// More menu refreshing going on.
+	
+	private function tradeActionMenuOpen():Void
+	{
+		tradeActionMenu.setUnits(tradeTargetMenu.selectedUnit, cast tradeTargetMenu.currentTarget);
+		tradeActionMenu.refreshInventories();
+	}
 	
 	///////////////////////////////////////
 	//       MENU CONFIRM FUNCTIONS      //

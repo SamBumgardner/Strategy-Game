@@ -2,6 +2,7 @@ package menus;
 import menus.cursorMenus.BasicMenu;
 import menus.cursorMenus.InventoryMenu;
 import menus.cursorMenus.ResizableBasicMenu;
+import menus.cursorMenus.TradeMenu;
 import menus.targetMenus.AttackTargetMenu;
 import menus.targetMenus.DropTargetMenu;
 import menus.targetMenus.HealTargetMenu;
@@ -144,9 +145,9 @@ class MissionMenuCreator
 	 * @return	A ResizeableBasicMenu with all of the options needed by the map action menu.
 	 */
 	public static function makeTradeActionMenu(?X:Float = 0, ?Y:Float = 0, 
-		?ID:Int = 0):ResizableBasicMenu
+		?ID:Int = 0):TradeMenu
 	{
-		return new ResizableBasicMenu(X, Y, ["Trade 1", "Trade 2"], ID);
+		return new TradeMenu(X, Y, ID);
 	}
 	
 	/**
