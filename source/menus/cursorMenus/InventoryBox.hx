@@ -4,6 +4,8 @@ import boxes.ResizableBox;
 import boxes.VarSizedBox;
 import flixel.group.FlxGroup;
 import flixel.system.FlxAssets.FlxGraphicAsset;
+import flixel.util.FlxColor;
+import menus.commonBoxGraphics.InventorySlot;
 import units.items.Inventory;
 
 /**
@@ -57,6 +59,8 @@ class InventoryBox implements VarSizedBox
 	 */
 	public var itemSlotsGrp:FlxGroup;
 	
+	public var menuOptionArr(default, null):Array<MenuOption>;
+	
 	/**
 	 * 
 	 */
@@ -107,6 +111,7 @@ class InventoryBox implements VarSizedBox
 	
 	private function initInventorySlots(X:Float, Y:Float):Void
 	{
+		menuOptionArr = new Array<MenuOption>();
 		var newMenuOption:MenuOption;
 		var menuOptionWidth:Float = boxWidth - cornerSize * 2;
 		
@@ -154,48 +159,51 @@ class InventoryBox implements VarSizedBox
 	}
 	
 	
-	public function set_trackedInventory(newInv:Inventory)
+	public function set_trackedInventory(newInv:Inventory):Inventory
 	{
 		trackedInventory = newInv;
-		refreshDisplay()
+		refreshDisplay();
+		return trackedInventory;
 	}
 	
 	public function refreshDisplay():Void
 	{
-		for (i in 0...maxInventorySlots)
+		if (trackedInventory != null)
 		{
-			if (i < selectedUnit.inventory.items.length)
+			for (i in 0...maxInventorySlots)
 			{
-				menuOptionArr[i].label.text = selectedUnit.inventory.items[i].name;
-				
-				
-				// Connect the current menu option and the previous option as neighbors.
-				if (i > 0) 
+				if (i < trackedInventory.items.length)
 				{
-					menuOptionArr[i].upOption = menuOptionArr[i - 1];
-					menuOptionArr[i - 1].downOption = menuOptionArr[i];
+					menuOptionArr[i].label.text = trackedInventory.items[i].name;
+					
+					
+					// Connect the current menu option and the previous option as neighbors.
+					if (i > 0) 
+					{
+						menuOptionArr[i].upOption = menuOptionArr[i - 1];
+						menuOptionArr[i - 1].downOption = menuOptionArr[i];
+					}
+					
+					// Connect the last menu option to the first menu option as neighbors.
+					if (i == trackedInventory.items.length - 1)
+					{
+						menuOptionArr[0].upOption = menuOptionArr[i];
+						menuOptionArr[0].upIsWrap = true;
+						menuOptionArr[i].downOption = menuOptionArr[0];
+						menuOptionArr[i].downIsWrap = true;
+					}
+					
+					itemSlotsGrp.members[i].visible = true;
+					menuOptionArr[i].reveal();
 				}
-				
-				// Connect the last menu option to the first menu option as neighbors.
-				if (i == selectedUnit.inventory.items.length - 1)
+				else // Deactivate other item slots.
 				{
-					menuOptionArr[0].upOption = menuOptionArr[i];
-					menuOptionArr[0].upIsWrap = true;
-					menuOptionArr[i].downOption = menuOptionArr[0];
-					menuOptionArr[i].downIsWrap = true;
+					itemSlotsGrp.members[i].visible = false;
+					menuOptionArr[i].hide();
 				}
-				
-				itemSlotsGrp.members[i].visible = true;
-				menuOptionArr[i].reveal();
-			}
-			else // Deactivate other item slots.
-			{
-				itemSlotsGrp.members[i].visible = false;
-				menuOptionArr[i].hide();
 			}
 		}
-		
-		boxHeight = Math.floor(itemSlotInterval * selectedUnit.inventory.items.length + cornerSize);
+		boxHeight = Math.floor(itemSlotInterval * trackedInventory.items.length + cornerSize);
 		resizableBox.resize(boxWidth, boxHeight);
 	}
 }
