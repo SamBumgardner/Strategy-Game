@@ -15,7 +15,7 @@ import units.Unit;
  * ...
  * @author Samuel Bumgardner
  */
-class InventoryMenu extends CursorMenuTemplate implements VarSizedBox
+class InventoryMenu extends CursorMenuTemplate
 {
 	///////////////////////////////////////
 	//         DATA  DECLARATION         //
@@ -40,7 +40,7 @@ class InventoryMenu extends CursorMenuTemplate implements VarSizedBox
 	/**
 	 * 
 	 */
-	private var selectedUnit:Unit;
+	public var selectedUnit(default, set):Unit;
 	
 	/**
 	 * 
@@ -64,7 +64,7 @@ class InventoryMenu extends CursorMenuTemplate implements VarSizedBox
 	private function initInventoryBox(X:Float, Y:Float):Void
 	{
 		inventoryBox = new InventoryBox(X, Y);
-		
+		menuOptionArr = inventoryBox.menuOptionArr;
 	}
 	
 	
@@ -81,8 +81,15 @@ class InventoryMenu extends CursorMenuTemplate implements VarSizedBox
 	 */
 	public override function resetMenu():Void
 	{
-		refreshMenuOptions(cast FlxG.state);
+		inventoryBox.refreshDisplay();
 		super.resetMenu();
+	}
+	
+	public function set_selectedUnit(newUnit:Unit):Unit
+	{
+		selectedUnit = newUnit;
+		inventoryBox.trackedInventory = selectedUnit.inventory;
+		return selectedUnit;
 	}
 	
 	/**
@@ -92,11 +99,9 @@ class InventoryMenu extends CursorMenuTemplate implements VarSizedBox
 	 * 
 	 * @param	parentState
 	 */
-	public function refreshMenuOptions(parentState:MissionState):Void
+	public function refreshMenuOptions():Void
 	{
-		selectedUnit = parentState.getSelectedUnit();
-		inventoryBox.trackedInventory = selectedUnit.inventory;
-		
+		inventoryBox.refreshDisplay();
 	}
 	
 	override private function moveResponse(vertMove:Int, horizMove:Int, heldMove:Bool):Void

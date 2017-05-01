@@ -319,6 +319,7 @@ class MenuManager implements Observer
 		// non-default open menu functions setup.
 		
 		openFunctions[MissionMenuTypes.UNIT_ACTION] = unitActionMenuOpen;
+		openFunctions[MissionMenuTypes.UNIT_INVENTORY] = unitInvMenuOpen;
 		openFunctions[MissionMenuTypes.ATTACK_TARGET] = attackTargetMenuOpen;
 		openFunctions[MissionMenuTypes.HEAL_TARGET] = healTargetMenuOpen;
 		openFunctions[MissionMenuTypes.TALK_TARGET] = talkTargetMenuOpen;
@@ -657,6 +658,11 @@ class MenuManager implements Observer
 	{
 		tradeActionMenu.setUnits(tradeTargetMenu.selectedUnit, cast tradeTargetMenu.currentTarget);
 		tradeActionMenu.refreshInventories();
+	}
+	
+	private function unitInvMenuOpen():Void
+	{
+		unitInvMenu.selectedUnit = parentState.getSelectedUnit();
 	}
 	
 	///////////////////////////////////////
