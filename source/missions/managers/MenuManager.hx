@@ -657,7 +657,7 @@ class MenuManager implements Observer
 	private function tradeActionMenuOpen():Void
 	{
 		tradeActionMenu.setUnits(tradeTargetMenu.selectedUnit, cast tradeTargetMenu.currentTarget);
-		tradeActionMenu.refreshInventories();
+		tradeActionMenu.refreshMenuOptions();
 	}
 	
 	private function unitInvMenuOpen():Void
