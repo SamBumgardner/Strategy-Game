@@ -73,9 +73,6 @@ class TradeMenu extends CursorMenuTemplate
 		
 		addAllFlxGrps();
 		
-		trace(invBox1);		trace(invBox2);
-
-		
 		hide();
 	}
 	
@@ -196,8 +193,6 @@ class TradeMenu extends CursorMenuTemplate
 			if (i < otherUnit.inventory.items.length)
 			{
 				var optionIndex = i * 2 + 1;
-				
-				menuOptionArr[optionIndex].label.text = selectedUnit.inventory.items[i].name;
 				
 				// Connect this menuOption horizontally.
 				if (i < selectedUnit.inventory.items.length)
