@@ -83,6 +83,7 @@ class InventoryMenu extends CursorMenuTemplate
 	{
 		inventoryBox.refreshDisplay();
 		super.resetMenu();
+		hoveredItemIndex = currMenuOption.id;
 	}
 	
 	public function set_selectedUnit(newUnit:Unit):Unit
