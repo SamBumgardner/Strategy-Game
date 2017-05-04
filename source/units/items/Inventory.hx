@@ -67,4 +67,65 @@ class Inventory
 	{
 		items.remove(dummyItem);
 	}
+	
+	public function finalizeItemInfo():Bool
+	{
+		var changeOccurred:Bool = false;
+		
+		for (i in 0...items.length)
+		{
+			if (items[i].owner != owner)
+			{
+				items[i].owner = owner;
+				changeOccurred = true;
+			}
+		}
+		return changeOccurred;
+	}
+	
+	public function updateEquippedItem():Bool
+	{
+		var changedEquipped:Bool = false;
+		
+		// TODO: do a more robust check if item is equippable.
+		if (owner.equippedItem != items[0])
+		{
+			if (items[0].itemType == ItemTypes.WEAPON || items[0].itemType == ItemTypes.HEALING)
+			{
+				owner.equipItem(0);
+			}
+			else
+			{
+				owner.equippedItem = null;
+			}
+			
+			changedEquipped = true;
+		}
+		
+		return changedEquipped;
+	}
+	
+	/**
+	 * Swaps the positional data of two different items.
+	 * 
+	 * @param	item1
+	 * @param	item2
+	 */
+	static public function tradeItems(item1:Item, item2:Item):Void
+	{
+		trace(item1.inventory,  item2.inventory);
+		
+		var index1:Int = item1.invIndex;
+		var inv1:Inventory = item1.inventory;
+		
+		item1.invIndex = item2.invIndex;
+		item1.inventory = item2.inventory;
+		
+		item1.inventory.items[item1.invIndex] = item1;
+		
+		item2.invIndex = index1;
+		item2.inventory = inv1;
+		
+		item2.inventory.items[item2.invIndex] = item2;
+	}
 }
