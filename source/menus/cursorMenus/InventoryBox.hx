@@ -190,6 +190,14 @@ class InventoryBox implements VarSizedBox
 	
 	public function refreshDisplay():Void
 	{
+		trace("Displaying inventory contents: ");
+		for (item in trackedInventory.items)
+		{
+			trace("Item name: " + item.name);
+			trace("InvIndex: " + item.invIndex);
+			trace("Is identical to first item", item == trackedInventory.items[0], "\n");
+		}
+		
 		if (trackedInventory != null)
 		{
 			for (i in 0...maxInventorySlots)

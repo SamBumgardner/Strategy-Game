@@ -126,6 +126,8 @@ class MenuOption implements HideableEntity
 		cursorOffsetY = Math.floor((label.height / 2) - (cursorSideLength / 2));
 		cursorPos.set(labelX + cursorOffsetX, labelY + cursorOffsetY);
 		
+		trace(cursorPos);
+
 		if (hasBgHighlight)
 		{
 			bgHighlight = new FlxSprite(label.x, label.y + label.height / 2);

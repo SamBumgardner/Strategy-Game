@@ -44,9 +44,12 @@ class InventorySlot extends FlxSprite implements VarSizedBox
 	{
 		super(X, Y);
 		
+	
 		if (sharedGraphic == null)
 		{
+			
 			BoxCreator.setBoxType(boxSpriteSheet, cornerSize, backgroundSize);
+			
 			sharedGraphic = BoxCreator.createBox(boxWidth, boxHeight);
 		}
 		

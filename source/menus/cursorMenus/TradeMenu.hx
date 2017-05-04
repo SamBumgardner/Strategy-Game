@@ -245,12 +245,6 @@ class TradeMenu extends CursorMenuTemplate
 		}
 	}
 	
-	override function moveResponse(vertMove:Int, horizMove:Int, heldMove:Bool):Void 
-	{
-		super.moveResponse(vertMove, horizMove, heldMove);
-		trace(currMenuOption.id);
-	}
-	
 	override public function actionResponse(pressedKeys:Array<Bool>, heldAction:Bool):Void
 	{
 		if (!heldAction)
