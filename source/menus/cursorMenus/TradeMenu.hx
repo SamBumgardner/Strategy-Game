@@ -111,16 +111,19 @@ class TradeMenu extends CursorMenuTemplate
 		{
 			menuOptionArr.push(invBox1.menuOptionArr[i]);
 			menuOptionArr.push(invBox2.menuOptionArr[i]);
-			
-			menuOptionArr[i].leftIsWrap = true;
-			menuOptionArr[i + 1].rightIsWrap = true;
 		}
 		
 		for (i in 0...menuOptionArr.length)
 		{
 			menuOptionArr[i].id = i;
-			
-			trace(menuOptionArr[i].id);
+			if (i % 2 == 0)
+			{
+				menuOptionArr[i].leftIsWrap = true;
+			}
+			else
+			{
+				menuOptionArr[i].rightIsWrap = true;
+			}
 		}
 		
 		boxSpriteGrp = new FlxGroup();
@@ -233,7 +236,7 @@ class TradeMenu extends CursorMenuTemplate
 				}
 				else
 				{
-					var targetIndex = (otherUnit.inventory.items.length - 1) * 2;
+					var targetIndex = (selectedUnit.inventory.items.length - 1) * 2;
 					
 					menuOptionArr[optionIndex].rightOption = menuOptionArr[targetIndex];
 					menuOptionArr[optionIndex].leftOption = menuOptionArr[targetIndex];
@@ -272,6 +275,7 @@ class TradeMenu extends CursorMenuTemplate
 				
 				if (selectedItem == null)
 				{
+					finalizeTrades();
 					subject.notify(EventTypes.CANCEL);
 				}
 				else

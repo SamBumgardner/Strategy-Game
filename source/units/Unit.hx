@@ -242,6 +242,8 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		inventory.items[2].invIndex = 2;
 		inventory.items[3].invIndex = 3;
 		
+		inventory.owner = this;
+		
 		
 		
 		inventory.weaponIndices = [0, 1, 2, 3];

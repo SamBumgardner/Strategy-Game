@@ -24,6 +24,13 @@ class Item
 		itemType = type;
 	}
 	
+	public function insertIntoInv(targetInv:Inventory, targetIndex:Int)
+	{
+		targetInv.items[targetIndex] = this;
+		this.invIndex = targetIndex;
+		this.inventory = targetInv;
+	}
+	
 	public function use(usingUnit:Unit, targetUnit:Unit)
 	{
 		

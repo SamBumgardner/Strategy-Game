@@ -22,7 +22,7 @@ class Inventory
 	/**
 	 * 
 	 */
-	static public var dummyItem:Item;
+	private var dummyItem:Item;
 	
 	/**
 	 * 
@@ -42,9 +42,16 @@ class Inventory
 	{
 		if (dummyItem == null)
 		{
-			dummyItem = new Item([], ItemTypes.OTHER);
+			dummyItem = new Item([], ItemTypes.DUMMY);
 		}
-		
+		maxSize = 7;
+	}
+	
+	public function addItemToEnd(newItem:Item):Void
+	{
+		items.push(newItem);
+		newItem.invIndex = items.length - 1;
+		newItem.inventory = this;
 	}
 	
 	/**
@@ -56,7 +63,7 @@ class Inventory
 	{
 		if (items.length < maxSize)
 		{
-			items.push(dummyItem);
+			addItemToEnd(dummyItem);
 		}
 	}
 	
@@ -65,7 +72,28 @@ class Inventory
 	 */
 	public function removeDummyItem():Void
 	{
-		items.remove(dummyItem);
+		var invLength:Int = items.length;
+		var dummyIndex:Int = -1;
+		for (i in 0...invLength)
+		{
+			var currIndex = invLength - (i + 1);
+			if (items[currIndex].itemType == ItemTypes.DUMMY)
+			{
+				items.splice(currIndex, 1);
+				dummyIndex = currIndex;
+				break;
+			}
+		}
+		
+		if (dummyIndex != -1)
+		{
+			for (i in dummyIndex...items.length)
+			{
+				trace(i);
+				trace(items[i]);
+				items[i].invIndex = i;
+			}
+		}
 	}
 	
 	public function finalizeItemInfo():Bool
@@ -113,19 +141,10 @@ class Inventory
 	 */
 	static public function tradeItems(item1:Item, item2:Item):Void
 	{
-		trace(item1.inventory,  item2.inventory);
-		
 		var index1:Int = item1.invIndex;
 		var inv1:Inventory = item1.inventory;
 		
-		item1.invIndex = item2.invIndex;
-		item1.inventory = item2.inventory;
-		
-		item1.inventory.items[item1.invIndex] = item1;
-		
-		item2.invIndex = index1;
-		item2.inventory = inv1;
-		
-		item2.inventory.items[item2.invIndex] = item2;
+		item1.insertIntoInv(item2.inventory, item2.invIndex);
+		item2.insertIntoInv(inv1, index1);
 	}
 }
