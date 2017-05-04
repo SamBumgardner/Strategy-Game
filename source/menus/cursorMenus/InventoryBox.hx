@@ -120,14 +120,36 @@ class InventoryBox implements VarSizedBox
 		for (i in 0...maxInventorySlots)
 		{
 			var slotX:Float = X + cornerSize / 2;
+			
+			#if !html5
+			// Default slot positioning data for non-html5 targets.
+			
 			var slotY:Float = Y + cornerSize / 2 + itemSlotInterval * i;
 			var optionOffsetY:Float = 9;
+			
+			#else
+			
+			// Item slot offsets are different on html5, due to needing a different,
+			// 	alpha-less item slot box graphic.
+			
+			var slotY:Float = Y + cornerSize / 2 + itemSlotInterval * i + 6;
+			var optionOffsetY:Float = 3;
+			
+			#end
+			
 			
 			itemSlotsGrp.add(new InventorySlot(slotX, slotY));
 			
 			newMenuOption = new MenuOption(slotX + cornerSize, slotY + optionOffsetY, i, 
 				menuOptionWidth, "", textSize);
 			newMenuOption.label.color = FlxColor.BLACK;
+			
+			#if html5
+			// For some reason, these menuOption cursor positions end up being 10 too small
+			// 	on the html5 target.
+			newMenuOption.moveCursorPos(0, 10);
+			#end
+			
 			menuOptionArr.push(newMenuOption);
 			
 			// Connect the current menu option and the previous option as neighbors.
