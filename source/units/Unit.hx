@@ -232,6 +232,18 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		inventory.items[2].name = "Chakram";
 		inventory.items[3].name = "Quarterstaff";
 		
+		inventory.items[0].inventory = inventory;
+		inventory.items[1].inventory = inventory;
+		inventory.items[2].inventory = inventory;
+		inventory.items[3].inventory = inventory;
+		
+		inventory.items[0].invIndex = 0;
+		inventory.items[1].invIndex = 1;
+		inventory.items[2].invIndex = 2;
+		inventory.items[3].invIndex = 3;
+		
+		
+		
 		inventory.weaponIndices = [0, 1, 2, 3];
 		
 		
@@ -334,28 +346,47 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	}
 	
 	
-	
+	/**
+	 * 
+	 * @param	targetDirection
+	 */
 	private function beginMoving(targetDirection:Int):Void
 	{
 		
 	}
 	
-	
+	/**
+	 * 
+	 * @param	equipIndex
+	 */
 	public function equipItem(equipIndex:Int):Void
 	{
 		var tempItem:Item = inventory.items[0];
+		
 		inventory.items[0] = inventory.items[equipIndex];
+		inventory.items[0].invIndex = 0;
+		
 		inventory.items[equipIndex] = tempItem;
+		inventory.items[equipIndex].invIndex = equipIndex;
 		
 		// Cast the item to EquippedItem type.
 		equippedItem = cast inventory.items[0];
 	}
 	
+	/**
+	 * 
+	 * @param	target
+	 */
 	public function attackTarget(target:Unit):Void
 	{
 		
 	}
 	
+	/**
+	 * 
+	 * @param	target
+	 * @param	item
+	 */
 	public function useItem(target:Unit, item:Item):Void
 	{
 		item.use(this, target);

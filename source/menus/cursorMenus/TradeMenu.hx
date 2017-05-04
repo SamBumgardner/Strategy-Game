@@ -1,7 +1,10 @@
 package menus.cursorMenus;
 
 import boxes.BoxCreator;
+import flixel.FlxSprite;
 import flixel.group.FlxGroup;
+import inputHandlers.ActionInputHandler.KeyIndex;
+import observerPattern.eventSystem.EventTypes;
 import units.Unit;
 import units.items.Inventory;
 import units.items.Item;
@@ -60,6 +63,16 @@ class TradeMenu extends CursorMenuTemplate
 	 */
 	public var hoveredItemIndex:Int;
 	
+	/**
+	 * 
+	 */
+	public var selectedItem:Item;
+	
+	/**
+	 * 
+	 */
+	private var selectedCursor:FlxSprite;
+	
 	///////////////////////////////////////
 	//          INITIALIZATION           //
 	///////////////////////////////////////
@@ -69,6 +82,7 @@ class TradeMenu extends CursorMenuTemplate
 		super(X, Y, subjectID);
 		initInventoryBoxes(X, Y);
 		initBasicCursor();
+		initSelectedCursor();
 		initSoundAssets();
 		
 		addAllFlxGrps();
@@ -102,6 +116,13 @@ class TradeMenu extends CursorMenuTemplate
 			menuOptionArr[i + 1].rightIsWrap = true;
 		}
 		
+		for (i in 0...menuOptionArr.length)
+		{
+			menuOptionArr[i].id = i;
+			
+			trace(menuOptionArr[i].id);
+		}
+		
 		boxSpriteGrp = new FlxGroup();
 		boxSpriteGrp.add(invBox1.boxSpriteGrp);
 		boxSpriteGrp.add(invBox2.boxSpriteGrp);
@@ -115,7 +136,15 @@ class TradeMenu extends CursorMenuTemplate
 		optionFlxGrp.add(invBox2.optionFlxGrp);
 	}
 	
-	
+	/**
+	 * 
+	 */
+	private function initSelectedCursor():Void
+	{
+		selectedCursor = new FlxSprite(0, 0, AssetPaths.menu_cursor_simple__png);
+		selectedCursor.active = false;
+		selectedCursor.visible = false;
+	}
 	
 	/**
 	 * 
@@ -125,6 +154,7 @@ class TradeMenu extends CursorMenuTemplate
 		totalFlxGrp.add(boxSpriteGrp);
 		totalFlxGrp.add(itemSlotsGrp);
 		totalFlxGrp.add(optionFlxGrp);
+		totalFlxGrp.add(selectedCursor);
 		totalFlxGrp.add(menuCursor);
 	}
 	
@@ -144,6 +174,7 @@ class TradeMenu extends CursorMenuTemplate
 	{
 		refreshMenuOptions();
 		super.resetMenu();
+		selectedCursor.visible = false;
 	}
 	
 	/**
@@ -211,7 +242,57 @@ class TradeMenu extends CursorMenuTemplate
 		}
 	}
 	
+	override function moveResponse(vertMove:Int, horizMove:Int, heldMove:Bool):Void 
+	{
+		super.moveResponse(vertMove, horizMove, heldMove);
+		trace(currMenuOption.id);
+	}
 	
+	override public function actionResponse(pressedKeys:Array<Bool>, heldAction:Bool):Void
+	{
+		if (!heldAction)
+		{
+			// Could also be done with a loop, but this ends up being easier to understand.
+			if (pressedKeys[KeyIndex.CONFIRM])
+			{
+				confirmSound.play(true);
+				
+				if (selectedItem == null)
+				{
+					selectItem();
+				}
+				else
+				{
+					tradeItems();
+				}
+			}
+			else if (pressedKeys[KeyIndex.CANCEL])
+			{
+				cancelSound.play(true);
+				
+				if (selectedItem == null)
+				{
+					subject.notify(EventTypes.CANCEL);
+				}
+				else
+				{
+					unselectItem();
+				}
+			}
+			else if (pressedKeys[KeyIndex.PAINT])
+			{
+				subject.notify(EventTypes.PAINT);
+			}
+			else if (pressedKeys[KeyIndex.NEXT])
+			{
+				subject.notify(EventTypes.NEXT);
+			}
+			else if (pressedKeys[KeyIndex.INFO])
+			{
+				subject.notify(EventTypes.INFO);
+			}
+		}
+	}
 	
 	
 	
@@ -220,24 +301,67 @@ class TradeMenu extends CursorMenuTemplate
 	 * 
 	 * @param	selectedItem
 	 */
+	public function getItemFromOptionID():Item
 	{
+		var currOptionInv:Inventory;
+		
+		// If currSelectedOption's id is even, it's in inv1, otherwise inv2.
+		if (currMenuOption.id % 2 == 0)
 		{
+			currOptionInv = invBox1.trackedInventory;
 		}
 		else
 		{
+			currOptionInv = invBox2.trackedInventory;
 		}
 		
+		return currOptionInv.items[Math.floor(currMenuOption.id / 2)];
 	}
 	
+	private function selectItem():Void
 	{
+		selectedCursor.x = currMenuOption.cursorPos.x;
+		selectedCursor.y = currMenuOption.cursorPos.y;
+		selectedCursor.visible = true;
 		
+		selectedItem = getItemFromOptionID();
 		
+		if (selectedItem.inventory == invBox1.trackedInventory)
+		{
+			invBox2.trackedInventory.addDummyItem();
+		}
+		else
+		{
+			invBox1.trackedInventory.addDummyItem();
+		}
 		
-		
-		
+		refreshMenuOptions();
 	}
 	
+	private function unselectItem():Void
 	{
+		selectedItem = null;
+		
+		tradeItemCleanup();
+		refreshMenuOptions();
+	}
+	
+	private function tradeItems():Void
+	{
+		Inventory.tradeItems(selectedItem, getItemFromOptionID());
+		tradeItemCleanup();
+		
+		selectedItem = null;
+		
+		refreshMenuOptions();
+	}
+	
+	
+	public function tradeItemCleanup():Void
+	{
+		invBox1.trackedInventory.removeDummyItem();
+		invBox2.trackedInventory.removeDummyItem();
+		selectedCursor.visible = false;
 	}
 	
 	/**
@@ -247,6 +371,15 @@ class TradeMenu extends CursorMenuTemplate
 	{
 		// Loop through items in both inventories, change owner variable to match owner of inventory.
 		// If any items changed owners, then set selected unit's canAct to false.
+		var changeOccurred:Bool = false;
 		
+		// Finalize item changes, items exchanging inventories counts as a meaning ful change.
+		changeOccurred = invBox1.trackedInventory.finalizeItemInfo() || 
+			invBox2.trackedInventory.finalizeItemInfo();
+		
+		// Determine if either inventory has a new equipped item.
+		invBox1.trackedInventory.updateEquippedItem();
+		// NOTE: Changing the other target's equipped item counts as a meaningful change.
+		changeOccurred = changeOccurred || invBox2.trackedInventory.updateEquippedItem();
 	}
 }
