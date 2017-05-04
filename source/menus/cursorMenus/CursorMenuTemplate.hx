@@ -325,7 +325,7 @@ class CursorMenuTemplate extends MenuTemplate
 	 * @param	pressedKeys	Indicates which keys were pressed. Use KeyIndex enum (from ActionInputHandler) to identify what type of input each index corresponds to.
 	 * @param	heldAction	Whether the provided set of pressed keys were held down for a length of time (true) or just pressed (false).
 	 */
-	override private function actionResponse(pressedKeys:Array<Bool>, heldAction:Bool)
+	override private function actionResponse(pressedKeys:Array<Bool>, heldAction:Bool):Void
 	{
 		if (!heldAction)
 		{
