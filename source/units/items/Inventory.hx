@@ -104,6 +104,15 @@ class Inventory
 				changeOccurred = true;
 			}
 		}
+		
+		if (items.length != owner.heldItemCount)
+		{
+			changeOccurred = true;
+			owner.heldItemCount = items.length;
+		}
+		
+		owner.itemsHaveChanged = changeOccurred;
+		
 		return changeOccurred;
 	}
 	

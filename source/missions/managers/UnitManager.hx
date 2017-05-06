@@ -1405,7 +1405,7 @@ class UnitManager implements Observer
 	{
 		for (move in validMoves)
 		{
-			var validAttackTiles:Array<MoveID> = getValidNeighbors(move, unit.attackRanges, 
+			var validAttackTiles:Array<MoveID> = getValidNeighbors(move, unit.get_attackRanges(), 
 				function(_, __){return true;});
 			
 			for (tile in validAttackTiles)
@@ -1487,14 +1487,14 @@ class UnitManager implements Observer
 		for (move in blockedMoves)
 		{
 			var possiblyBlockedAttacks:Array<MoveID> = getValidNeighbors(move, 
-				unit.attackRanges, function(_, __){return true; });
+				unit.get_attackRanges(), function(_, __){return true; });
 			
 			for (attack in possiblyBlockedAttacks)
 			{
 				if (!checkedAttackTiles.exists(attack))
 				{
 					var validMoveToAttackFrom:Array<MoveID> = getValidNeighbors(attack, 
-						unit.attackRanges, attackTileBlockedTest.bind(unit), true);
+						unit.get_attackRanges(), attackTileBlockedTest.bind(unit), true);
 					
 					if (validMoveToAttackFrom.length == 0)
 					{

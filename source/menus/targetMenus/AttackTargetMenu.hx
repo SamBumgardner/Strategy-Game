@@ -114,7 +114,7 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		
 		// Get array of valid units, then cast to store as Array<OnMapEntity>
 		possibleTargets = cast parentState.getValidUnitsInRange(
-			selectedUnit.attackRanges, SimpleTargetTests.enemyUnitTest);
+			selectedUnit.get_attackRanges(), SimpleTargetTests.enemyUnitTest);
 		
 		// Set up the equipped weapon as the default item upon equip
 		if (selectedUnit.equippedItem != null && 

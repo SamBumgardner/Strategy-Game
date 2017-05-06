@@ -122,11 +122,14 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	
 	public var inventory(default, null):Inventory;
 	
+	public var heldItemCount:Int = 0;
+	public var itemsHaveChanged:Bool = false;
+	
 	// List of integer ranges this unit can attack from, based on contents of inventory.
-	public var attackRanges:Array<Int>;
+	private var attackRanges:Array<Int>;
 	
 	// List of integer ranges this unit can heal, based on contents of inventory.
-	public var healRanges:Array<Int>;
+	private var healRanges:Array<Int>;
 	
 	public var equippedItem:EquippableItem;
 	
@@ -399,7 +402,56 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		item.use(this, target);
 	}
 	
+	public function get_attackRanges():Array<Int>
+	{
+		if (itemsHaveChanged)
+		{
+			updateRanges();
+			itemsHaveChanged = false;
+		}
+		
+		return attackRanges;
+	}
 	
+	public function get_healRanges():Array<Int>
+	{
+		if (itemsHaveChanged)
+		{
+			updateRanges();
+			itemsHaveChanged = false;
+		}
+		
+		return healRanges;
+	}
+	
+	private function updateAttackRanges():Void
+	{
+		attackRanges.splice(0, attackRanges.length);
+		
+		for (weaponIndex in inventory.weaponIndices)
+		{
+			var weapon:WeaponItem = cast inventory.items[weaponIndex];
+			
+			for (range in weapon.ranges)
+			{
+				if (attackRanges.indexOf(range) == -1)
+				{
+					attackRanges.push(range);
+				}
+			}
+		}
+	}
+	
+	private function updateHealRanges():Void
+	{
+		
+	}
+	
+	public function updateRanges():Void
+	{
+		updateAttackRanges();
+		updateHealRanges();
+	}
 	
 	
 	override public function update(elapsed:Float):Void 

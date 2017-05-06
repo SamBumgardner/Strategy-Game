@@ -544,7 +544,7 @@ class MenuManager implements Observer
 		
 		// Checking ATTACK option...
 		// 	If there are no enemies in range of any of the unit's weapons, no attacking.
-		if (parentState.getValidUnitsInRange(selectedUnit.attackRanges, 
+		if (parentState.getValidUnitsInRange(selectedUnit.get_attackRanges(), 
 			SimpleTargetTests.enemyUnitTest).length == 0)
 		{
 			whichOptionsActive[UnitActionMenuOptions.ATTACK] = false;
@@ -552,7 +552,7 @@ class MenuManager implements Observer
 		
 		// Checking HEAL option...
 		// 	If there are no allies in range of the unit's healing items, no healing.
-		if (parentState.getValidUnitsInRange(selectedUnit.healRanges,
+		if (parentState.getValidUnitsInRange(selectedUnit.get_healRanges(),
 			SimpleTargetTests.alliedUnitTest).length == 0)
 		{
 			whichOptionsActive[UnitActionMenuOptions.HEAL] = false;
