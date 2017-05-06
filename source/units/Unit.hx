@@ -225,20 +225,15 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		inventory = new Inventory();
 		inventory.owner = this;
 		
-		inventory.addItemToEnd(new WeaponItem([1, 2]));
-		inventory.addItemToEnd(new WeaponItem([2]));
-		inventory.addItemToEnd(new WeaponItem([1, 2]));
-		inventory.addItemToEnd(new WeaponItem([1]));
+		inventory.addItemToEnd(new WeaponItem("Javelin", [1, 2]));
+		inventory.addItemToEnd(new WeaponItem("Longbow", [2]));
+		inventory.addItemToEnd(new WeaponItem("Chakram", [1, 2]));
+		inventory.addItemToEnd(new WeaponItem("Quarterstaff", [1]));
 		
 		(cast inventory.items[0]).weight = FlxG.random.int(1, 10);
 		(cast inventory.items[1]).weight = FlxG.random.int(1, 10);
 		(cast inventory.items[2]).weight = FlxG.random.int(1, 10);
 		(cast inventory.items[3]).weight = FlxG.random.int(1, 10);
-		
-		inventory.items[0].name = "Javelin";
-		inventory.items[1].name = "Longbow";
-		inventory.items[2].name = "Chakram";
-		inventory.items[3].name = "Quarterstaff";
 		
 		inventory.finalizeItemInfo();
 		

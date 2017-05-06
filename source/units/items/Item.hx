@@ -19,8 +19,9 @@ class Item
 	public var itemType:ItemTypes;
 	public var name:String;
 	
-	public function new(rangeArr:Array<Int>, type:ItemTypes) 
+	public function new(itemName:String, rangeArr:Array<Int>, type:ItemTypes) 
 	{
+		name = itemName;
 		ranges = rangeArr;
 		itemType = type;
 	}

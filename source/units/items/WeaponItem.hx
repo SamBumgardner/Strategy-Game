@@ -7,9 +7,9 @@ package units.items;
 class WeaponItem extends EquippableItem
 {
 	
-	public function new(rangeArr:Array<Int>) 
+	public function new(itemName:String, rangeArr:Array<Int>) 
 	{
-		super(rangeArr, ItemTypes.WEAPON);
+		super(itemName, rangeArr, ItemTypes.WEAPON);
 		
 	}
 	

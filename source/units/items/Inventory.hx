@@ -41,7 +41,7 @@ class Inventory
 	{
 		if (dummyItem == null)
 		{
-			dummyItem = new Item([], ItemTypes.DUMMY);
+			dummyItem = new Item("", [], ItemTypes.DUMMY);
 		}
 		maxSize = 7;
 	}

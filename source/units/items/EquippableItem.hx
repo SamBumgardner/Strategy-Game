@@ -9,9 +9,9 @@ class EquippableItem extends Item
 
 	public var weight:Int = 4;
 	
-	public function new(rangeArr:Array<Int>, type:ItemTypes) 
+	public function new(itemName:String, rangeArr:Array<Int>, type:ItemTypes) 
 	{
-		super(rangeArr, type);
+		super(itemName, rangeArr, type);
 	}
 	
 }
