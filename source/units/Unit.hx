@@ -219,11 +219,16 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		weight = 5;
 		carry = 5;
 		
+		healRanges = [];
+		attackRanges = [];
+		
 		inventory = new Inventory();
-		inventory.items.push(new WeaponItem([1, 2]));
-		inventory.items.push(new WeaponItem([2, 3]));
-		inventory.items.push(new WeaponItem([1, 3, 4]));
-		inventory.items.push(new WeaponItem([1]));
+		inventory.owner = this;
+		
+		inventory.addItemToEnd(new WeaponItem([1, 2]));
+		inventory.addItemToEnd(new WeaponItem([2]));
+		inventory.addItemToEnd(new WeaponItem([1, 2]));
+		inventory.addItemToEnd(new WeaponItem([1]));
 		
 		(cast inventory.items[0]).weight = FlxG.random.int(1, 10);
 		(cast inventory.items[1]).weight = FlxG.random.int(1, 10);
@@ -235,29 +240,13 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		inventory.items[2].name = "Chakram";
 		inventory.items[3].name = "Quarterstaff";
 		
-		inventory.items[0].inventory = inventory;
-		inventory.items[1].inventory = inventory;
-		inventory.items[2].inventory = inventory;
-		inventory.items[3].inventory = inventory;
+		inventory.finalizeItemInfo();
 		
-		inventory.items[0].invIndex = 0;
-		inventory.items[1].invIndex = 1;
-		inventory.items[2].invIndex = 2;
-		inventory.items[3].invIndex = 3;
-		
-		inventory.owner = this;
-		
-		
-		
-		inventory.weaponIndices = [0, 1, 2, 3];
-		
-		
-		equippedItem = cast inventory.items[2];
+		equippedItem = cast inventory.items[0];
 		
 		// Should actually display the union of all attack ranges in the backpack.
 		// Instead, this just assumes that the equipped item is just a weapon.
-		attackRanges = [1, 2, 3, 4];
-		healRanges = [];
+		
 		
 		health = FlxG.random.int(10, 30);
 		energy = FlxG.random.int(5, 25);
@@ -373,11 +362,8 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	{
 		var tempItem:Item = inventory.items[0];
 		
-		inventory.items[0] = inventory.items[equipIndex];
-		inventory.items[0].invIndex = 0;
-		
-		inventory.items[equipIndex] = tempItem;
-		inventory.items[equipIndex].invIndex = equipIndex;
+		inventory.items[equipIndex].insertIntoInv(inventory, 0);
+		tempItem.insertIntoInv(inventory, equipIndex);
 		
 		// Cast the item to EquippedItem type.
 		equippedItem = cast inventory.items[0];
