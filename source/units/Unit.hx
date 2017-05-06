@@ -86,7 +86,7 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	public var spriteWidth(default, never):Int = 128;
 	
 	static public var tileSize(default, never):Int = 64;
-	static public var attackMoveDist(default, never):Int = 32;
+	static public var attackMoveDist(default, never):Int = 16;
 	
 	
 	public var name(default, null):String;
@@ -446,17 +446,17 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		var unitLogicalCenter:FlxPoint = new FlxPoint();
 		var targetLogicalCenter:FlxPoint = new FlxPoint();
 		
-		unitLogicalCenter.x = (unit.mapPos.getRow() + .5) * tileSize;
-		unitLogicalCenter.y = (unit.mapPos.getCol() + .5) * tileSize;
+		unitLogicalCenter.x = (unit.mapPos.getCol() + .5) * tileSize;
+		unitLogicalCenter.y = (unit.mapPos.getRow() + .5) * tileSize;
 		
-		targetLogicalCenter.x = (targetMoveID.getRow() + .5) * tileSize;
-		targetLogicalCenter.y = (targetMoveID.getCol() + .5) * tileSize;
+		targetLogicalCenter.x = (targetMoveID.getCol() + .5) * tileSize;
+		targetLogicalCenter.y = (targetMoveID.getRow() + .5) * tileSize;
 		
 		// Get the angle between two points in degrees. (straight up is 0 deg)
 		var angle:Float = unitLogicalCenter.angleBetween(targetLogicalCenter) * Math.PI / 180; 
 		
-		unit.x = unit.mapPos.getRow() * tileSize + distTravelled * Math.sin(angle);
-		unit.y = unit.mapPos.getCol() * tileSize + distTravelled * Math.cos(angle);
+		unit.x = unit.mapPos.getCol() * tileSize + distTravelled * Math.sin(angle);
+		unit.y = unit.mapPos.getRow() * tileSize + distTravelled * -Math.cos(angle);
 	}
 	
 	override public function update(elapsed:Float):Void 
