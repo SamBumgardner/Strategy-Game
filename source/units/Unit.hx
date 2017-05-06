@@ -1,6 +1,7 @@
 package units;
 import flixel.FlxG;
 import flixel.FlxSprite;
+import flixel.math.FlxPoint;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import observerPattern.Observed;
 import observerPattern.Subject;
@@ -84,7 +85,8 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	public var spriteHeight(default, never):Int = 96;
 	public var spriteWidth(default, never):Int = 128;
 	
-	public var tileSize(default, never):Int = 64;
+	static public var tileSize(default, never):Int = 64;
+	static public var attackMoveDist(default, never):Int = 32;
 	
 	
 	public var name(default, null):String;
@@ -434,12 +436,33 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		updateHealRanges();
 	}
 	
+	static public function attackTweenFunc(unit:Unit, targetMoveID:MoveID, distTravelled:Float):Void
+	{
+		if (distTravelled > attackMoveDist)
+		{
+			distTravelled = attackMoveDist * 2 - distTravelled;
+		}
+		
+		var unitLogicalCenter:FlxPoint = new FlxPoint();
+		var targetLogicalCenter:FlxPoint = new FlxPoint();
+		
+		unitLogicalCenter.x = (unit.mapPos.getRow() + .5) * tileSize;
+		unitLogicalCenter.y = (unit.mapPos.getCol() + .5) * tileSize;
+		
+		targetLogicalCenter.x = (targetMoveID.getRow() + .5) * tileSize;
+		targetLogicalCenter.y = (targetMoveID.getCol() + .5) * tileSize;
+		
+		// Get the angle between two points in degrees. (straight up is 0 deg)
+		var angle:Float = unitLogicalCenter.angleBetween(targetLogicalCenter) * Math.PI / 180; 
+		
+		unit.x = unit.mapPos.getRow() * tileSize + distTravelled * Math.sin(angle);
+		unit.y = unit.mapPos.getCol() * tileSize + distTravelled * Math.cos(angle);
+	}
 	
 	override public function update(elapsed:Float):Void 
 	{
 		super.update(elapsed);
 	}
-	
 }
 
 enum TeamType
