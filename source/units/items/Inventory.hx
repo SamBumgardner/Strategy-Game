@@ -123,7 +123,7 @@ class Inventory
 		// TODO: do a more robust check if item is equippable.
 		if (owner.equippedItem != items[0])
 		{
-			if (items[0].itemType == ItemTypes.WEAPON || items[0].itemType == ItemTypes.HEALING)
+			if (owner.canEquipItem(items[0]))
 			{
 				owner.equipItem(0);
 			}
