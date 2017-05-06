@@ -132,6 +132,20 @@ class Inventory
 		return changedEquipped;
 	}
 	
+	public function updateEquippableIndices():Void
+	{
+		// Clear current weaponIndices array
+		weaponIndices.splice(0, weaponIndices.length);
+		
+		for (i in 0...items.length)
+		{
+			if (items[i].itemType == ItemTypes.WEAPON && owner.canEquipItem(items[i]))
+			{
+				weaponIndices.push(i);
+			}
+		}
+	}
+	
 	/**
 	 * Swaps the positional data of two different items.
 	 * 
