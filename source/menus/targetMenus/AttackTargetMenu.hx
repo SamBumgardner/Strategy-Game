@@ -5,6 +5,8 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import flixel.text.FlxText;
+import flixel.tweens.FlxEase;
+import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import inputHandlers.ActionInputHandler.KeyIndex;
 import menus.MenuTemplate;
@@ -219,6 +221,10 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 			if (pressedKeys[KeyIndex.CONFIRM])
 			{
 				confirmSound.play(true);
+				
+				FlxTween.num(0, Unit.attackMoveDist * 2, .3, {ease: FlxEase.quadInOut}, 
+					Unit.attackTweenFunc.bind(selectedUnit, currentTarget.mapPos));
+				
 				subject.notify(EventTypes.CONFIRM);
 			}
 			else if (pressedKeys[KeyIndex.CANCEL])
