@@ -2,6 +2,7 @@ package units.items;
 
 import units.Unit;
 
+using flixel.util.FlxArrayUtil;
 /**
  * ...
  * 
@@ -29,6 +30,12 @@ class Item
 		targetInv.items[targetIndex] = this;
 		this.invIndex = targetIndex;
 		this.inventory = targetInv;
+		
+		if (!targetInv.owner.canEquipItem(this))
+		{
+			// If this item is not equippable, remove its index from any equippable index arrays.
+			targetInv.weaponIndices.fastSplice(targetInv.weaponIndices.indexOf(targetIndex));
+		}
 	}
 	
 	public function use(usingUnit:Unit, targetUnit:Unit)

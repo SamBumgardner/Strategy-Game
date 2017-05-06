@@ -357,6 +357,11 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		
 	}
 	
+	public function canEquipItem(item:Item):Bool
+	{
+		return true;
+	}
+	
 	/**
 	 * 
 	 * @param	equipIndex

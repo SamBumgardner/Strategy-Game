@@ -50,8 +50,7 @@ class Inventory
 	public function addItemToEnd(newItem:Item):Void
 	{
 		items.push(newItem);
-		newItem.invIndex = items.length - 1;
-		newItem.inventory = this;
+		newItem.insertIntoInv(this, items.length - 1);
 	}
 	
 	/**
