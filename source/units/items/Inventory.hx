@@ -33,7 +33,6 @@ class Inventory
 	 * 
 	 */
 	public var owner:Unit;
-	
 
 	public var items:Array<Item> = new Array<Item>();
 	public var weaponIndices:Array<Int> = new Array<Int>();
@@ -88,8 +87,6 @@ class Inventory
 		{
 			for (i in dummyIndex...items.length)
 			{
-				trace(i);
-				trace(items[i]);
 				items[i].invIndex = i;
 			}
 		}
