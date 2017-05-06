@@ -241,10 +241,6 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		
 		equippedItem = cast inventory.items[0];
 		
-		// Should actually display the union of all attack ranges in the backpack.
-		// Instead, this just assumes that the equipped item is just a weapon.
-		
-		
 		health = FlxG.random.int(10, 30);
 		energy = FlxG.random.int(5, 25);
 		
