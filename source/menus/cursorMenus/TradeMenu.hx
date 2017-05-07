@@ -70,6 +70,11 @@ class TradeMenu extends CursorMenuTemplate
 	/**
 	 * 
 	 */
+	public var selectedOption:MenuOption;
+	
+	/**
+	 * 
+	 */
 	public var selectedItem:Item;
 	
 	/**
@@ -346,6 +351,7 @@ class TradeMenu extends CursorMenuTemplate
 		selectedCursor.y = currMenuOption.cursorPos.y;
 		selectedCursor.visible = true;
 		
+		selectedOption = currMenuOption;
 		selectedItem = getItemFromOptionID();
 		
 		if (selectedItem.inventory == invBox1.trackedInventory)
@@ -362,7 +368,10 @@ class TradeMenu extends CursorMenuTemplate
 	
 	private function unselectItem():Void
 	{
-		selectedItem = null;
+		currMenuOption = selectedOption;
+		// Jump menu cursor visually to the old selected option's position.
+		menuCursor.setAnchor(currMenuOption.cursorPos.x, currMenuOption.cursorPos.y);
+		menuCursor.jumpToAnchor();
 		
 		tradeItemCleanup();
 		refreshMenuOptions();
@@ -372,9 +381,6 @@ class TradeMenu extends CursorMenuTemplate
 	{
 		Inventory.tradeItems(selectedItem, getItemFromOptionID());
 		tradeItemCleanup();
-		
-		selectedItem = null;
-		
 		refreshMenuOptions();
 	}
 	
@@ -383,7 +389,11 @@ class TradeMenu extends CursorMenuTemplate
 	{
 		invBox1.trackedInventory.removeDummyItem();
 		invBox2.trackedInventory.removeDummyItem();
+		
 		selectedCursor.visible = false;
+		
+		selectedItem = null;
+		selectedOption = null;
 	}
 	
 	/**
