@@ -379,7 +379,7 @@ class UnitManager implements Observer
 	{
 		var newUnit:Unit;
 		// Temporary code, can't actually use unitInfo yet.
-		newUnit = new Unit(row, col, AssetPaths.eldon_sheet__png, unitArray.length, team);
+		newUnit = new Unit(row, col, AssetPaths.eldon_sheet__png, unitArray.length, team, "Eldon");
 		
 		unitFlxGrp.add(newUnit);
 		unitArray.push(newUnit);

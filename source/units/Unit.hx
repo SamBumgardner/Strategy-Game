@@ -184,9 +184,11 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	
 	
 	public function new(row:Int = 0, col:Int = 0, spriteSheet:FlxGraphicAsset, ID:Int = 0,
-		teamP:TeamType) 
+		teamP:TeamType, unitName:String) 
 	{
 		super(col * tileSize, row * tileSize);
+		
+		name = unitName;
 		
 		offset.x = 32;
 		offset.y = 32;
