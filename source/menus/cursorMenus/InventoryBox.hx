@@ -204,6 +204,7 @@ class InventoryBox implements VarSizedBox
 					if (i > 0) 
 					{
 						menuOptionArr[i].upOption = menuOptionArr[i - 1];
+						menuOptionArr[i].downIsWrap = false;
 						menuOptionArr[i - 1].downOption = menuOptionArr[i];
 					}
 					
