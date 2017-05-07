@@ -52,7 +52,7 @@ class NameBox implements VarSizedBox
 	
 	private function initName(X:Float, Y:Float):Void
 	{
-		nameText = new FlxText(X + cornerSize, Y + cornerSize, 0, "", textSize);
+		nameText = new FlxText(X + cornerSize, Y + cornerSize, 0, "Placeholder", textSize);
 		nameText.color = FlxColor.BLACK;
 	}
 	
@@ -85,7 +85,7 @@ class NameBox implements VarSizedBox
 		totalFlxGrp.add(nameText);
 	}
 	
-	public function changeName(newName:String):Void
+	public function setName(newName:String):Void
 	{
 		nameText.text = newName;
 		
@@ -93,8 +93,4 @@ class NameBox implements VarSizedBox
 		
 		nameBox.resize(boxWidth, boxHeight);
 	}
-	
-	
-	
-	
 }
