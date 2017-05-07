@@ -4,6 +4,7 @@ import boxes.BoxCreator;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
 import inputHandlers.ActionInputHandler.KeyIndex;
+import menus.commonBoxGraphics.NameBox;
 import observerPattern.eventSystem.EventTypes;
 import units.Unit;
 import units.items.Inventory;
@@ -32,10 +33,13 @@ class TradeMenu extends CursorMenuTemplate
 	private var textSize(default, never):Int = 16;
 	private var itemSlotInterval(default, never):Float = 40;
 	
+	public var nameBox1:NameBox;
 	public var invBox1:InventoryBox;
 	
+	public var nameBox2:NameBox;
 	public var invBox2:InventoryBox;
 	
+	private var nameBoxGrp:FlxGroup;
 	
 	/**
 	 * Variable for keeping track of the inventory boxes.
@@ -80,6 +84,7 @@ class TradeMenu extends CursorMenuTemplate
 	public function new(?X:Float=0, ?Y:Float=0, ?subjectID:Int=0) 
 	{
 		super(X, Y, subjectID);
+		initNameBoxes(X, Y);
 		initInventoryBoxes(X, Y);
 		initBasicCursor();
 		initSelectedCursor();
@@ -88,6 +93,21 @@ class TradeMenu extends CursorMenuTemplate
 		addAllFlxGrps();
 		
 		hide();
+	}
+	
+	private function initNameBoxes(X:Float, Y:Float):Void
+	{
+		nameBoxGrp = new FlxGroup();
+		
+		var OffsetX = -10;
+		var OffsetY = 15;
+		
+		nameBox1 = new NameBox(300 + OffsetX, Y + OffsetY);
+		
+		nameBox2 = new NameBox(650 + OffsetX, Y + OffsetY);
+		
+		nameBoxGrp.add(nameBox1.totalFlxGrp);
+		nameBoxGrp.add(nameBox2.totalFlxGrp);
 	}
 	
 	/**
@@ -101,7 +121,7 @@ class TradeMenu extends CursorMenuTemplate
 		
 		var box1LocX = 300;
 		var box2LocX = 650;
-		var boxY = Y;
+		var boxY = Y + nameBox1.boxHeight;
 		
 		invBox1 = new InventoryBox(box1LocX, boxY);
 		invBox2 = new InventoryBox(box2LocX, boxY);
@@ -155,6 +175,7 @@ class TradeMenu extends CursorMenuTemplate
 	override private function addAllFlxGrps():Void
 	{
 		totalFlxGrp.add(boxSpriteGrp);
+		totalFlxGrp.add(nameBoxGrp);
 		totalFlxGrp.add(itemSlotsGrp);
 		totalFlxGrp.add(optionFlxGrp);
 		totalFlxGrp.add(selectedCursor);
@@ -165,6 +186,9 @@ class TradeMenu extends CursorMenuTemplate
 	{
 		selectedUnit = leftUnit;
 		otherUnit = rightUnit;
+		
+		nameBox1.setName(leftUnit.name);
+		nameBox2.setName(rightUnit.name);
 		
 		invBox1.trackedInventory = selectedUnit.inventory;
 		invBox2.trackedInventory = otherUnit.inventory;
