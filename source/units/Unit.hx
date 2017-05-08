@@ -105,6 +105,8 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	public var will(default, null):Int;
 	public var presence(default, null):Int;
 	
+	public var luck(default, null):Int;
+	
 	public var carry(default, null):Int;
 	public var weight(default, null):Int;
 	
@@ -119,6 +121,13 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	public var attackDamage(default, null):Int;
 	public var critCost(default, null):Int;
 	public var critDamage(default, null):Int;
+	
+	// Temp derived statistics (for FE7-style combat)
+	public var critChance(default, null):Int;
+	public var dodge(default, null):Int;
+	
+	public var attackSpeed(default, null):Int;
+	
 	
 	// Inventory
 	
@@ -251,18 +260,20 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		skill = FlxG.random.int(1, 10);
 		defense = FlxG.random.int(1, 10);
 		intel = FlxG.random.int(1, 10);
+		luck = FlxG.random.int(1, 10);
 		
 		calcDerivedStats(equippedItem);
 	}
 	
 	public function calcDerivedStats(itemToUse:EquippableItem):Void
 	{
-		accuracy = skill + agility + (strength - itemToUse.weight);
-		evade = agility + Math.floor(intel / 2) + (strength - itemToUse.weight);
-		attackCost = Std.int(Math.max(5 + itemToUse.weight - strength, 1));
+		attackSpeed = agility - Math.floor(Math.max(itemToUse.weight - weight, 0));
+		accuracy = itemToUse.accuracy + skill * 2 + cast (luck / 2);
+		evade = attackSpeed * 2 + luck;
 		attackDamage = strength + itemToUse.weight;
-		critCost = Std.int(Math.max(10 - intel - agility + (itemToUse.weight * 2 - strength), 1));
-		critDamage = Std.int(Math.max(strength, skill) * 2 + itemToUse.weight);
+		
+		critChance = itemToUse.critChance + cast (skill / 2);
+		dodge = luck;
 	}
 	
 	public function attack(isCrit:Bool):Int
@@ -280,11 +291,6 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		}
 		
 		return damage;
-	}
-	
-	public function dodge(enemyAccuracy:Int):Void
-	{
-		
 	}
 	
 	public function defend(takeDamage:Int):Int
