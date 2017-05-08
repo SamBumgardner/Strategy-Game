@@ -1084,7 +1084,7 @@ class MenuManager implements Observer
 			
 			//tradeTargetMenu.setPos(cornerMenuPos.rightX - tradeTargetMenu.boxWidth, 
 			//	cornerMenuPos.topY);
-			attackTargetMenu.setPos(cornerMenuPos.rightX - attackTargetMenu.boxWidth, 
+			attackTargetMenu.setPos(cornerMenuPos.rightX - attackTargetMenu.totalWidth, 
 				cornerMenuPos.topY);
 			//healTargetMenu.setPos(cornerMenuPos.rightX - healTargetMenu.boxWidth, 
 			//	cornerMenuPos.topY);

@@ -1,8 +1,11 @@
 package menus.targetMenus;
 import boxes.BoxCreator;
 import boxes.VarSizedBox;
+import flixel.FlxBasic;
 import flixel.FlxG;
+import flixel.FlxObject;
 import flixel.FlxSprite;
+import flixel.group.FlxGroup;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import flixel.text.FlxText;
 import flixel.tweens.FlxEase;
@@ -10,6 +13,7 @@ import flixel.tweens.FlxTween;
 import flixel.util.FlxColor;
 import inputHandlers.ActionInputHandler.KeyIndex;
 import menus.MenuTemplate;
+import menus.commonBoxGraphics.NameBox;
 import missions.MissionState;
 import observerPattern.eventSystem.EventTypes;
 import units.Unit;
@@ -30,20 +34,31 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 {
 	public var selectedUnit:Unit;
 	public var boxWidth(default, null):Int = 150;
-	public var boxHeight(default, null):Int = 300;
+	public var boxHeight(default, null):Int;
 	
 	public var boxSpriteSheet(default, null):FlxGraphicAsset = AssetPaths.box_simple__png;
 	public var cornerSize(default, null):Int = 10;
 	public var backgroundSize(default, null):Int = 10;
 	
+	public var totalWidth(default, null):Float;
+	
+	private var nameBox1:NameBox;
+	private var nameBox2:NameBox;
+	
 	private var infoWindow:FlxSprite;
 	
-	private var weaponName:FlxText;
+	private var textSize(default, never):Int = 15;
+	
+	private var weaponName1:FlxText;
+	private var weaponName2:FlxText;
 	private var InfoArray:Array<Array<FlxText>>;
+	
+	private var infoArrGrp:FlxGroup;
 	
 	private var validWeaponIndices:Array<Int> = new Array<Int>();
 	private var currWeaponIndexID:Int = 0;
 	private var currWeaponIndex(default, set):Int = 0;
+
 	
 	/**
 	 * Initializer
@@ -52,54 +67,117 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 	{
 		super(ID);
 		
-		initInfoWindow();
-		initInfoArray();
+		nameBox1 = new NameBox(x, y);
 		
+		var infoArrayOffsetX = 20;
+		var infoArrayOffsetY = nameBox1.boxHeight - 10;
+		
+		initInfoArray(infoArrayOffsetX, infoArrayOffsetY);
+		initInfoWindow(infoArrayOffsetX, infoArrayOffsetY);
+		
+		var nameBox2OffsetY = infoWindow.y + infoWindow.height - 10;
+		nameBox2 = new NameBox(x, y + nameBox2OffsetY);
+		
+		// Shift nameBox2 over to the right.
+		var nameBox2OffsetX = infoWindow.x + boxWidth + infoArrayOffsetX - nameBox2.boxWidth;
+		
+		nameBox2.setPos(x + nameBox2OffsetX, y + nameBox2OffsetY); 
+		
+		totalWidth = nameBox2.nameBox.x + nameBox2.boxWidth - nameBox1.nameBox.x;
+		
+		addAllFlxGrps();
+		
+		hide();
 	}
 	
-	private function initInfoWindow():Void
+	private function initInfoArray(X:Float, Y:Float):Void
 	{
-		BoxCreator.setBoxType(boxSpriteSheet, cornerSize, backgroundSize);
-		infoWindow = BoxCreator.createBox(boxWidth, boxHeight);
-		infoWindow.visible = false;
-		totalFlxGrp.add(infoWindow);
-	}
-	
-	private function initInfoArray():Void
-	{
-		weaponName = new FlxText(x + 15, y + 10, 300, "", 15);
-		weaponName.color = FlxColor.BLACK;
-		totalFlxGrp.add(weaponName);
+		infoArrGrp = new FlxGroup();
+		
+		var wName1OffsetY = 15;
+		
+		weaponName1 = new FlxText(X + cornerSize, Y + wName1OffsetY, boxWidth - boxWidth * 2, 
+			"Placeholder", textSize);
+		weaponName1.color = FlxColor.BLACK;
+		weaponName1.active = false;
+		
+		infoArrGrp.add(weaponName1);
 		
 		InfoArray = new Array<Array<FlxText>>();
+		
+		var infoArrayOffsetY = 45;
+		
+		var infoArrayIntervalX = 50;
+		var infoArrayIntervalY = 30;
+		
+		var infoTextWidth = 50;
 		
 		for (row in 0...InfoWindowRows.NUM_ROWS)
 		{
 			InfoArray.push(new Array<FlxText>());
 			for (col in 0...InfoWindowCols.NUM_COLS)
 			{
-				var infoEntry:FlxText = new FlxText(x + 50 * col, 
-					y + 10 + 30 * (row + 1), 50, "", 15);
+				var infoEntry:FlxText = new FlxText(X + infoArrayIntervalX * col, 
+					Y + infoArrayOffsetY + infoArrayIntervalY * row, infoTextWidth, 
+					"", textSize);
 				infoEntry.color = (FlxColor.BLACK);
 				infoEntry.alignment = FlxTextAlign.CENTER;
-				infoEntry.visible = false;
 				infoEntry.active = false;
 				
-				totalFlxGrp.add(infoEntry);
+				infoArrGrp.add(infoEntry);
 				
 				InfoArray[row].push(infoEntry);
 			}
 		}
 		
 		InfoArray[InfoWindowRows.HEALTH][InfoWindowCols.LABEL].text = "HP";
-		InfoArray[InfoWindowRows.ENERGY][InfoWindowCols.LABEL].text = "EN";
-		InfoArray[InfoWindowRows.EVADE_COST][InfoWindowCols.LABEL].text = "E/C";
-		InfoArray[InfoWindowRows.ATTACK_COST][InfoWindowCols.LABEL].text = "A/C";
-		InfoArray[InfoWindowRows.ATTACK_DAMAGE][InfoWindowCols.LABEL].text = "A/D";
-		InfoArray[InfoWindowRows.CRIT_COST][InfoWindowCols.LABEL].text = "C/C";
-		InfoArray[InfoWindowRows.CRIT_DAMAGE][InfoWindowCols.LABEL].text = "C/D";
+		InfoArray[InfoWindowRows.MIGHT][InfoWindowCols.LABEL].text = "Mt";
+		InfoArray[InfoWindowRows.HIT][InfoWindowCols.LABEL].text = "Hit";
+		InfoArray[InfoWindowRows.CRIT][InfoWindowCols.LABEL].text = "Crit";
 		
+		var bottomOfInfoArray = InfoArray[InfoWindowRows.CRIT][InfoWindowCols.LABEL].y +
+			InfoArray[InfoWindowRows.CRIT][InfoWindowCols.LABEL].height;
+		
+		var weaponName2offsetY = bottomOfInfoArray + (infoArrayOffsetY - (weaponName1.y + 
+			weaponName1.height));
+		
+		weaponName2 = new FlxText(X + cornerSize, Y + weaponName2offsetY, 
+			boxWidth - boxWidth * 2, "Placeholder", textSize);
+		
+		weaponName2.alignment = FlxTextAlign.RIGHT;
+		weaponName2.color = FlxColor.BLACK;
+		weaponName2.active = false;
+		
+		infoArrGrp.add(weaponName2);
 	}
+	
+	/**
+	 * Should only be called after initInfoArray();
+	 */
+	private function initInfoWindow(X:Float, Y:Float):Void
+	{
+		BoxCreator.setBoxType(boxSpriteSheet, cornerSize, backgroundSize);
+		
+		var bufferSpaceAtEnd = 15;
+		
+		boxHeight = Math.floor(weaponName2.y + weaponName2.height + bufferSpaceAtEnd - Y);
+		
+		infoWindow = BoxCreator.createBox(boxWidth, boxHeight);
+		infoWindow.setPosition(X, Y);
+	}
+	
+	/**
+	 * 
+	 */
+	override private function addAllFlxGrps():Void
+	{
+		totalFlxGrp.add(infoWindow);
+		totalFlxGrp.add(infoArrGrp);
+		totalFlxGrp.add(nameBox1.totalFlxGrp);
+		totalFlxGrp.add(nameBox2.totalFlxGrp);
+	}
+	
+	
 	
 	/**
 	 * Identifies all valid targets within this unit's equipped item's range, then
@@ -113,6 +191,8 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 	public override function refreshTargets(parentState:MissionState):Void
 	{
 		selectedUnit = parentState.getSelectedUnit();
+		
+		//nameBox1.setName(selectedUnit.name);
 		
 		// Get array of valid units, then cast to store as Array<OnMapEntity>
 		possibleTargets = cast parentState.getValidUnitsInRange(
@@ -169,7 +249,7 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 	{
 		selectedUnit.calcDerivedStats(cast selectedUnit.inventory.items[newWeaponIndex]);
 		
-		weaponName.text = selectedUnit.inventory.items[newWeaponIndex].name;
+		weaponName1.text = selectedUnit.inventory.items[newWeaponIndex].name;
 		
 		if (selectedUnit != null && currentTarget != null)
 		{
@@ -191,26 +271,26 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		setInfoArrayColumn(InfoWindowCols.PLAYER_INFO, selectedUnit, otherUnit);
 		setInfoArrayColumn(InfoWindowCols.ENEMY_INFO, otherUnit, selectedUnit);
 		
+		// Need to handle case where other unit has no weapon equipped.
+		weaponName2.text = otherUnit.equippedItem.name;
+		
+		//nameBox2.setName(otherUnit.name);
+		
 		return currentTarget;
 	}
 	
 	private function setInfoArrayColumn(colIndex:Int, new_unit:Unit, enemy_unit:Unit):Void
 	{	
 		InfoArray[InfoWindowRows.HEALTH][colIndex].text = Std.string(new_unit.health);
-		InfoArray[InfoWindowRows.ENERGY][colIndex].text = Std.string(new_unit.energy);
 		
-		InfoArray[InfoWindowRows.EVADE_COST][colIndex].text = 
-			Std.string(Std.int(Math.max(enemy_unit.accuracy - new_unit.evade, 1)));
-		
-		InfoArray[InfoWindowRows.ATTACK_COST][colIndex].text = 
-			Std.string(new_unit.attackCost);
-		InfoArray[InfoWindowRows.ATTACK_DAMAGE][colIndex].text = 
+		InfoArray[InfoWindowRows.MIGHT][colIndex].text = 
 			Std.string(Std.int(Math.max(new_unit.attackDamage - enemy_unit.defense, 0)));
 		
-		InfoArray[InfoWindowRows.CRIT_COST][colIndex].text = 
-			Std.string(new_unit.critCost + enemy_unit.intel);
-		InfoArray[InfoWindowRows.CRIT_DAMAGE][colIndex].text = 
-			Std.string(Std.int(Math.max(new_unit.critDamage - enemy_unit.defense, 0)));
+		InfoArray[InfoWindowRows.HIT][colIndex].text = 
+			Std.string(Std.int(Math.max(new_unit.accuracy - enemy_unit.evade, 0)));
+		
+		InfoArray[InfoWindowRows.CRIT][colIndex].text = 
+			Std.string(Std.int(Math.max(new_unit.critChance - enemy_unit.dodge, 0)));
 	}
 	
 	public override function actionResponse(pressedKeys:Array<Bool>, heldAction:Bool)
@@ -260,20 +340,28 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 			}
 		}
 	}
+	
+	override public function setPos(newX:Float, newY:Float):Void
+	{
+		nameBox1.nameBox.x = newX;
+		nameBox1.nameBox.y = newY;
+		
+		nameBox2.nameBox.x = newX;
+		nameBox2.nameBox.y = newY;
+		
+		super.setPos(newX, newY);
+	}
 }
 
 @:enum
 class InfoWindowRows
 {
 	public static var HEALTH(default, never)        = 0;
-	public static var ENERGY(default, never)        = 1;
-	public static var EVADE_COST(default, never)    = 2;
-	public static var ATTACK_COST(default, never)   = 3;
-	public static var ATTACK_DAMAGE(default, never) = 4;
-	public static var CRIT_COST(default, never)     = 5;
-	public static var CRIT_DAMAGE(default, never)   = 6;
+	public static var MIGHT(default, never)         = 1;
+	public static var HIT(default, never)           = 2;
+	public static var CRIT(default, never)          = 3;
 	
-	public static var NUM_ROWS(default, never) = 7;
+	public static var NUM_ROWS(default, never) = 4;
 }
 
 @:enum
