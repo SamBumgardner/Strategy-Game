@@ -35,17 +35,18 @@ class NameBox implements VarSizedBox
 	
 	private var nameText:FlxText;
 	
-	private var nameBox:ResizableBox;
+	public var nameBox(default, null):ResizableBox;
 	
 	
 	public var totalFlxGrp:FlxGroup;
-	
 	
 	
 	public function new(?X:Float=0, ?Y:Float=0) 
 	{
 		initName(X, Y);
 		initBox(X, Y);
+		
+		setName("Placeholder");
 		
 		addAllFlxGrps();
 	}
@@ -92,5 +93,11 @@ class NameBox implements VarSizedBox
 		boxWidth = Math.floor(nameText.width + cornerSize * 2);
 		
 		nameBox.resize(boxWidth, boxHeight);
+	}
+	
+	public function setPos(newX:Float, newY:Float):Void
+	{
+		nameBox.setPos(newX, newY);
+		nameText.setPosition(newX + cornerSize, newY + cornerSize);
 	}
 }
