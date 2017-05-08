@@ -59,6 +59,9 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 	private var currWeaponIndexID:Int = 0;
 	private var currWeaponIndex(default, set):Int = 0;
 
+	var nameBox2OffsetX:Float;
+	var nameBox2OffsetY:Float;
+	
 	
 	/**
 	 * Initializer
@@ -75,14 +78,13 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		initInfoArray(infoArrayOffsetX, infoArrayOffsetY);
 		initInfoWindow(infoArrayOffsetX, infoArrayOffsetY);
 		
-		var nameBox2OffsetY = infoWindow.y + infoWindow.height - 10;
+		nameBox2OffsetY = infoWindow.y + infoWindow.height;
 		nameBox2 = new NameBox(x, y + nameBox2OffsetY);
 		
 		// Shift nameBox2 over to the right.
-		var nameBox2OffsetX = infoWindow.x + boxWidth + infoArrayOffsetX - nameBox2.boxWidth;
+		nameBox2OffsetX = infoWindow.x + boxWidth + infoArrayOffsetX - nameBox2.boxWidth;
 		
 		nameBox2.setPos(x + nameBox2OffsetX, y + nameBox2OffsetY); 
-		
 		totalWidth = nameBox2.nameBox.x + nameBox2.boxWidth - nameBox1.nameBox.x;
 		
 		addAllFlxGrps();
@@ -96,7 +98,7 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		
 		var wName1OffsetY = 15;
 		
-		weaponName1 = new FlxText(X + cornerSize, Y + wName1OffsetY, boxWidth - boxWidth * 2, 
+		weaponName1 = new FlxText(X + cornerSize, Y + wName1OffsetY, boxWidth - cornerSize * 2, 
 			"Placeholder", textSize);
 		weaponName1.color = FlxColor.BLACK;
 		weaponName1.active = false;
@@ -142,7 +144,7 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 			weaponName1.height));
 		
 		weaponName2 = new FlxText(X + cornerSize, Y + weaponName2offsetY, 
-			boxWidth - boxWidth * 2, "Placeholder", textSize);
+			boxWidth - cornerSize * 2, "Placeholder", textSize);
 		
 		weaponName2.alignment = FlxTextAlign.RIGHT;
 		weaponName2.color = FlxColor.BLACK;
@@ -192,7 +194,7 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 	{
 		selectedUnit = parentState.getSelectedUnit();
 		
-		//nameBox1.setName(selectedUnit.name);
+		nameBox1.setName(selectedUnit.name);
 		
 		// Get array of valid units, then cast to store as Array<OnMapEntity>
 		possibleTargets = cast parentState.getValidUnitsInRange(
@@ -274,7 +276,13 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		// Need to handle case where other unit has no weapon equipped.
 		weaponName2.text = otherUnit.equippedItem.name;
 		
-		//nameBox2.setName(otherUnit.name);
+		nameBox2.setName(otherUnit.name);
+		
+		nameBox2OffsetX = infoWindow.x + boxWidth + 20 - nameBox2.boxWidth;
+		
+		nameBox2.setPos(nameBox2OffsetX, nameBox2OffsetY); 
+		totalWidth = nameBox2.nameBox.x + nameBox2.boxWidth - nameBox1.nameBox.x;
+		
 		
 		return currentTarget;
 	}
@@ -330,7 +338,6 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 			}
 			else if (pressedKeys[KeyIndex.INFO])
 			{
-				trace(validWeaponIndices);
 				if (validWeaponIndices.length > 1)
 				{
 					// Cycle backward through weapons
@@ -343,13 +350,13 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 	
 	override public function setPos(newX:Float, newY:Float):Void
 	{
+		super.setPos(newX, newY);
+		
 		nameBox1.nameBox.x = newX;
 		nameBox1.nameBox.y = newY;
 		
-		nameBox2.nameBox.x = newX;
-		nameBox2.nameBox.y = newY;
-		
-		super.setPos(newX, newY);
+		nameBox2.nameBox.x = newX + nameBox2OffsetX;
+		nameBox2.nameBox.y = newY + nameBox2OffsetY;
 	}
 }
 
