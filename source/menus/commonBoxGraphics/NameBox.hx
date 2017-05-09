@@ -33,7 +33,7 @@ class NameBox implements VarSizedBox
 	
 	private var textSize(default, never):Int = 16;
 	
-	private var nameText:FlxText;
+	public var nameText:FlxText;
 	
 	public var nameBox(default, null):ResizableBox;
 	

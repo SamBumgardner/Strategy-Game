@@ -59,8 +59,11 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 	private var currWeaponIndexID:Int = 0;
 	private var currWeaponIndex(default, set):Int = 0;
 
-	var nameBox2OffsetX:Float;
-	var nameBox2OffsetY:Float;
+	private var nameBox2OffsetX:Float;
+	private var nameBox2OffsetY:Float;
+	
+	private var playerTextColor:FlxColor = 0x2a45a8;
+	private var enemyTextColor:FlxColor = 0x721414;
 	
 	
 	/**
@@ -71,6 +74,7 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		super(ID);
 		
 		nameBox1 = new NameBox(x, y);
+		nameBox1.nameText.color = playerTextColor;
 		
 		var infoArrayOffsetX = 20;
 		var infoArrayOffsetY = nameBox1.boxHeight - 10;
@@ -80,6 +84,7 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		
 		nameBox2OffsetY = infoWindow.y + infoWindow.height;
 		nameBox2 = new NameBox(x, y + nameBox2OffsetY);
+		nameBox2.nameText.color = enemyTextColor;
 		
 		// Shift nameBox2 over to the right.
 		nameBox2OffsetX = infoWindow.x + boxWidth + infoArrayOffsetX - nameBox2.boxWidth;
@@ -100,7 +105,7 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		
 		weaponName1 = new FlxText(X + cornerSize, Y + wName1OffsetY, boxWidth - cornerSize * 2, 
 			"Placeholder", textSize);
-		weaponName1.color = FlxColor.BLACK;
+		weaponName1.color = playerTextColor;
 		weaponName1.active = false;
 		
 		infoArrGrp.add(weaponName1);
@@ -122,7 +127,21 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 				var infoEntry:FlxText = new FlxText(X + infoArrayIntervalX * col, 
 					Y + infoArrayOffsetY + infoArrayIntervalY * row, infoTextWidth, 
 					"", textSize);
-				infoEntry.color = (FlxColor.BLACK);
+				
+				// Set text color
+				if (col == InfoWindowCols.PLAYER_INFO)
+				{
+					infoEntry.color = playerTextColor;
+				}
+				else if (col == InfoWindowCols.ENEMY_INFO)
+				{
+					infoEntry.color = enemyTextColor;
+				}
+				else
+				{
+					infoEntry.color = (FlxColor.BLACK);
+				}
+				
 				infoEntry.alignment = FlxTextAlign.CENTER;
 				infoEntry.active = false;
 				
@@ -147,7 +166,7 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 			boxWidth - cornerSize * 2, "Placeholder", textSize);
 		
 		weaponName2.alignment = FlxTextAlign.RIGHT;
-		weaponName2.color = FlxColor.BLACK;
+		weaponName2.color = enemyTextColor;
 		weaponName2.active = false;
 		
 		infoArrGrp.add(weaponName2);
