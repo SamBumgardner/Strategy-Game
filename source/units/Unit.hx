@@ -94,6 +94,7 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	public var level(default, null):String;
 	public var exp:Int;
 	
+	public var maxHealth(default, null):Int;
 	public var energy(default, null):Int;
 	
 	public var strength(default, null):Int;
@@ -252,7 +253,8 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		
 		equippedItem = cast inventory.items[0];
 		
-		health = FlxG.random.int(10, 30);
+		maxHealth = FlxG.random.int(10, 30);
+		health = maxHealth;
 		energy = FlxG.random.int(5, 25);
 		
 		strength = FlxG.random.int(1, 10);
