@@ -691,6 +691,7 @@ class MenuManager implements Observer
 	private function combatMenuOpen():Void
 	{
 		combatMenu.setUnits(attackTargetMenu.selectedUnit, cast attackTargetMenu.currentTarget);
+		combatMenu.beginCombat();
 	}
 	
 	///////////////////////////////////////

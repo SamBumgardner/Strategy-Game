@@ -3,8 +3,10 @@ package menus;
 import boxes.VarSizedBox;
 import flixel.FlxG;
 import flixel.system.FlxAssets.FlxGraphicAsset;
+import flixel.util.FlxTimer;
 import menus.commonBoxGraphics.CombatHealthBox;
 import missions.MissionState;
+import observerPattern.eventSystem.EventTypes;
 import units.Unit;
 
 /**
@@ -18,6 +20,15 @@ class CombatMenu extends MenuTemplate
 	
 	public var combatHealthBox1:CombatHealthBox;
 	public var combatHealthBox2:CombatHealthBox;
+	
+	private var originalAttacker:Unit;
+	private var originalDefender:Unit;
+	
+	private var combatRound:Int;
+	private var nextTurn:CombatRoles;
+	
+	private var timeBetweenTurns:Float = .75;
+	private var turnTimer:FlxTimer;
 	
 	public function new(?X:Float=0, ?Y:Float=0, ?subjectID:Int=0) 
 	{
@@ -33,38 +44,140 @@ class CombatMenu extends MenuTemplate
 		
 		height = combatHealthBox1.boxHeight;
 		
+		turnTimer = new FlxTimer();
+		
 		hide();
 	}
 	
 	public function setUnits(attacker:Unit, defender:Unit):Void
 	{
+		originalAttacker = attacker;
+		originalDefender = defender;
+		
 		combatHealthBox1.setUnit(attacker);
 		combatHealthBox2.setUnit(defender);
-		// Set up combat variables, get numeric versions of needed derived statistics.
 	}
 	
 	public function beginCombat():Void
 	{
+		combatRound = 0;
+		nextTurn = CombatRoles.ATTACKER;
+		
+		turnTimer.start(timeBetweenTurns, continueCombat);
 		// Start a series of timed events. Initiator attacks, defender counterattacks, etc.
 	}
 	
-	public function continueCombat(whoseTurn:Int):Void
+	public function continueCombat(combatTimer:FlxTimer):Void
 	{
-		// I think this one is the meat of the combat logic. 
-		// maybe. Might need some other name for it. Starts next attack, checks for death, etc.
+		combatRound++;
 		
+		var attacker:Unit = null;
+		var defender:Unit = null;
+		
+		// Do attack logic.
+		if (nextTurn == ATTACKER)
+		{
+			attacker = originalAttacker;
+			defender = originalDefender;
+		}
+		else if (nextTurn == DEFENDER)
+		{
+			attacker = originalDefender;
+			defender = originalAttacker;
+		}
+		
+		attacker.attackAnimate(defender.mapPos);
+		
+		var hitRoll:Int = FlxG.random.int(1, 100);
+		var critRoll:Int = FlxG.random.int(1, 100);
+		
+		if (hitRoll <= attacker.accuracy - defender.evade)
+		{
+			var totalDamage:Float = Math.max(attacker.attackDamage - defender.defense, 0);
+			
+			// Check for critical damage
+			if (critRoll <= attacker.critChance - defender.dodge)
+			{
+				// Crit occurred, do x3 damage.
+				totalDamage *= 3;
+				
+				// Do special crit effects.
+				FlxG.camera.shake(0.01, 0.2);
+			}
+			else 
+			{
+				// Do normal damage, so no change needed.
+				// Play normal damage sound effect.
+			}
+			defender.hurt(totalDamage);
+		}
+		else
+		{
+			// Do defender dodge movement.
+		}
+		
+		if (defender.health == 0)
+		{
+			combatFinished();
+			return;
+		}
+		
+		
+		// Before the second round, just swap attackers so both get a turn.
+		if (combatRound < 2)
+		{
+			if (nextTurn == DEFENDER)
+			{
+				nextTurn = ATTACKER;
+			}
+			else
+			{
+				nextTurn = DEFENDER;
+			}
+			
+			turnTimer.start(timeBetweenTurns, continueCombat);
+		}
+		// If both sides have attacked...
+		else if (combatRound == 2)
+		{
+			//Figure out if a third round should occur, and if so, who is attacking.
+			
+			if (attacker.attackSpeed >= defender.attackSpeed + 4)
+			{
+				// Current attacker gets a follow-up.
+				turnTimer.start(timeBetweenTurns, continueCombat);
+			}
+			else if (defender.attackSpeed >= attacker.attackSpeed + 4)
+			{
+				// Current defender gets a follow-up.
+				
+				// Swap next turn, then move on to next round.
+				if (nextTurn == DEFENDER)
+				{
+					nextTurn = ATTACKER;
+				}
+				else
+				{
+					nextTurn = DEFENDER;
+				}
+				
+				turnTimer.start(timeBetweenTurns, continueCombat);
+			}
+			else
+			{
+				combatFinished();
+			}
+		}
+		else
+		{
+			combatFinished();
+		}
 	}
 	
-	/**
-	 * This breaks the rules I set for the game's design:
-	 * 	An individual menu should not interact with the missionState directly.
-	 */
 	private function combatFinished():Void
 	{
-		var missionState:MissionState = cast FlxG.state;
-		
-		// Should transfer controll back to the mapcursor, like all menus getting closed.
-		//missionState.combatFinished();
+		turnTimer.start(timeBetweenTurns * 3, 
+		function(timer:FlxTimer){subject.notify(EventTypes.CONFIRM); });
 	}
 	
 	// Call CombatHealthBox updates
@@ -76,4 +189,10 @@ class CombatMenu extends MenuTemplate
 		combatHealthBox1.update(elapsed);
 		combatHealthBox2.update(elapsed);
 	}
+}
+
+enum CombatRoles
+{
+	ATTACKER;
+	DEFENDER;
 }
