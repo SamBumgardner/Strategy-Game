@@ -55,6 +55,7 @@ class NameBox implements VarSizedBox
 	{
 		nameText = new FlxText(X + cornerSize, Y + cornerSize, 0, "Placeholder", textSize);
 		nameText.color = FlxColor.BLACK;
+		nameText.active = false;
 	}
 	
 	/**

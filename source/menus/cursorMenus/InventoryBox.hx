@@ -190,7 +190,6 @@ class InventoryBox implements VarSizedBox
 	
 	public function refreshDisplay():Void
 	{
-		
 		if (trackedInventory != null)
 		{
 			for (i in 0...maxInventorySlots)
