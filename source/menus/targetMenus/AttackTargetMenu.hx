@@ -329,6 +329,8 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 			{
 				confirmSound.play(true);
 				
+				selectedUnit.equipItem(currWeaponIndex);
+				
 				FlxTween.num(0, Unit.attackMoveDist * 2, .3, {ease: FlxEase.quadInOut}, 
 					Unit.attackTweenFunc.bind(selectedUnit, currentTarget.mapPos));
 				
