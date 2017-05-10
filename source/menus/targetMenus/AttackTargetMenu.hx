@@ -314,10 +314,10 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 			Std.string(Std.int(Math.max(new_unit.attackDamage - enemy_unit.defense, 0)));
 		
 		InfoArray[InfoWindowRows.HIT][colIndex].text = 
-			Std.string(Std.int(Math.max(new_unit.accuracy - enemy_unit.evade, 0)));
+			Std.string(Std.int(Math.min(Math.max(new_unit.accuracy - enemy_unit.evade, 0), 100)));
 		
 		InfoArray[InfoWindowRows.CRIT][colIndex].text = 
-			Std.string(Std.int(Math.max(new_unit.critChance - enemy_unit.dodge, 0)));
+			Std.string(Std.int(Math.min(Math.max(new_unit.critChance - enemy_unit.dodge, 0), 100)));
 	}
 	
 	public override function actionResponse(pressedKeys:Array<Bool>, heldAction:Bool)
