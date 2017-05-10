@@ -239,4 +239,13 @@ class MissionMenuCreator
 	{
 		return new DropTargetMenu(ID);
 	}
+	
+	/**
+	 * 
+	 */
+	public static function makeCombatMenu(?X:Float = 0, ?Y:Float = 0, 
+		?ID:Int = 0):CombatMenu
+	{
+		return new CombatMenu(X, Y, ID);
+	}
 }

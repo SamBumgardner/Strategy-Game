@@ -2,6 +2,7 @@ package missions.managers;
 
 import flixel.FlxG;
 import flixel.group.FlxGroup;
+import menus.CombatMenu;
 import menus.cursorMenus.BasicMenu;
 import menus.cursorMenus.CursorMenuTemplate;
 import menus.MenuTemplate;
@@ -112,6 +113,11 @@ class MenuManager implements Observer
 	private var dropTargetMenu:DropTargetMenu;
 	
 	/**
+	 * Menu used to manage player interaction in combat.
+	 */
+	private var combatMenu:CombatMenu;
+	
+	/**
 	 * X and Y coordinates that "root" level menus (unitAction & mapAction) should use to set 
 	 * 	its position when appearing in different regions of the screen.
 	 */
@@ -123,6 +129,14 @@ class MenuManager implements Observer
 	 */
 	private var cornerMenuPos:PossiblePosTracker;
 	
+	/**
+	 * X and Y coordinates that "middle" menus (at the moment, just the combat menu) should
+	 * 	use to set position when appearing in different regions of the screen.
+	 * 
+	 * NOTE: This position's X is just the middle of the screen, so some additional 
+	 * 	computations may be necessary to get the desired x positioning.
+	 */
+	private var middleMenuPos:PossiblePosTracker;
 	
 	/**
 	 * Tracks what horizontal position menus are currently in.
@@ -214,6 +228,8 @@ class MenuManager implements Observer
 	{
 		rootMenuPos  = new PossiblePosTracker(30, FlxG.width - 30, 60, FlxG.height - 60);
 		cornerMenuPos = new PossiblePosTracker(15, FlxG.width - 15, 15, FlxG.height - 15);
+		middleMenuPos = new PossiblePosTracker(FlxG.width / 2, FlxG.width / 2, 
+			300, FlxG.height - 300); 
 	}
 	
 	/**
@@ -278,6 +294,10 @@ class MenuManager implements Observer
 		dropTargetMenu = MissionMenuCreator.makeDropTargetMenu(cornerMenuPos.leftX,
 			cornerMenuPos.topY, MissionMenuTypes.DROP_TARGET);
 		dropTargetMenu.subject.addObserver(this);
+		
+		combatMenu = MissionMenuCreator.makeCombatMenu(middleMenuPos.leftX,
+			middleMenuPos.topY, MissionMenuTypes.COMBAT_MENU);
+		combatMenu.subject.addObserver(this);
 	}
 	
 	/**
@@ -301,6 +321,7 @@ class MenuManager implements Observer
 		totalFlxGrp.add(rescueTargetMenu.totalFlxGrp);
 		totalFlxGrp.add(takeTargetMenu.totalFlxGrp);
 		totalFlxGrp.add(dropTargetMenu.totalFlxGrp);
+		totalFlxGrp.add(combatMenu.totalFlxGrp);
 	}
 	
 	/**
@@ -327,6 +348,7 @@ class MenuManager implements Observer
 		openFunctions[MissionMenuTypes.TAKE_TARGET] = takeTargetMenuOpen;
 		openFunctions[MissionMenuTypes.TRADE_TARGET] = tradeTargetMenuOpen;
 		openFunctions[MissionMenuTypes.TRADE_ACTION] = tradeActionMenuOpen;
+		openFunctions[MissionMenuTypes.COMBAT_MENU] = combatMenuOpen;
 		
 		
 		// non-default cancel functions
@@ -665,6 +687,11 @@ class MenuManager implements Observer
 		unitInvMenu.selectedUnit = parentState.getSelectedUnit();
 	}
 	
+	private function combatMenuOpen():Void
+	{
+		combatMenu.setUnits(attackTargetMenu.selectedUnit, cast attackTargetMenu.currentTarget);
+	}
+	
 	///////////////////////////////////////
 	//       MENU CONFIRM FUNCTIONS      //
 	///////////////////////////////////////
@@ -899,7 +926,8 @@ class MenuManager implements Observer
 	private function attackTargetConfirm():Void
 	{
 		trace("Beginning attack!");
-		clearMenuStack();
+		hideMenuStack();
+		pushMenuStack(combatMenu);
 	}
 	
 	
@@ -1099,6 +1127,30 @@ class MenuManager implements Observer
 		}
 		
 		menusOnLeft = goToLeft;
+	}
+	
+	/**
+	 * Public interface for changing the region of the screen that menus appear in.
+	 * 
+	 * Could be made more elegant by associating each menu with a position object,
+	 * 	and grouping all menus in an array of some sort. Then all that needs to be
+	 * 	done is iterate through the array and change the position of the current menu.
+	 * 
+	 * @param goToTop	Whether the menus should be positioned on top or bottom side.
+	 */
+	public function changeMenuYPositions(goToTop:Bool):Void
+	{
+		if (goToTop != menusOnTop && goToTop)
+		{
+			combatMenu.setPos(middleMenuPos.leftX - combatMenu.width / 2, middleMenuPos.topY);
+		}
+		else if (goToTop != menusOnTop && !goToTop)
+		{
+			combatMenu.setPos(middleMenuPos.leftX - combatMenu.width / 2, middleMenuPos.bottomY -
+				combatMenu.height);
+		}
+		
+		menusOnTop = goToTop;
 	}
 	
 	/**

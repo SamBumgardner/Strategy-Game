@@ -397,6 +397,7 @@ class MissionState extends FlxState
 	{
 		mapCursorManager.deactivateMapCursor();
 		menuManager.changeMenuXPositions(!mapCursorManager.cursorOnLeft);
+		menuManager.changeMenuYPositions(!mapCursorManager.cursorOnTop);
 	}
 	
 	/**

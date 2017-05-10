@@ -29,6 +29,7 @@ class MissionMenuTypes
 	public static var RESCUE_TARGET(default, never)			= 9;
 	public static var TAKE_TARGET(default, never)			= 10;
 	public static var DROP_TARGET(default, never)			= 11;
+	public static var COMBAT_MENU(default, never)			= 12;
 	
-	public static var NUM_OF_MENUS(default, never)			= 12;
+	public static var NUM_OF_MENUS(default, never)			= 13;
 }

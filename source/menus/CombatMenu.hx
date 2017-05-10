@@ -13,6 +13,8 @@ import units.Unit;
  */
 class CombatMenu extends MenuTemplate 
 {
+	public var width(default, never):Int = 400;
+	public var height(default, null):Int;
 	
 	public var combatHealthBox1:CombatHealthBox;
 	public var combatHealthBox2:CombatHealthBox;
@@ -28,6 +30,8 @@ class CombatMenu extends MenuTemplate
 		
 		totalFlxGrp.add(combatHealthBox1.totalFlxGroup);
 		totalFlxGrp.add(combatHealthBox2.totalFlxGroup);
+		
+		height = combatHealthBox1.boxHeight;
 		
 		hide();
 	}
