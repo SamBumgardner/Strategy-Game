@@ -3,8 +3,11 @@ import flixel.FlxG;
 import flixel.FlxSprite;
 import flixel.math.FlxPoint;
 import flixel.system.FlxAssets.FlxGraphicAsset;
+import flixel.tweens.FlxEase;
+import flixel.tweens.FlxTween;
 import observerPattern.Observed;
 import observerPattern.Subject;
+import observerPattern.eventSystem.UnitEvents;
 import units.items.EquippableItem;
 import units.items.Inventory;
 import units.items.Item;
@@ -465,9 +468,27 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		unit.y = unit.mapPos.getRow() * tileSize + distTravelled * -Math.cos(angle);
 	}
 	
+	public function attackAnimate(targetMoveID:MoveID):Void
+	{
+		FlxTween.num(0, Unit.attackMoveDist * 2, .3, {ease: FlxEase.quadInOut}, 
+			Unit.attackTweenFunc.bind(this, targetMoveID));
+	}
+	
 	override public function update(elapsed:Float):Void 
 	{
 		super.update(elapsed);
+	}
+	
+	override public function hurt(Damage:Float):Void
+	{
+		super.hurt(Damage);
+		health = Math.max(health, 0);
+	}
+	
+	override public function kill():Void 
+	{
+		subject.notify(UnitEvents.DIED);
+		super.kill();
 	}
 }
 

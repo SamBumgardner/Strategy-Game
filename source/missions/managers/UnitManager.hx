@@ -7,6 +7,7 @@ import missions.MissionState;
 import observerPattern.Observed;
 import observerPattern.Observer;
 import observerPattern.eventSystem.InputEvent;
+import observerPattern.eventSystem.UnitEvents;
 import units.movement.ArrowTile;
 import units.movement.MoveID;
 import units.movement.PossibleMove;
@@ -16,6 +17,7 @@ import units.Unit;
 import units.UnitInfo;
 
 using units.movement.MoveIDExtender;
+using observerPattern.eventSystem.EventExtender;
 
 /**
  * A component of MissionState that acts as a middleman between MissionState 
@@ -381,6 +383,8 @@ class UnitManager implements Observer
 		// Temporary code, can't actually use unitInfo yet.
 		newUnit = new Unit(row, col, AssetPaths.eldon_sheet__png, unitArray.length, team, "Eldon");
 		
+		newUnit.subject.addObserver(this);
+		
 		unitFlxGrp.add(newUnit);
 		unitArray.push(newUnit);
 		unitHasProcessedArr.push(tileChanges.length);
@@ -397,6 +401,18 @@ class UnitManager implements Observer
 		findMoveAndAttackRange(newUnit);
 		
 		return newUnit;
+	}
+	
+	public function removeUnitFromMission(unit:Unit):Void
+	{
+		unitFlxGrp.remove(unit);
+		unitHasProcessedArr[unit.subject.ID] = -1;
+		unitArray[unit.subject.ID] = null;
+		unitMap[unit.preMoveMapPos.getRow()][unit.preMoveMapPos.getCol()] = -1;
+		teamMap[unit.preMoveMapPos.getRow()][unit.preMoveMapPos.getCol()] = TeamID.NONE;
+		tileChanges.push(new TileChange(unit.preMoveMapPos, true, unit.teamID));
+		
+		trace("Unit Died...");
 	}
 	
 	/**
@@ -680,7 +696,12 @@ class UnitManager implements Observer
 	 */
 	public function onNotify(event:InputEvent, notifier:Observed):Void 
 	{
-		
+		var notifyingUnit:Unit = cast notifier;
+		trace("UnitManager's onNotify was called");
+		if (event.getType() == UnitEvents.DIED)
+		{
+			removeUnitFromMission(notifyingUnit);
+		}
 	}
 	
 	
