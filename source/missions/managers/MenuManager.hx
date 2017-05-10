@@ -398,6 +398,7 @@ class MenuManager implements Observer
 		confirmFunctions[MissionMenuTypes.RESCUE_TARGET].push(rescueTargetConfirm);
 		confirmFunctions[MissionMenuTypes.TAKE_TARGET].push(takeTargetConfirm);
 		confirmFunctions[MissionMenuTypes.DROP_TARGET].push(dropTargetConfirm);
+		confirmFunctions[MissionMenuTypes.COMBAT_MENU].push(combatMenuConfirm);
 	}
 	
 	
@@ -990,6 +991,16 @@ class MenuManager implements Observer
 	}
 	
 	
+	// combatMenu confirm function
+	
+	/**
+	 * Called when combat has ended successfully.
+	 */
+	private function combatMenuConfirm():Void
+	{
+		trace("Combat finished!");
+		clearMenuStack();
+	}
 	
 	
 	
