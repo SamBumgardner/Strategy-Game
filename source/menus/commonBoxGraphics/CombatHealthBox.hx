@@ -48,18 +48,21 @@ class CombatHealthBox implements VarSizedBox
 	public var trackedUnit:Unit;
 	
 	
-	public function new() 
+	public function new(?X:Float = 0, ?Y:Float = 0) 
 	{
-		initName(0, 0);
+		initName();
 		initHealthComponents();
 		initBox();
+		
+		setPos(X, Y);
+		
 		addAllFlxGrps();
 	}
 	
 	
-	private function initName(X:Float, Y:Float):Void
+	private function initName():Void
 	{
-		nameText = new FlxText(X + cornerSize, Y + cornerSize, boxWidth - cornerSize * 2, 
+		nameText = new FlxText(cornerSize, cornerSize, boxWidth - cornerSize * 2, 
 			"Placeholder", textSize);
 		nameText.color = FlxColor.BLACK;
 		nameText.alignment = FlxTextAlign.CENTER;
@@ -114,7 +117,7 @@ class CombatHealthBox implements VarSizedBox
 		nameText.setPosition(X + cornerSize, Y + cornerSize);
 		
 		healthCount.setPosition(nameText.x, nameText.y + 20);
-		healthBar.setPosition(healthCount.x + healthCount.width + 5, healthCount.y + 2);
+		healthBar.setPosition(healthCount.x + healthCount.width + 5, healthCount.y + 6);
 	}
 	
 	public function update(elapsed:Float):Void
