@@ -10,6 +10,7 @@ import flixel.system.FlxAssets.FlxGraphicAsset;
 import flixel.text.FlxText;
 import flixel.tweens.FlxEase;
 import flixel.tweens.FlxTween;
+import flixel.tweens.motion.CircularMotion;
 import flixel.util.FlxColor;
 import inputHandlers.ActionInputHandler.KeyIndex;
 import menus.MenuTemplate;
@@ -65,6 +66,10 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 	private var playerTextColor:FlxColor = 0x2a45a8;
 	private var enemyTextColor:FlxColor = 0x721414;
 	
+	private var doubleHitSprite:FlxSprite;
+	private var doubleHitOffsetX:Float = 30;
+	private var doubleHitOffsetY:Float = -5;
+	private var doubleHitColumn:Int = InfoWindowCols.NONE;
 	
 	/**
 	 * Initializer
@@ -91,6 +96,9 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		
 		nameBox2.setPos(x + nameBox2OffsetX, y + nameBox2OffsetY); 
 		totalWidth = nameBox2.nameBox.x + nameBox2.boxWidth - nameBox1.nameBox.x;
+		
+		doubleHitSprite = new FlxSprite(x, y, AssetPaths.double_hit__png);
+		doubleHitSprite.active = false;
 		
 		addAllFlxGrps();
 		
@@ -196,6 +204,7 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		totalFlxGrp.add(infoArrGrp);
 		totalFlxGrp.add(nameBox1.totalFlxGrp);
 		totalFlxGrp.add(nameBox2.totalFlxGrp);
+		totalFlxGrp.add(doubleHitSprite);
 	}
 	
 	
@@ -318,6 +327,34 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		
 		InfoArray[InfoWindowRows.CRIT][colIndex].text = 
 			Std.string(Std.int(Math.min(Math.max(new_unit.critChance - enemy_unit.dodge, 0), 100)));
+		
+		setDoubleHit(colIndex, new_unit, enemy_unit);
+		trace(doubleHitSprite.visible);
+	}
+	
+	private function setDoubleHit(colIndex:Int, new_unit:Unit, enemy_unit:Unit):Void
+	{
+		trace(colIndex, new_unit.attackSpeed, enemy_unit.attackSpeed);
+		if (new_unit.attackSpeed >= enemy_unit.attackSpeed + 4)
+		{
+			trace("Someone gets a double!");
+			if (doubleHitColumn != colIndex)
+			{
+				var newX:Float = InfoArray[InfoWindowRows.MIGHT][colIndex].x + doubleHitOffsetX;
+				var newY:Float = InfoArray[InfoWindowRows.MIGHT][colIndex].y + doubleHitOffsetY;
+				
+				doubleHitSprite.setPosition(newX, newY);
+				
+				doubleHitColumn = colIndex;
+			}
+			doubleHitSprite.visible = true;
+		}
+		else if (doubleHitColumn == colIndex)
+		{
+			trace("deactivated double");
+			doubleHitSprite.visible = false;
+			doubleHitColumn = InfoWindowCols.NONE;
+		}
 	}
 	
 	public override function actionResponse(pressedKeys:Array<Bool>, heldAction:Bool)
@@ -376,6 +413,18 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		nameBox2.nameBox.x = newX + nameBox2OffsetX;
 		nameBox2.nameBox.y = newY + nameBox2OffsetY;
 	}
+	
+	override public function reveal():Void
+	{
+		super.reveal();
+		
+		if (doubleHitColumn == InfoWindowCols.NONE)
+		{
+			doubleHitSprite.visible = false;
+		}
+		
+		trace("reveal just happened");
+	}
 }
 
 @:enum
@@ -396,5 +445,7 @@ class InfoWindowCols
 	public static var LABEL(default, never)       = 1;
 	public static var ENEMY_INFO(default, never)  = 2;
 	
-	public static var NUM_COLS(default, never) = 3;
+	public static var NUM_COLS(default, never)    = 3;
+	
+	public static var NONE(default, never)        = -1;
 }
