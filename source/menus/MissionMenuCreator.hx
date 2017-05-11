@@ -39,6 +39,7 @@ import menus.targetMenus.TradeTargetMenu;
  * 		rescue target
  * 		take target
  * 		drop target
+ * 		combat menu
  * 
  * NOTE: Need to update documentation.
  * 
