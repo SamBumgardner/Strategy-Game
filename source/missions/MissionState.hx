@@ -20,6 +20,8 @@ import observerPattern.Observer;
 import observerPattern.eventSystem.EventTypes;
 import observerPattern.eventSystem.InputEvent;
 import units.MapCursorUnitTypes;
+import units.items.Inventory;
+import units.items.Item;
 import units.movement.MoveID;
 import units.Unit;
 import utilities.StrategyOgmoLoader;
@@ -395,6 +397,7 @@ class MissionState extends FlxState
 	{
 		mapCursorManager.deactivateMapCursor();
 		menuManager.changeMenuXPositions(!mapCursorManager.cursorOnLeft);
+		menuManager.changeMenuYPositions(!mapCursorManager.cursorOnTop);
 	}
 	
 	/**
@@ -455,6 +458,10 @@ class MissionState extends FlxState
 		ActionInputHandler.resetNumVars();
 		MoveInputHandler.resetNumVars();
 	}
+	
+	///////////////////////////////////////
+	//      SELECTED UNIT ACTIONS        //
+	///////////////////////////////////////
 	
 	/**
 	 * Gets the value of unitManager's selectedUnit variable.

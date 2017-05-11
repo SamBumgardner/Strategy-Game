@@ -2,12 +2,16 @@ package missions.managers;
 
 import flixel.FlxG;
 import flixel.group.FlxGroup;
+import menus.CombatMenu;
 import menus.cursorMenus.BasicMenu;
 import menus.cursorMenus.CursorMenuTemplate;
 import menus.MenuTemplate;
 import menus.MissionMenuCreator;
 import menus.MissionMenuTypes;
+import menus.cursorMenus.InventoryMenu;
 import menus.cursorMenus.ResizableBasicMenu;
+import menus.cursorMenus.TradeMenu;
+import menus.cursorMenus.optionEnums.ItemActionMenuOptions;
 import menus.cursorMenus.optionEnums.UnitActionMenuOptions;
 import menus.targetMenus.AttackTargetMenu;
 import menus.targetMenus.DropTargetMenu;
@@ -62,7 +66,7 @@ class MenuManager implements Observer
 	/**
 	 * Menu used to display unit inventory menu.
 	 */
-	private var unitInvMenu:ResizableBasicMenu;
+	private var unitInvMenu:InventoryMenu;
 	
 	/**
 	 * Menu used to select how to interact with an item in a unit's inventory.
@@ -77,7 +81,7 @@ class MenuManager implements Observer
 	/**
 	 * Menu used to trade items between two units.
 	 */
-	private var tradeActionMenu:ResizableBasicMenu;
+	private var tradeActionMenu:TradeMenu;
 	
 	/**
 	 * Menu used to select which enemy unit to attack.
@@ -110,6 +114,11 @@ class MenuManager implements Observer
 	private var dropTargetMenu:DropTargetMenu;
 	
 	/**
+	 * Menu used to manage player interaction in combat.
+	 */
+	private var combatMenu:CombatMenu;
+	
+	/**
 	 * X and Y coordinates that "root" level menus (unitAction & mapAction) should use to set 
 	 * 	its position when appearing in different regions of the screen.
 	 */
@@ -121,6 +130,14 @@ class MenuManager implements Observer
 	 */
 	private var cornerMenuPos:PossiblePosTracker;
 	
+	/**
+	 * X and Y coordinates that "middle" menus (at the moment, just the combat menu) should
+	 * 	use to set position when appearing in different regions of the screen.
+	 * 
+	 * NOTE: This position's X is just the middle of the screen, so some additional 
+	 * 	computations may be necessary to get the desired x positioning.
+	 */
+	private var middleMenuPos:PossiblePosTracker;
 	
 	/**
 	 * Tracks what horizontal position menus are currently in.
@@ -212,6 +229,8 @@ class MenuManager implements Observer
 	{
 		rootMenuPos  = new PossiblePosTracker(30, FlxG.width - 30, 60, FlxG.height - 60);
 		cornerMenuPos = new PossiblePosTracker(15, FlxG.width - 15, 15, FlxG.height - 15);
+		middleMenuPos = new PossiblePosTracker(FlxG.width / 2, FlxG.width / 2, 
+			300, FlxG.height - 300); 
 	}
 	
 	/**
@@ -276,6 +295,10 @@ class MenuManager implements Observer
 		dropTargetMenu = MissionMenuCreator.makeDropTargetMenu(cornerMenuPos.leftX,
 			cornerMenuPos.topY, MissionMenuTypes.DROP_TARGET);
 		dropTargetMenu.subject.addObserver(this);
+		
+		combatMenu = MissionMenuCreator.makeCombatMenu(middleMenuPos.leftX,
+			middleMenuPos.topY, MissionMenuTypes.COMBAT_MENU);
+		combatMenu.subject.addObserver(this);
 	}
 	
 	/**
@@ -299,6 +322,7 @@ class MenuManager implements Observer
 		totalFlxGrp.add(rescueTargetMenu.totalFlxGrp);
 		totalFlxGrp.add(takeTargetMenu.totalFlxGrp);
 		totalFlxGrp.add(dropTargetMenu.totalFlxGrp);
+		totalFlxGrp.add(combatMenu.totalFlxGrp);
 	}
 	
 	/**
@@ -317,16 +341,21 @@ class MenuManager implements Observer
 		// non-default open menu functions setup.
 		
 		openFunctions[MissionMenuTypes.UNIT_ACTION] = unitActionMenuOpen;
+		openFunctions[MissionMenuTypes.UNIT_INVENTORY] = unitInvMenuOpen;
+		openFunctions[MissionMenuTypes.ITEM_ACTION] = itemActionOpen;
 		openFunctions[MissionMenuTypes.ATTACK_TARGET] = attackTargetMenuOpen;
 		openFunctions[MissionMenuTypes.HEAL_TARGET] = healTargetMenuOpen;
 		openFunctions[MissionMenuTypes.TALK_TARGET] = talkTargetMenuOpen;
 		openFunctions[MissionMenuTypes.RESCUE_TARGET] = rescueTargetMenuOpen;
 		openFunctions[MissionMenuTypes.TAKE_TARGET] = takeTargetMenuOpen;
 		openFunctions[MissionMenuTypes.TRADE_TARGET] = tradeTargetMenuOpen;
+		openFunctions[MissionMenuTypes.TRADE_ACTION] = tradeActionMenuOpen;
+		openFunctions[MissionMenuTypes.COMBAT_MENU] = combatMenuOpen;
 		
 		
 		// non-default cancel functions
 		cancelFunctions[MissionMenuTypes.UNIT_ACTION] = unitActionMenuCancel;
+		cancelFunctions[MissionMenuTypes.ITEM_ACTION] = itemActionCancel;
 		cancelFunctions[MissionMenuTypes.TRADE_TARGET] = tradeMenuCancel;
 		cancelFunctions[MissionMenuTypes.TRADE_ACTION] = tradeMenuCancel;
 		
@@ -371,6 +400,7 @@ class MenuManager implements Observer
 		confirmFunctions[MissionMenuTypes.RESCUE_TARGET].push(rescueTargetConfirm);
 		confirmFunctions[MissionMenuTypes.TAKE_TARGET].push(takeTargetConfirm);
 		confirmFunctions[MissionMenuTypes.DROP_TARGET].push(dropTargetConfirm);
+		confirmFunctions[MissionMenuTypes.COMBAT_MENU].push(combatMenuConfirm);
 	}
 	
 	
@@ -539,7 +569,7 @@ class MenuManager implements Observer
 		
 		// Checking ATTACK option...
 		// 	If there are no enemies in range of any of the unit's weapons, no attacking.
-		if (parentState.getValidUnitsInRange(selectedUnit.attackRanges, 
+		if (parentState.getValidUnitsInRange(selectedUnit.get_attackRanges(), 
 			SimpleTargetTests.enemyUnitTest).length == 0)
 		{
 			whichOptionsActive[UnitActionMenuOptions.ATTACK] = false;
@@ -547,7 +577,7 @@ class MenuManager implements Observer
 		
 		// Checking HEAL option...
 		// 	If there are no allies in range of the unit's healing items, no healing.
-		if (parentState.getValidUnitsInRange(selectedUnit.healRanges,
+		if (parentState.getValidUnitsInRange(selectedUnit.get_healRanges(),
 			SimpleTargetTests.alliedUnitTest).length == 0)
 		{
 			whichOptionsActive[UnitActionMenuOptions.HEAL] = false;
@@ -609,6 +639,29 @@ class MenuManager implements Observer
 		unitActionMenu.changeMenuOptions(whichOptionsActive);
 	}
 	
+	private function itemActionOpen():Void
+	{
+		// Start with all 4 possible options set to be displayed.
+		var whichOptionsActive:Array<Bool> = [true, true, true, true];
+		
+		var selectedUnit:Unit = parentState.getSelectedUnit();
+		var selectedItem = selectedUnit.inventory.items[unitInvMenu.hoveredItemIndex];
+		
+		whichOptionsActive[ItemActionMenuOptions.EQUIP] = selectedUnit.canEquipItem(selectedItem);
+		whichOptionsActive[ItemActionMenuOptions.USE] = true;
+		
+		// Checking TRADE option...
+		// 	If the selected unit isn't adjacent to any allies, cannot trade.
+		if (parentState.getValidUnitsInRange([1], SimpleTargetTests.alliedUnitTest).length == 0)
+		{
+			whichOptionsActive[ItemActionMenuOptions.TRADE] = false;
+		}
+		
+		whichOptionsActive[ItemActionMenuOptions.DISCARD] = true;
+		
+		itemActionMenu.changeMenuOptions(whichOptionsActive);
+	}
+	
 	/**
 	 * Refreshes the set of available targets based on the selected unit's current weapon.
 	 */
@@ -647,6 +700,24 @@ class MenuManager implements Observer
 		tradeTargetMenu.refreshTargets(parentState);
 	}
 	
+	// More menu refreshing going on.
+	
+	private function tradeActionMenuOpen():Void
+	{
+		tradeActionMenu.setUnits(tradeTargetMenu.selectedUnit, cast tradeTargetMenu.currentTarget);
+		tradeActionMenu.refreshMenuOptions();
+	}
+	
+	private function unitInvMenuOpen():Void
+	{
+		unitInvMenu.selectedUnit = parentState.getSelectedUnit();
+	}
+	
+	private function combatMenuOpen():Void
+	{
+		combatMenu.setUnits(attackTargetMenu.selectedUnit, cast attackTargetMenu.currentTarget);
+		combatMenu.beginCombat();
+	}
 	
 	///////////////////////////////////////
 	//       MENU CONFIRM FUNCTIONS      //
@@ -814,6 +885,7 @@ class MenuManager implements Observer
 	private function itemEquipConfirm():Void
 	{
 		trace("Changing equipped item!");
+		parentState.getSelectedUnit().equipItem(unitInvMenu.hoveredItemIndex);
 		popMenuStack();
 	}
 	
@@ -881,7 +953,8 @@ class MenuManager implements Observer
 	private function attackTargetConfirm():Void
 	{
 		trace("Beginning attack!");
-		clearMenuStack();
+		hideMenuStack();
+		pushMenuStack(combatMenu);
 	}
 	
 	
@@ -944,6 +1017,16 @@ class MenuManager implements Observer
 	}
 	
 	
+	// combatMenu confirm function
+	
+	/**
+	 * Called when combat has ended successfully.
+	 */
+	private function combatMenuConfirm():Void
+	{
+		trace("Combat finished!");
+		clearMenuStack();
+	}
 	
 	
 	
@@ -969,6 +1052,16 @@ class MenuManager implements Observer
 	private function unitActionMenuCancel():Void
 	{
 		popMenuStack();
+	}
+	
+	/**
+	 * 
+	 */
+	private function itemActionCancel():Void
+	{
+		var hoveredItemIndex:Int = unitInvMenu.hoveredItemIndex;
+		popMenuStack();
+		unitInvMenu.rememberHoveredItem(hoveredItemIndex);
 	}
 	
 	/**
@@ -1057,7 +1150,7 @@ class MenuManager implements Observer
 			
 			//tradeTargetMenu.setPos(cornerMenuPos.rightX - tradeTargetMenu.boxWidth, 
 			//	cornerMenuPos.topY);
-			attackTargetMenu.setPos(cornerMenuPos.rightX - attackTargetMenu.boxWidth, 
+			attackTargetMenu.setPos(cornerMenuPos.rightX - attackTargetMenu.totalWidth, 
 				cornerMenuPos.topY);
 			//healTargetMenu.setPos(cornerMenuPos.rightX - healTargetMenu.boxWidth, 
 			//	cornerMenuPos.topY);
@@ -1072,6 +1165,30 @@ class MenuManager implements Observer
 		}
 		
 		menusOnLeft = goToLeft;
+	}
+	
+	/**
+	 * Public interface for changing the region of the screen that menus appear in.
+	 * 
+	 * Could be made more elegant by associating each menu with a position object,
+	 * 	and grouping all menus in an array of some sort. Then all that needs to be
+	 * 	done is iterate through the array and change the position of the current menu.
+	 * 
+	 * @param goToTop	Whether the menus should be positioned on top or bottom side.
+	 */
+	public function changeMenuYPositions(goToTop:Bool):Void
+	{
+		if (goToTop != menusOnTop && goToTop)
+		{
+			combatMenu.setPos(middleMenuPos.leftX - combatMenu.width / 2, middleMenuPos.topY);
+		}
+		else if (goToTop != menusOnTop && !goToTop)
+		{
+			combatMenu.setPos(middleMenuPos.leftX - combatMenu.width / 2, middleMenuPos.bottomY -
+				combatMenu.height);
+		}
+		
+		menusOnTop = goToTop;
 	}
 	
 	/**

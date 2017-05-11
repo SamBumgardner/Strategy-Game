@@ -7,6 +7,7 @@ import missions.MissionState;
 import observerPattern.Observed;
 import observerPattern.Observer;
 import observerPattern.eventSystem.InputEvent;
+import observerPattern.eventSystem.UnitEvents;
 import units.movement.ArrowTile;
 import units.movement.MoveID;
 import units.movement.PossibleMove;
@@ -16,6 +17,7 @@ import units.Unit;
 import units.UnitInfo;
 
 using units.movement.MoveIDExtender;
+using observerPattern.eventSystem.EventExtender;
 
 /**
  * A component of MissionState that acts as a middleman between MissionState 
@@ -191,6 +193,11 @@ class UnitManager implements Observer
 	public var selectedUnit:Unit = null;
 	
 	/**
+	 * Reference to the unit that is the target of the selected unit's current action.
+	 */
+	public var targetUnit:Unit = null;
+	
+	/**
 	 * Tracks the frame of the idle animation that all idling units should be on.
 	 * Should be updated with every update cycle.
 	 * Is used whenever a unit is instructed to start up it's idle animation again.
@@ -242,6 +249,20 @@ class UnitManager implements Observer
 		addUnitToMission(1, 0, dummyUnitInfo, TeamType.PLAYER);
 		addUnitToMission(2, 1, dummyUnitInfo, TeamType.PLAYER);
 		addUnitToMission(4, 4, dummyUnitInfo, TeamType.PLAYER);
+		
+		addUnitToMission(14, 10, dummyUnitInfo, TeamType.ENEMY);
+		addUnitToMission(10, 8, dummyUnitInfo, TeamType.ENEMY);
+		addUnitToMission(8, 14, dummyUnitInfo, TeamType.PLAYER);
+		addUnitToMission(14, 6, dummyUnitInfo, TeamType.PLAYER);
+		addUnitToMission(10, 3, dummyUnitInfo, TeamType.PLAYER);
+		
+		addUnitToMission(7, 2, dummyUnitInfo, TeamType.ENEMY);
+		addUnitToMission(12, 3, dummyUnitInfo, TeamType.ENEMY);
+		addUnitToMission(13, 14, dummyUnitInfo, TeamType.ENEMY);
+		addUnitToMission(1, 13, dummyUnitInfo, TeamType.ENEMY);
+		addUnitToMission(5, 10, dummyUnitInfo, TeamType.ENEMY);
+		addUnitToMission(3, 12, dummyUnitInfo, TeamType.ENEMY);
+		
 	}
 	
 	/**
@@ -372,9 +393,18 @@ class UnitManager implements Observer
 	 */
 	public function addUnitToMission(row:Int, col:Int, unitInfo:UnitInfo, team:TeamType):Unit
 	{
-		var newUnit:Unit;
+		var newUnit:Unit = null;
 		// Temporary code, can't actually use unitInfo yet.
-		newUnit = new Unit(row, col, AssetPaths.eldon_sheet__png, unitArray.length, team);
+		if (team == TeamType.PLAYER)
+		{
+			newUnit = new Unit(row, col, AssetPaths.eldon_sheet__png, unitArray.length, team, "Eldon");
+		}
+		if (team == TeamType.ENEMY)
+		{
+			newUnit = new Unit(row, col, AssetPaths.enemy_scallywag__png, unitArray.length, team, "Mercenary");
+		}
+		
+		newUnit.subject.addObserver(this);
 		
 		unitFlxGrp.add(newUnit);
 		unitArray.push(newUnit);
@@ -392,6 +422,18 @@ class UnitManager implements Observer
 		findMoveAndAttackRange(newUnit);
 		
 		return newUnit;
+	}
+	
+	public function removeUnitFromMission(unit:Unit):Void
+	{
+		unitFlxGrp.remove(unit);
+		unitHasProcessedArr[unit.subject.ID] = -1;
+		unitArray[unit.subject.ID] = null;
+		unitMap[unit.preMoveMapPos.getRow()][unit.preMoveMapPos.getCol()] = -1;
+		teamMap[unit.preMoveMapPos.getRow()][unit.preMoveMapPos.getCol()] = TeamID.NONE;
+		tileChanges.push(new TileChange(unit.preMoveMapPos, true, unit.teamID));
+		
+		trace("Unit Died...");
 	}
 	
 	/**
@@ -675,7 +717,12 @@ class UnitManager implements Observer
 	 */
 	public function onNotify(event:InputEvent, notifier:Observed):Void 
 	{
-		
+		var notifyingUnit:Unit = cast notifier;
+		trace("UnitManager's onNotify was called");
+		if (event.getType() == UnitEvents.DIED)
+		{
+			removeUnitFromMission(notifyingUnit);
+		}
 	}
 	
 	
@@ -714,6 +761,18 @@ class UnitManager implements Observer
 	 */
 	private function displayUnitMoveAttackRange(unit:Unit):Void
 	{
+		if (unit.rangesHaveChanged)
+		{
+			var moveTilesArray:Array<MoveID> = new Array<MoveID>();
+			for (key in unit.moveTiles.keys())
+			{
+				moveTilesArray.push(key);
+			}
+			calculateAttackTiles(unit, moveTilesArray);
+			
+			unit.rangesHaveChanged = false;
+		}
+		
 		// Display all movement range (blue) RangeTiles.
 		for (moveID in unit.moveTiles.keys())
 		{
@@ -954,7 +1013,7 @@ class UnitManager implements Observer
 	 * They'll correctly fill in the cost to reach the newly opened tiles and propogate those 
 	 * 	changes across the whole movement range as needed.
 	 * 
-	 * Also calls calculateAttackTiles() to update the unit's attack range to match.
+	 * Also calls addToAttackTiles() to update the unit's attack range to match.
 	 * 
 	 * @param	unit		The unit whose movement/attack range is being recalculated.
 	 * @param	openedTiles	Array of MoveIDs of newly opened tiles. Used to determine what tiles 
@@ -978,7 +1037,8 @@ class UnitManager implements Observer
 		}
 		
 		var addedTiles:Array<MoveID> = bfCalcMoveTiles(unit, tilesToBfCalcFrom);
-		calculateAttackTiles(unit, addedTiles);
+		
+		addToAttackTiles(unit, addedTiles);
 	}
 	
 	/**
@@ -1386,6 +1446,33 @@ class UnitManager implements Observer
 	
 	/**
 	 * Calculates the set of tiles a unit can attack based on the contents of their moveTiles
+	 * 	map. The procedure is straightforward: First, clear the unit's attack tiles array.
+	 * 	For each tile in the validMoves array, find all tiles within that unit's attack range 
+	 * 	by using getValidNeighbors. Then add those tiles to the unit's attackTiles map.
+	 * 
+	 * Isn't as nicely optimized as the functions that recalculate movement tiles. One attack
+	 * 	tile will likely be visited many times over the course of the function.
+	 * 
+	 * @param	unit		The unit whose attack tiles are being calculated.
+	 * @param	validMoves	The array of tiles that the attack ranges should be calculated from?
+	 */
+	public function calculateAttackTiles(unit:Unit, validMoves:Array<MoveID>):Void
+	{
+		unit.attackTiles = new Map<MoveID, Bool>();
+		for (move in validMoves)
+		{
+			var validAttackTiles:Array<MoveID> = getValidNeighbors(move, unit.get_attackRanges(), 
+				function(_, __){return true;});
+			
+			for (tile in validAttackTiles)
+			{
+				unit.attackTiles.set(tile, true);
+			}
+		}
+	}
+	
+	/**
+	 * Calculates the set of tiles a unit can attack based on the contents of their moveTiles
 	 * 	map. The procedure is straightforward: for each tile in the validMoves array, find all
 	 * 	tiles within that unit's attack range by using getValidNeighbors. Then add those tiles
 	 * 	to the unit's attackTiles map.
@@ -1396,11 +1483,11 @@ class UnitManager implements Observer
 	 * @param	unit		The unit whose attack tiles are being calculated.
 	 * @param	validMoves	The array of tiles that the attack ranges should be calculated from?
 	 */
-	public function calculateAttackTiles(unit:Unit, validMoves:Array<MoveID>):Void
+	public function addToAttackTiles(unit:Unit, validMoves:Array<MoveID>):Void
 	{
 		for (move in validMoves)
 		{
-			var validAttackTiles:Array<MoveID> = getValidNeighbors(move, unit.attackRanges, 
+			var validAttackTiles:Array<MoveID> = getValidNeighbors(move, unit.get_attackRanges(), 
 				function(_, __){return true;});
 			
 			for (tile in validAttackTiles)
@@ -1482,14 +1569,14 @@ class UnitManager implements Observer
 		for (move in blockedMoves)
 		{
 			var possiblyBlockedAttacks:Array<MoveID> = getValidNeighbors(move, 
-				unit.attackRanges, function(_, __){return true; });
+				unit.get_attackRanges(), function(_, __){return true; });
 			
 			for (attack in possiblyBlockedAttacks)
 			{
 				if (!checkedAttackTiles.exists(attack))
 				{
 					var validMoveToAttackFrom:Array<MoveID> = getValidNeighbors(attack, 
-						unit.attackRanges, attackTileBlockedTest.bind(unit), true);
+						unit.get_attackRanges(), attackTileBlockedTest.bind(unit), true);
 					
 					if (validMoveToAttackFrom.length == 0)
 					{

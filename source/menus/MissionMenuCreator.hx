@@ -1,6 +1,8 @@
 package menus;
 import menus.cursorMenus.BasicMenu;
+import menus.cursorMenus.InventoryMenu;
 import menus.cursorMenus.ResizableBasicMenu;
+import menus.cursorMenus.TradeMenu;
 import menus.targetMenus.AttackTargetMenu;
 import menus.targetMenus.DropTargetMenu;
 import menus.targetMenus.HealTargetMenu;
@@ -37,6 +39,7 @@ import menus.targetMenus.TradeTargetMenu;
  * 		rescue target
  * 		take target
  * 		drop target
+ * 		combat menu
  * 
  * NOTE: Need to update documentation.
  * 
@@ -95,10 +98,9 @@ class MissionMenuCreator
 	 * @return	A ResizeableBasicMenu with all of the options needed by the map action menu.
 	 */
 	public static function makeInventoryMenu(?X:Float = 0, ?Y:Float = 0, 
-		?ID:Int = 0):ResizableBasicMenu
+		?ID:Int = 0):InventoryMenu
 	{
-		return new ResizableBasicMenu(X, Y, ["Item 1", "Item 2", "Item 3", "Item 4", "Item 5"], 
-			ID);
+		return new InventoryMenu(X, Y, ID);
 	}
 	
 	/**
@@ -144,9 +146,9 @@ class MissionMenuCreator
 	 * @return	A ResizeableBasicMenu with all of the options needed by the map action menu.
 	 */
 	public static function makeTradeActionMenu(?X:Float = 0, ?Y:Float = 0, 
-		?ID:Int = 0):ResizableBasicMenu
+		?ID:Int = 0):TradeMenu
 	{
-		return new ResizableBasicMenu(X, Y, ["Trade 1", "Trade 2"], ID);
+		return new TradeMenu(X, Y, ID);
 	}
 	
 	/**
@@ -237,5 +239,14 @@ class MissionMenuCreator
 		?ID:Int = 0):DropTargetMenu
 	{
 		return new DropTargetMenu(ID);
+	}
+	
+	/**
+	 * 
+	 */
+	public static function makeCombatMenu(?X:Float = 0, ?Y:Float = 0, 
+		?ID:Int = 0):CombatMenu
+	{
+		return new CombatMenu(X, Y, ID);
 	}
 }

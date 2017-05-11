@@ -121,8 +121,9 @@ class MenuOption implements HideableEntity
 		id = ID;
 		
 		label = new FlxText(labelX, labelY, labelWidth, labelText, labelSize);
+		labelPos.set(labelX, labelY);
 		
-		cursorOffsetY = (label.height / 2) - (cursorSideLength / 2);
+		cursorOffsetY = Math.floor((label.height / 2) - (cursorSideLength / 2));
 		cursorPos.set(labelX + cursorOffsetX, labelY + cursorOffsetY);
 		
 		if (hasBgHighlight)

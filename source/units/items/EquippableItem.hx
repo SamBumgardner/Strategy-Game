@@ -8,10 +8,14 @@ class EquippableItem extends Item
 {
 
 	public var weight:Int = 4;
+	public var accuracy:Int = 80;
+	public var damage:Int = 5;
+	public var critChance:Int = 15;
 	
-	public function new(rangeArr:Array<Int>, type:ItemTypes) 
+	
+	public function new(itemName:String, rangeArr:Array<Int>, type:ItemTypes) 
 	{
-		super(rangeArr, type);
+		super(itemName, rangeArr, type);
 	}
 	
 }
