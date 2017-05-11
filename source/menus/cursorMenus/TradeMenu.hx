@@ -406,17 +406,18 @@ class TradeMenu extends CursorMenuTemplate
 		var changeOccurred:Bool = false;
 		
 		// Finalize item changes, items exchanging inventories counts as a meaning ful change.
-		changeOccurred = invBox1.trackedInventory.finalizeItemInfo() || 
-			invBox2.trackedInventory.finalizeItemInfo();
+		changeOccurred = invBox1.trackedInventory.finalizeItemInfo();
+		changeOccurred = invBox2.trackedInventory.finalizeItemInfo() || changeOccurred;
 		
 		// Determine if either inventory has a new equipped item.
 		invBox1.trackedInventory.updateEquippedItem();
+		
 		
 		// Update overall list of equippable weapon indices for both inventories.
 		invBox1.trackedInventory.updateEquippableIndices();
 		invBox2.trackedInventory.updateEquippableIndices();
 		
 		// NOTE: Changing the other target's equipped item counts as a meaningful change.
-		changeOccurred = changeOccurred || invBox2.trackedInventory.updateEquippedItem();
+		changeOccurred = invBox2.trackedInventory.updateEquippedItem() || changeOccurred;
 	}
 }

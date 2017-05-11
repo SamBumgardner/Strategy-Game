@@ -121,7 +121,16 @@ class Inventory
 		var changedEquipped:Bool = false;
 		
 		// TODO: do a more robust check if item is equippable.
-		if (owner.equippedItem != items[0])
+		
+		if (items.length == 0)
+		{
+			if (owner.equippedItem != null)
+			{
+				owner.equippedItem = null;
+				changedEquipped = true;
+			}
+		}
+		else if (owner.equippedItem != items[0])
 		{
 			if (owner.canEquipItem(items[0]))
 			{
