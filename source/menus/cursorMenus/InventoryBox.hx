@@ -226,7 +226,7 @@ class InventoryBox implements VarSizedBox
 				}
 			}
 		}
-		boxHeight = Math.floor(itemSlotInterval * trackedInventory.items.length + cornerSize);
+		boxHeight = Math.floor(itemSlotInterval * Math.max(trackedInventory.items.length, 1) + cornerSize);
 		resizableBox.resize(boxWidth, boxHeight);
 	}
 }

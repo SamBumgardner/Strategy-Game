@@ -207,6 +207,20 @@ class TradeMenu extends CursorMenuTemplate
 		refreshMenuOptions();
 		super.resetMenu();
 		selectedCursor.visible = false;
+		
+		// Avoid situations where the first inv box has no items
+		// and the cursor is stuck in a menu without any connections
+		// to the other box.
+		if (currMenuOption != null)
+		{
+			trace(currMenuOption.label.visible);
+			while (currMenuOption.label.visible == false)
+			{
+				currMenuOption = menuOptionArr[(currMenuOption.id + 1) % menuOptionArr.length];
+				menuCursor.setAnchor(currMenuOption.cursorPos.x, currMenuOption.cursorPos.y);
+				menuCursor.jumpToAnchor();
+			}
+		}
 	}
 	
 	/**
