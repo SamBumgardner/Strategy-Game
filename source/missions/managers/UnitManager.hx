@@ -249,6 +249,20 @@ class UnitManager implements Observer
 		addUnitToMission(1, 0, dummyUnitInfo, TeamType.PLAYER);
 		addUnitToMission(2, 1, dummyUnitInfo, TeamType.PLAYER);
 		addUnitToMission(4, 4, dummyUnitInfo, TeamType.PLAYER);
+		
+		addUnitToMission(14, 10, dummyUnitInfo, TeamType.ENEMY);
+		addUnitToMission(10, 8, dummyUnitInfo, TeamType.ENEMY);
+		addUnitToMission(8, 14, dummyUnitInfo, TeamType.PLAYER);
+		addUnitToMission(14, 6, dummyUnitInfo, TeamType.PLAYER);
+		addUnitToMission(10, 3, dummyUnitInfo, TeamType.PLAYER);
+		
+		addUnitToMission(7, 2, dummyUnitInfo, TeamType.ENEMY);
+		addUnitToMission(12, 3, dummyUnitInfo, TeamType.ENEMY);
+		addUnitToMission(13, 14, dummyUnitInfo, TeamType.ENEMY);
+		addUnitToMission(1, 13, dummyUnitInfo, TeamType.ENEMY);
+		addUnitToMission(5, 10, dummyUnitInfo, TeamType.ENEMY);
+		addUnitToMission(3, 12, dummyUnitInfo, TeamType.ENEMY);
+		
 	}
 	
 	/**
@@ -379,9 +393,16 @@ class UnitManager implements Observer
 	 */
 	public function addUnitToMission(row:Int, col:Int, unitInfo:UnitInfo, team:TeamType):Unit
 	{
-		var newUnit:Unit;
+		var newUnit:Unit = null;
 		// Temporary code, can't actually use unitInfo yet.
-		newUnit = new Unit(row, col, AssetPaths.eldon_sheet__png, unitArray.length, team, "Eldon");
+		if (team == TeamType.PLAYER)
+		{
+			newUnit = new Unit(row, col, AssetPaths.eldon_sheet__png, unitArray.length, team, "Eldon");
+		}
+		if (team == TeamType.ENEMY)
+		{
+			newUnit = new Unit(row, col, AssetPaths.enemy_scallywag__png, unitArray.length, team, "Mercenary");
+		}
 		
 		newUnit.subject.addObserver(this);
 		
