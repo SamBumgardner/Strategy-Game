@@ -88,7 +88,7 @@ class CombatMenu extends MenuTemplate
 		
 		attacker.attackAnimate(defender.mapPos);
 		
-		var hitRoll:Int = FlxG.random.int(1, 100);
+		var hitRoll:Int = Math.floor((FlxG.random.int(1, 100) + FlxG.random.int(1, 100)) / 2);
 		var critRoll:Int = FlxG.random.int(1, 100);
 		
 		if (hitRoll <= attacker.accuracy - defender.evade)

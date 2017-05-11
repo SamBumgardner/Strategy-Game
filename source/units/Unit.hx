@@ -273,7 +273,7 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	
 	public function calcDerivedStats(itemToUse:EquippableItem):Void
 	{
-		attackSpeed = agility - Math.floor(Math.max(itemToUse.weight - weight, 0));
+		attackSpeed = Math.floor(Math.max(agility - Math.max(itemToUse.weight - weight, 0), 0));
 		accuracy = itemToUse.accuracy + skill * 2 + cast (luck / 2);
 		evade = attackSpeed * 2 + luck;
 		attackDamage = strength + itemToUse.weight;
