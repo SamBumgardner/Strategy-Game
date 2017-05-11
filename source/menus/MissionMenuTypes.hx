@@ -23,12 +23,13 @@ class MissionMenuTypes
 	public static var ITEM_ACTION(default, never)			= 3;
 	public static var TRADE_TARGET(default, never)			= 4;
 	public static var TRADE_ACTION(default, never)			= 5;
-	public static var WEAPON_SELECT(default, never)			= 6;
-	public static var ATTACK_TARGET(default, never)			= 7;
-	public static var HEAL_TARGET(default, never)			= 8;
+	public static var ATTACK_TARGET(default, never)			= 6;
+	public static var HEAL_TARGET(default, never)			= 7;
+	public static var TALK_TARGET(default, never)			= 8;
 	public static var RESCUE_TARGET(default, never)			= 9;
 	public static var TAKE_TARGET(default, never)			= 10;
 	public static var DROP_TARGET(default, never)			= 11;
+	public static var COMBAT_MENU(default, never)			= 12;
 	
-	public static var NUM_OF_MENUS(default, never)			= 12;
+	public static var NUM_OF_MENUS(default, never)			= 13;
 }

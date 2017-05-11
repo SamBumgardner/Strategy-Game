@@ -1,7 +1,8 @@
-package menus;
+package menus.cursorMenus;
 
 import boxes.ResizableBox;
 import flixel.text.FlxText;
+import menus.cursorMenus.BasicMenu;
 import observerPattern.Observed;
 import utilities.HideableEntity;
 import utilities.UpdatingEntity;
@@ -272,6 +273,7 @@ class ResizableBasicMenu extends BasicMenu
 			if (i > 0) 
 			{
 				menuOptionArr[i].upOption = menuOptionArr[i - 1];
+				menuOptionArr[i].downIsWrap = false;
 				menuOptionArr[i - 1].downOption = menuOptionArr[i];
 			}
 			

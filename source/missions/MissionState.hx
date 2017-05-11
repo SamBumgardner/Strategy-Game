@@ -9,10 +9,10 @@ import flixel.math.FlxRect;
 import flixel.tile.FlxTilemap;
 import inputHandlers.ActionInputHandler;
 import inputHandlers.MoveInputHandler;
-import menus.BasicMenu;
+import menus.cursorMenus.BasicMenu;
 import menus.MenuTemplate;
 import menus.MissionMenuTypes;
-import menus.ResizableBasicMenu;
+import menus.cursorMenus.ResizableBasicMenu;
 import missions.managers.MapCursorManager;
 import missions.managers.MenuManager;
 import missions.managers.UnitManager;
@@ -20,6 +20,8 @@ import observerPattern.Observer;
 import observerPattern.eventSystem.EventTypes;
 import observerPattern.eventSystem.InputEvent;
 import units.MapCursorUnitTypes;
+import units.items.Inventory;
+import units.items.Item;
 import units.movement.MoveID;
 import units.Unit;
 import utilities.StrategyOgmoLoader;
@@ -344,7 +346,7 @@ class MissionState extends FlxState
 				mapCursor.selectedLocations.exists(mapCursorManager.currCursorPos))
 			{
 				controlState = PlayerControlStates.UNIT_MENU;
-				unitManager.initiateUnitMovement();
+				unitManager.initiateUnitMovement(mapCursor.row, mapCursor.col);
 				mapCursorManager.deactivateMapCursor();
 				// waits to open unit menu until player unit finishes moving.
 			}
@@ -395,6 +397,7 @@ class MissionState extends FlxState
 	{
 		mapCursorManager.deactivateMapCursor();
 		menuManager.changeMenuXPositions(!mapCursorManager.cursorOnLeft);
+		menuManager.changeMenuYPositions(!mapCursorManager.cursorOnTop);
 	}
 	
 	/**
@@ -436,7 +439,7 @@ class MissionState extends FlxState
 			{
 				controlState = PlayerControlStates.FREE_MOVE;
 				mapCursorManager.activateMapCursor();
-				unitManager.updateUnitPos(unitManager.selectedUnit, mapCursor.row, mapCursor.col);
+				unitManager.confirmUnitMove();
 				unitManager.unitUnselected();
 				mapCursorManager.unitUnselected();
 			}
@@ -454,6 +457,48 @@ class MissionState extends FlxState
 		currentlyUpdatingObject = newObj;
 		ActionInputHandler.resetNumVars();
 		MoveInputHandler.resetNumVars();
+	}
+	
+	///////////////////////////////////////
+	//      SELECTED UNIT ACTIONS        //
+	///////////////////////////////////////
+	
+	/**
+	 * Gets the value of unitManager's selectedUnit variable.
+	 * 
+	 * @return	The unitManager's currently selectedUnit.
+	 */
+	public function getSelectedUnit():Unit
+	{
+		return unitManager.selectedUnit;
+	}
+	
+	/**
+	 * Hands off the provided arguments to unitManager's getValidUnitsInRange, whose
+	 * 	documentation is included below:
+	 * 
+	 * Identifies the group of units within "range" of the current selected unit that
+	 * 	pass the provided test function. Will often be used by target-type menus to 
+	 * 	identify the set of targets they can look at.
+	 * 
+	 * @param	rangesToCheck	An array of neighbor distances to check. [1] means only check
+	 * 							1-distance away neighbors, [1,2] means check both 1- and 
+	 * 							2-distance away neighbors, etc.
+	 * @param	testFunc     	A function that returns true if the neighbor Unit should be 
+	 * 							included in the returned array of valid Units. The first
+	 *                       	argument should be for the currently selected unit, and
+	 *       	             	the second argument should be for the neighbor to be checked.
+	 * 
+	 * @return	An array containing all valid Unit objects within range.
+	 */
+	public function getValidUnitsInRange(rangesToCheck:Array<Int>, 
+		testFunc:Unit->Unit->Bool):Array<Unit>
+	{
+		var unitArray:Array<Unit>;
+		
+		unitArray = unitManager.getValidUnitsInRange(rangesToCheck, testFunc);
+		
+		return unitArray;
 	}
 	
 	///////////////////////////////////////

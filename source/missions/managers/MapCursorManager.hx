@@ -237,7 +237,7 @@ class MapCursorManager implements Observer
 	 */
 	public function jumpToUnit(unit:Unit):Void
 	{
-		mapCursor.jumpToPosition(unit.mapRow, unit.mapCol);
+		mapCursor.jumpToPosition(unit.mapPos.getRow(), unit.mapPos.getCol());
 	}
 	
 	/**

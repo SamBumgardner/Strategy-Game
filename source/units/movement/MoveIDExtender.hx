@@ -73,11 +73,11 @@ class MoveIDExtender
 	 * 
 	 * @param	rowOffset	Number of rows the requested tile is offset from the provided tile.
 	 * @param	colOffset	Number of cols the requested tile is offset from the provided tile.
-	 * @return	MoveID of the requested offset, or null if the requested location was outside map.
+	 * @return	MoveID of the requested offset, or -1 if the requested location was outside map.
 	 */
 	static public function getOtherByOffset(moveID:MoveID, rowOffset:Int, colOffset:Int):MoveID
 	{
-		var targetMoveID:MoveID = null;
+		var targetMoveID:MoveID = -1;
 		
 		var newRow = getRow(moveID) + rowOffset;
 		var newCol = getCol(moveID) + colOffset;
