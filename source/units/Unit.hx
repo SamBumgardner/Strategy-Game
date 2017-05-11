@@ -209,10 +209,11 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 		loadGraphic(spriteSheet, true, spriteWidth, spriteHeight);
 		animation.add("up", [0, 1, 2, 3], 6);
 		animation.add("down", [4, 5, 6, 7], 6);
-		animation.add("left", [16, 17, 18, 17], 6);
-		animation.add("right", [19, 20, 21, 20], 6);
-		animation.add("hover", [9, 9, 9, 8, 10, 11, 11, 10, 10, 11, 11, 8], 10);
-		animation.add("idle", [12, 13, 12, 13, 14, 15], 2);
+		animation.add("right", [8, 11, 10, 9], 4);
+		animation.add("left", [12, 13, 14, 15], 4);
+		// Hover and idle haven't been drawn for the new sprite yet, so no animations for now.
+		animation.add("hover", [16], 1);
+		animation.add("idle", [16], 1);
 		
 		animation.play("idle");
 		
