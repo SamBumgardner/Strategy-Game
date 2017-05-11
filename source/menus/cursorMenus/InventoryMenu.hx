@@ -111,8 +111,10 @@ class InventoryMenu extends CursorMenuTemplate
 		hoveredItemIndex = currMenuOption.id;
 	}
 	
-	public function rememberHoveredItem():Void
+	public function rememberHoveredItem(hoveredItemID:Int):Void
 	{
+		hoveredItemIndex = hoveredItemID;
+		
 		// If the old hovered item is still an active option,
 		if (menuOptionArr[hoveredItemIndex].label.visible == true)
 		{

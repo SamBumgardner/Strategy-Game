@@ -11,6 +11,7 @@ import menus.MissionMenuTypes;
 import menus.cursorMenus.InventoryMenu;
 import menus.cursorMenus.ResizableBasicMenu;
 import menus.cursorMenus.TradeMenu;
+import menus.cursorMenus.optionEnums.ItemActionMenuOptions;
 import menus.cursorMenus.optionEnums.UnitActionMenuOptions;
 import menus.targetMenus.AttackTargetMenu;
 import menus.targetMenus.DropTargetMenu;
@@ -341,6 +342,7 @@ class MenuManager implements Observer
 		
 		openFunctions[MissionMenuTypes.UNIT_ACTION] = unitActionMenuOpen;
 		openFunctions[MissionMenuTypes.UNIT_INVENTORY] = unitInvMenuOpen;
+		openFunctions[MissionMenuTypes.ITEM_ACTION] = itemActionOpen;
 		openFunctions[MissionMenuTypes.ATTACK_TARGET] = attackTargetMenuOpen;
 		openFunctions[MissionMenuTypes.HEAL_TARGET] = healTargetMenuOpen;
 		openFunctions[MissionMenuTypes.TALK_TARGET] = talkTargetMenuOpen;
@@ -635,6 +637,29 @@ class MenuManager implements Observer
 		}
 		
 		unitActionMenu.changeMenuOptions(whichOptionsActive);
+	}
+	
+	private function itemActionOpen():Void
+	{
+		// Start with all 4 possible options set to be displayed.
+		var whichOptionsActive:Array<Bool> = [true, true, true, true];
+		
+		var selectedUnit:Unit = parentState.getSelectedUnit();
+		var selectedItem = selectedUnit.inventory.items[unitInvMenu.hoveredItemIndex];
+		
+		whichOptionsActive[ItemActionMenuOptions.EQUIP] = selectedUnit.canEquipItem(selectedItem);
+		whichOptionsActive[ItemActionMenuOptions.USE] = true;
+		
+		// Checking TRADE option...
+		// 	If the selected unit isn't adjacent to any allies, cannot trade.
+		if (parentState.getValidUnitsInRange([1], SimpleTargetTests.alliedUnitTest).length == 0)
+		{
+			whichOptionsActive[ItemActionMenuOptions.TRADE] = false;
+		}
+		
+		whichOptionsActive[ItemActionMenuOptions.DISCARD] = true;
+		
+		itemActionMenu.changeMenuOptions(whichOptionsActive);
 	}
 	
 	/**
@@ -1034,8 +1059,9 @@ class MenuManager implements Observer
 	 */
 	private function itemActionCancel():Void
 	{
+		var hoveredItemIndex:Int = unitInvMenu.hoveredItemIndex;
 		popMenuStack();
-		unitInvMenu.rememberHoveredItem();
+		unitInvMenu.rememberHoveredItem(hoveredItemIndex);
 	}
 	
 	/**
