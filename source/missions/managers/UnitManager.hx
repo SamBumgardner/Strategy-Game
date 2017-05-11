@@ -740,6 +740,19 @@ class UnitManager implements Observer
 	 */
 	private function displayUnitMoveAttackRange(unit:Unit):Void
 	{
+		if (unit.rangesHaveChanged)
+		{
+			var moveTilesArray:Array<MoveID> = new Array<MoveID>();
+			for (key in unit.moveTiles.keys())
+			{
+				moveTilesArray.push(key);
+			}
+			
+			calculateAttackTiles(unit, moveTilesArray);
+			
+			unit.rangesHaveChanged = false;
+		}
+		
 		// Display all movement range (blue) RangeTiles.
 		for (moveID in unit.moveTiles.keys())
 		{
@@ -1424,6 +1437,7 @@ class UnitManager implements Observer
 	 */
 	public function calculateAttackTiles(unit:Unit, validMoves:Array<MoveID>):Void
 	{
+		unit.attackTiles = new Map<MoveID, Bool>();
 		for (move in validMoves)
 		{
 			var validAttackTiles:Array<MoveID> = getValidNeighbors(move, unit.get_attackRanges(), 

@@ -146,6 +146,8 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	// List of integer ranges this unit can heal, based on contents of inventory.
 	private var healRanges:Array<Int>;
 	
+	public var rangesHaveChanged:Bool = false;
+	
 	public var equippedItem:EquippableItem;
 	
 	
@@ -444,6 +446,7 @@ class Unit extends FlxSprite implements Observed implements OnMapEntity
 	{
 		updateAttackRanges();
 		updateHealRanges();
+		rangesHaveChanged = true;
 	}
 	
 	static public function attackTweenFunc(unit:Unit, targetMoveID:MoveID, distTravelled:Float):Void
