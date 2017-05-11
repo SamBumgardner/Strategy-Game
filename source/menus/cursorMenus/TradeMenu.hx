@@ -213,7 +213,6 @@ class TradeMenu extends CursorMenuTemplate
 		// to the other box.
 		if (currMenuOption != null)
 		{
-			trace(currMenuOption.label.visible);
 			while (currMenuOption.label.visible == false)
 			{
 				currMenuOption = menuOptionArr[(currMenuOption.id + 1) % menuOptionArr.length];

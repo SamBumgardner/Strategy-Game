@@ -747,7 +747,6 @@ class UnitManager implements Observer
 			{
 				moveTilesArray.push(key);
 			}
-			
 			calculateAttackTiles(unit, moveTilesArray);
 			
 			unit.rangesHaveChanged = false;
@@ -993,7 +992,7 @@ class UnitManager implements Observer
 	 * They'll correctly fill in the cost to reach the newly opened tiles and propogate those 
 	 * 	changes across the whole movement range as needed.
 	 * 
-	 * Also calls calculateAttackTiles() to update the unit's attack range to match.
+	 * Also calls addToAttackTiles() to update the unit's attack range to match.
 	 * 
 	 * @param	unit		The unit whose movement/attack range is being recalculated.
 	 * @param	openedTiles	Array of MoveIDs of newly opened tiles. Used to determine what tiles 
@@ -1017,7 +1016,8 @@ class UnitManager implements Observer
 		}
 		
 		var addedTiles:Array<MoveID> = bfCalcMoveTiles(unit, tilesToBfCalcFrom);
-		calculateAttackTiles(unit, addedTiles);
+		
+		addToAttackTiles(unit, addedTiles);
 	}
 	
 	/**
@@ -1425,9 +1425,9 @@ class UnitManager implements Observer
 	
 	/**
 	 * Calculates the set of tiles a unit can attack based on the contents of their moveTiles
-	 * 	map. The procedure is straightforward: for each tile in the validMoves array, find all
-	 * 	tiles within that unit's attack range by using getValidNeighbors. Then add those tiles
-	 * 	to the unit's attackTiles map.
+	 * 	map. The procedure is straightforward: First, clear the unit's attack tiles array.
+	 * 	For each tile in the validMoves array, find all tiles within that unit's attack range 
+	 * 	by using getValidNeighbors. Then add those tiles to the unit's attackTiles map.
 	 * 
 	 * Isn't as nicely optimized as the functions that recalculate movement tiles. One attack
 	 * 	tile will likely be visited many times over the course of the function.
@@ -1438,6 +1438,32 @@ class UnitManager implements Observer
 	public function calculateAttackTiles(unit:Unit, validMoves:Array<MoveID>):Void
 	{
 		unit.attackTiles = new Map<MoveID, Bool>();
+		for (move in validMoves)
+		{
+			var validAttackTiles:Array<MoveID> = getValidNeighbors(move, unit.get_attackRanges(), 
+				function(_, __){return true;});
+			
+			for (tile in validAttackTiles)
+			{
+				unit.attackTiles.set(tile, true);
+			}
+		}
+	}
+	
+	/**
+	 * Calculates the set of tiles a unit can attack based on the contents of their moveTiles
+	 * 	map. The procedure is straightforward: for each tile in the validMoves array, find all
+	 * 	tiles within that unit's attack range by using getValidNeighbors. Then add those tiles
+	 * 	to the unit's attackTiles map.
+	 * 
+	 * Isn't as nicely optimized as the functions that recalculate movement tiles. One attack
+	 * 	tile will likely be visited many times over the course of the function.
+	 * 
+	 * @param	unit		The unit whose attack tiles are being calculated.
+	 * @param	validMoves	The array of tiles that the attack ranges should be calculated from?
+	 */
+	public function addToAttackTiles(unit:Unit, validMoves:Array<MoveID>):Void
+	{
 		for (move in validMoves)
 		{
 			var validAttackTiles:Array<MoveID> = getValidNeighbors(move, unit.get_attackRanges(), 
