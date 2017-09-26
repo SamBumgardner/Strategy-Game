@@ -311,7 +311,6 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		nameBox2.setPos(nameBox2OffsetX, nameBox2OffsetY); 
 		totalWidth = nameBox2.nameBox.x + nameBox2.boxWidth - nameBox1.nameBox.x;
 		
-		
 		return currentTarget;
 	}
 	
@@ -329,15 +328,12 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 			Std.string(Std.int(Math.min(Math.max(new_unit.critChance - enemy_unit.dodge, 0), 100)));
 		
 		setDoubleHit(colIndex, new_unit, enemy_unit);
-		trace(doubleHitSprite.visible);
 	}
 	
 	private function setDoubleHit(colIndex:Int, new_unit:Unit, enemy_unit:Unit):Void
 	{
-		trace(colIndex, new_unit.attackSpeed, enemy_unit.attackSpeed);
 		if (new_unit.attackSpeed >= enemy_unit.attackSpeed + 4)
 		{
-			trace("Someone gets a double!");
 			if (doubleHitColumn != colIndex)
 			{
 				var newX:Float = InfoArray[InfoWindowRows.MIGHT][colIndex].x + doubleHitOffsetX;
@@ -351,7 +347,6 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		}
 		else if (doubleHitColumn == colIndex)
 		{
-			trace("deactivated double");
 			doubleHitSprite.visible = false;
 			doubleHitColumn = InfoWindowCols.NONE;
 		}
@@ -425,8 +420,6 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		{
 			doubleHitSprite.visible = false;
 		}
-		
-		trace("reveal just happened");
 	}
 }
 
