@@ -405,13 +405,16 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 	
 	override public function setPos(newX:Float, newY:Float):Void
 	{
+		var oldX = x;
+		var oldY = y;
+		
 		super.setPos(newX, newY);
 		
-		nameBox1.nameBox.x = newX;
-		nameBox1.nameBox.y = newY;
+		nameBox1.nameBox.x += newX - oldX;
+		nameBox1.nameBox.y += newY - oldY;
 		
-		nameBox2.nameBox.x = newX + nameBox2OffsetX;
-		nameBox2.nameBox.y = newY + nameBox2OffsetY;
+		nameBox2.nameBox.x += newX - oldX;
+		nameBox2.nameBox.y += newY - oldY;
 	}
 	
 	override public function reveal():Void
