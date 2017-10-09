@@ -17,6 +17,8 @@ import observerPattern.eventSystem.EventTypes;
 import utilities.HideableEntity;
 import observerPattern.Observed;
 import observerPattern.Subject;
+import utilities.LogicalContainer;
+import utilities.LogicalContainerNester;
 import utilities.UpdatingEntity;
 
 /**
@@ -38,6 +40,7 @@ import utilities.UpdatingEntity;
  * @author Samuel Bumgardner
  */
 class MenuTemplate implements UpdatingEntity implements HideableEntity implements Observed
+	implements LogicalContainerNester
 {
 
 	/**
@@ -56,8 +59,8 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	 * x & y coordinates that all menu components should be positioned relative to.
 	 * Can be changed by external entities using setPos().
 	 */
-	private var x:Float;
-	private var y:Float;
+	public var x(default, null):Float;
+	public var y(default, null):Float;
 	
 	/**
 	 * The scroll factor to be used by all visual components of a menu.
@@ -70,6 +73,12 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 	 * FlxGroup that holds all HaxeFlixel-inheriting components used by this menu.
 	 */
 	public var totalFlxGrp(default, null):FlxGroup = new FlxGroup();
+	
+	/**
+	 * Array of logical containers that will need logical position updates when this object's
+	 *  logical position updates.
+	 */
+	public var nestedContainers(null, null):Array<LogicalContainer> = new Array<LogicalContainer>();
 	
 	/**
 	 * Sound effects to be played after cursor actions.
@@ -160,9 +169,8 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 		// Move all HaxeFlixel-inheriting components.
 		totalFlxGrp.forEach(moveObject.bind(_, xDiff, yDiff), true);
 		
-		// Set menu's logical x & y values.
-		x = newX;
-		y = newY;
+		// Update all nested logical x & y values.
+		updateLogicalPos(xDiff, yDiff);
 	}
 	
 	/**
@@ -183,6 +191,26 @@ class MenuTemplate implements UpdatingEntity implements HideableEntity implement
 		{
 			(cast targetObject).x += dX;
 			(cast targetObject).y += dY;
+		}
+	}
+	
+	/**
+	 * Function to satisfy LogicalContainerNester interface.
+	 * Is used to update just this containers overall logical position without changing any
+	 *  sprite positions. Needed when something composing this updates all sprite positions
+	 *  itself, then needs to update container logical positions to match.
+	 * 
+	 * @param	diffX	The amount to change this container's logical X position by.
+	 * @param	diffY	The amount to change this container's logical Y position by.
+	 */
+	public function updateLogicalPos(xDiff:Float, yDiff:Float):Void
+	{
+		x += xDiff;
+		y += yDiff;
+		
+		for (logicalContainer in nestedContainers) 
+		{
+			logicalContainer.updateLogicalPos(xDiff, yDiff);
 		}
 	}
 	

@@ -100,6 +100,9 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 		doubleHitSprite = new FlxSprite(x, y, AssetPaths.double_hit__png);
 		doubleHitSprite.active = false;
 		
+		nestedContainers.push(nameBox1);
+		nestedContainers.push(nameBox2);
+		
 		addAllFlxGrps();
 		
 		hide();
@@ -396,20 +399,6 @@ class AttackTargetMenu extends TargetMenuTemplate implements VarSizedBox
 				}
 			}
 		}
-	}
-	
-	override public function setPos(newX:Float, newY:Float):Void
-	{
-		var oldX = x;
-		var oldY = y;
-		
-		super.setPos(newX, newY);
-		
-		nameBox1.nameBox.x += newX - oldX;
-		nameBox1.nameBox.y += newY - oldY;
-		
-		nameBox2.nameBox.x += newX - oldX;
-		nameBox2.nameBox.y += newY - oldY;
 	}
 	
 	override public function reveal():Void

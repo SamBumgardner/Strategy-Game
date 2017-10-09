@@ -109,10 +109,13 @@ class TradeMenu extends CursorMenuTemplate
 		
 		nameBox1 = new NameBox(300 + OffsetX, Y + OffsetY);
 		
-		nameBox2 = new NameBox(650 + OffsetX, Y + OffsetY);
+		nameBox2 = new NameBox();
+		nameBox2.setPos(650 + OffsetX, Y + OffsetY);
 		
 		nameBoxGrp.add(nameBox1.totalFlxGrp);
 		nameBoxGrp.add(nameBox2.totalFlxGrp);
+		nestedContainers.push(nameBox1);
+		nestedContainers.push(nameBox2);
 	}
 	
 	/**
@@ -162,6 +165,9 @@ class TradeMenu extends CursorMenuTemplate
 		optionFlxGrp = new FlxGroup();
 		optionFlxGrp.add(invBox1.optionFlxGrp);
 		optionFlxGrp.add(invBox2.optionFlxGrp);
+		
+		nestedContainers.push(invBox1);
+		nestedContainers.push(invBox2);
 	}
 	
 	/**

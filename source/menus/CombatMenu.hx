@@ -36,11 +36,13 @@ class CombatMenu extends MenuTemplate
 		
 		// Create a pair of CombatHealthBox objects
 		combatHealthBox1 = new CombatHealthBox(X, Y);
-		combatHealthBox2 = new CombatHealthBox(combatHealthBox1.boxSprite.x + 
+		combatHealthBox2 = new CombatHealthBox(combatHealthBox1.x + 
 			combatHealthBox1.boxWidth, Y);
 		
 		totalFlxGrp.add(combatHealthBox1.totalFlxGroup);
 		totalFlxGrp.add(combatHealthBox2.totalFlxGroup);
+		nestedContainers.push(combatHealthBox1);
+		nestedContainers.push(combatHealthBox2);
 		
 		height = combatHealthBox1.boxHeight;
 		
