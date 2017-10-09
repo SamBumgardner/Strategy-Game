@@ -431,6 +431,8 @@ class UnitManager implements Observer
 		unitArray[unit.subject.ID] = null;
 		unitMap[unit.preMoveMapPos.getRow()][unit.preMoveMapPos.getCol()] = -1;
 		teamMap[unit.preMoveMapPos.getRow()][unit.preMoveMapPos.getCol()] = TeamID.NONE;
+		unitMap[unit.mapPos.getRow()][unit.mapPos.getCol()] = -1;
+		teamMap[unit.mapPos.getRow()][unit.mapPos.getCol()] = TeamID.NONE;
 		tileChanges.push(new TileChange(unit.preMoveMapPos, true, unit.teamID));
 		
 		trace("Unit Died...");
