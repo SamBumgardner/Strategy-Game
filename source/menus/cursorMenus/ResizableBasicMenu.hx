@@ -121,6 +121,7 @@ class ResizableBasicMenu extends BasicMenu
 			cornerSize, backgroundSize);
 		
 		boxSpriteGrp = resizableBox.totalFlxGrp;
+		nestedContainers.push(resizableBox);
 	}
 	
 	

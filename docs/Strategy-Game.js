@@ -105,7 +105,7 @@ ApplicationMain.init = function() {
 	}
 };
 ApplicationMain.main = function() {
-	ApplicationMain.config = { build : "1989", company : "Samuel Bumgardner", file : "Strategy-Game", fps : 60, name : "Strategy-Game", orientation : "", packageName : "com.example.myapp", version : "0.0.1", windows : [{ antialiasing : 0, background : 0, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : false, height : 960, parameters : "{}", resizable : false, stencilBuffer : true, title : "Strategy-Game", vsync : true, width : 1280, x : null, y : null}]};
+	ApplicationMain.config = { build : "2045", company : "Samuel Bumgardner", file : "Strategy-Game", fps : 60, name : "Strategy-Game", orientation : "", packageName : "com.example.myapp", version : "0.0.1", windows : [{ antialiasing : 0, background : 0, borderless : false, depthBuffer : false, display : 0, fullscreen : false, hardware : false, height : 960, parameters : "{}", resizable : false, stencilBuffer : true, title : "Strategy-Game", vsync : true, width : 1280, x : null, y : null}]};
 };
 ApplicationMain.start = function() {
 	var hasMain = false;
@@ -3745,6 +3745,12 @@ boxes_BoxCreator.createCorner = function(flipX,flipY) {
 boxes_BoxCreator.prototype = {
 	__class__: boxes_BoxCreator
 };
+var utilities_LogicalContainer = function() { };
+$hxClasses["utilities.LogicalContainer"] = utilities_LogicalContainer;
+utilities_LogicalContainer.__name__ = ["utilities","LogicalContainer"];
+utilities_LogicalContainer.prototype = {
+	__class__: utilities_LogicalContainer
+};
 var boxes_VarSizedBox = function() { };
 $hxClasses["boxes.VarSizedBox"] = boxes_VarSizedBox;
 boxes_VarSizedBox.__name__ = ["boxes","VarSizedBox"];
@@ -3773,7 +3779,7 @@ var boxes_ResizableBox = function(X,Y,maximumWidth,maximumHeight,spriteSheet,cSi
 };
 $hxClasses["boxes.ResizableBox"] = boxes_ResizableBox;
 boxes_ResizableBox.__name__ = ["boxes","ResizableBox"];
-boxes_ResizableBox.__interfaces__ = [boxes_VarSizedBox,utilities_HideableEntity];
+boxes_ResizableBox.__interfaces__ = [utilities_LogicalContainer,boxes_VarSizedBox,utilities_HideableEntity];
 boxes_ResizableBox.prototype = {
 	initBoxComponents: function() {
 		boxes_BoxCreator.setBoxType(this.boxSpriteSheet,this.cornerSize,this.backgroundSize);
@@ -3798,7 +3804,7 @@ boxes_ResizableBox.prototype = {
 	}
 	,resize: function(newWidth,newHeight) {
 		if(newWidth > this.maxWidth || newHeight > this.maxHeight) {
-			haxe_Log.trace("ERROR: resizable boxes are not allowed to change size to any dimensions " + "greater than their original size.",{ fileName : "ResizableBox.hx", lineNumber : 238, className : "boxes.ResizableBox", methodName : "resize"});
+			haxe_Log.trace("ERROR: resizable boxes are not allowed to change size to any dimensions " + "greater than their original size.",{ fileName : "ResizableBox.hx", lineNumber : 239, className : "boxes.ResizableBox", methodName : "resize"});
 		}
 		this.boxWidth = newWidth;
 		this.boxHeight = newHeight;
@@ -3828,20 +3834,23 @@ boxes_ResizableBox.prototype = {
 	,setPos: function(newX,newY) {
 		var xDiff = newX - this.x;
 		var yDiff = newY - this.y;
-		this.x = newX;
-		this.y = newY;
 		var f = $bind(this,this.moveObject);
 		var dX = xDiff;
 		var dY = yDiff;
 		this.totalFlxGrp.forEach(function(a1) {
 			f(a1,dX,dY);
 		},true);
+		this.updateLogicalPos(xDiff,yDiff);
 	}
 	,moveObject: function(targetObject,dX,dY) {
 		if(js_Boot.__instanceof(targetObject,flixel_FlxObject)) {
 			targetObject.x += dX;
 			targetObject.y += dY;
 		}
+	}
+	,updateLogicalPos: function(diffX,diffY) {
+		this.x += diffX;
+		this.y += diffY;
 	}
 	,hide: function() {
 		this.totalFlxGrp.forEach($bind(this,this.hideSprite),true);
@@ -53089,6 +53098,13 @@ lime_utils__$UInt8Array_UInt8Array_$Impl_$.toString = function(this1) {
 		return null;
 	}
 };
+var utilities_LogicalContainerNester = function() { };
+$hxClasses["utilities.LogicalContainerNester"] = utilities_LogicalContainerNester;
+utilities_LogicalContainerNester.__name__ = ["utilities","LogicalContainerNester"];
+utilities_LogicalContainerNester.__interfaces__ = [utilities_LogicalContainer];
+utilities_LogicalContainerNester.prototype = {
+	__class__: utilities_LogicalContainerNester
+};
 var menus_MenuTemplate = function(X,Y,subjectID) {
 	if(subjectID == null) {
 		subjectID = 0;
@@ -53099,6 +53115,7 @@ var menus_MenuTemplate = function(X,Y,subjectID) {
 	if(X == null) {
 		X = 0;
 	}
+	this.nestedContainers = [];
 	this.totalFlxGrp = new flixel_group_FlxTypedGroup();
 	this.menuScrollFactor = new flixel_math_FlxPoint(0,0);
 	this.active = false;
@@ -53109,7 +53126,7 @@ var menus_MenuTemplate = function(X,Y,subjectID) {
 };
 $hxClasses["menus.MenuTemplate"] = menus_MenuTemplate;
 menus_MenuTemplate.__name__ = ["menus","MenuTemplate"];
-menus_MenuTemplate.__interfaces__ = [observerPattern_Observed,utilities_HideableEntity,utilities_UpdatingEntity];
+menus_MenuTemplate.__interfaces__ = [utilities_LogicalContainerNester,observerPattern_Observed,utilities_HideableEntity,utilities_UpdatingEntity];
 menus_MenuTemplate.prototype = {
 	initSoundAssets: function() {
 		this.moveSound = flixel_FlxG.sound.load("assets/sounds/menu_move.wav");
@@ -53135,13 +53152,23 @@ menus_MenuTemplate.prototype = {
 		this.totalFlxGrp.forEach(function(a1) {
 			f(a1,dX,dY);
 		},true);
-		this.x = newX;
-		this.y = newY;
+		this.updateLogicalPos(xDiff,yDiff);
 	}
 	,moveObject: function(targetObject,dX,dY) {
 		if(js_Boot.__instanceof(targetObject,flixel_FlxObject)) {
 			targetObject.x += dX;
 			targetObject.y += dY;
+		}
+	}
+	,updateLogicalPos: function(xDiff,yDiff) {
+		this.x += xDiff;
+		this.y += yDiff;
+		var _g = 0;
+		var _g1 = this.nestedContainers;
+		while(_g < _g1.length) {
+			var logicalContainer = _g1[_g];
+			++_g;
+			logicalContainer.updateLogicalPos(xDiff,yDiff);
 		}
 	}
 	,hide: function() {
@@ -53197,9 +53224,11 @@ var menus_CombatMenu = function(X,Y,subjectID) {
 	this.width = 400;
 	menus_MenuTemplate.call(this,X,Y,subjectID);
 	this.combatHealthBox1 = new menus_commonBoxGraphics_CombatHealthBox(X,Y);
-	this.combatHealthBox2 = new menus_commonBoxGraphics_CombatHealthBox(this.combatHealthBox1.boxSprite.x + this.combatHealthBox1.boxWidth,Y);
+	this.combatHealthBox2 = new menus_commonBoxGraphics_CombatHealthBox(this.combatHealthBox1.x + this.combatHealthBox1.boxWidth,Y);
 	this.totalFlxGrp.add(this.combatHealthBox1.totalFlxGroup);
 	this.totalFlxGrp.add(this.combatHealthBox2.totalFlxGroup);
+	this.nestedContainers.push(this.combatHealthBox1);
+	this.nestedContainers.push(this.combatHealthBox2);
 	this.height = this.combatHealthBox1.boxHeight;
 	this.turnTimer = new flixel_util_FlxTimer();
 	this.hide();
@@ -53462,6 +53491,8 @@ var menus_commonBoxGraphics_CombatHealthBox = function(X,Y) {
 	if(X == null) {
 		X = 0;
 	}
+	this.y = 0;
+	this.x = 0;
 	this.totalFlxGroup = new flixel_group_FlxTypedGroup();
 	this.textSize = 16;
 	this.backgroundSize = 10;
@@ -53471,12 +53502,12 @@ var menus_commonBoxGraphics_CombatHealthBox = function(X,Y) {
 	this.initName();
 	this.initHealthComponents();
 	this.initBox();
-	this.setPos(X,Y);
 	this.addAllFlxGrps();
+	this.setPos(X,Y);
 };
 $hxClasses["menus.commonBoxGraphics.CombatHealthBox"] = menus_commonBoxGraphics_CombatHealthBox;
 menus_commonBoxGraphics_CombatHealthBox.__name__ = ["menus","commonBoxGraphics","CombatHealthBox"];
-menus_commonBoxGraphics_CombatHealthBox.__interfaces__ = [boxes_VarSizedBox];
+menus_commonBoxGraphics_CombatHealthBox.__interfaces__ = [utilities_LogicalContainer,boxes_VarSizedBox];
 menus_commonBoxGraphics_CombatHealthBox.prototype = {
 	initName: function() {
 		this.nameText = new flixel_text_FlxText(this.cornerSize,this.cornerSize,this.boxWidth - this.cornerSize * 2,"Placeholder",this.textSize);
@@ -53510,11 +53541,26 @@ menus_commonBoxGraphics_CombatHealthBox.prototype = {
 			this.healthBar.setParent(this.trackedUnit,"health");
 		}
 	}
-	,setPos: function(X,Y) {
-		this.boxSprite.setPosition(X,Y);
-		this.nameText.setPosition(X + this.cornerSize,Y + this.cornerSize);
-		this.healthCount.setPosition(this.nameText.x,this.nameText.y + 20);
-		this.healthBar.setPosition(this.healthCount.x + this.healthCount.get_width() + 5,this.healthCount.y + 6);
+	,setPos: function(newX,newY) {
+		var xDiff = newX - this.x;
+		var yDiff = newY - this.y;
+		var f = $bind(this,this.moveObject);
+		var dX = xDiff;
+		var dY = yDiff;
+		this.totalFlxGroup.forEach(function(a1) {
+			f(a1,dX,dY);
+		},true);
+		this.updateLogicalPos(xDiff,yDiff);
+	}
+	,moveObject: function(targetObject,dX,dY) {
+		if(js_Boot.__instanceof(targetObject,flixel_FlxObject)) {
+			targetObject.x += dX;
+			targetObject.y += dY;
+		}
+	}
+	,updateLogicalPos: function(xDiff,yDiff) {
+		this.x += xDiff;
+		this.y += yDiff;
 	}
 	,update: function(elapsed) {
 		if(this.trackedUnit != null && this.healthCountValue != this.trackedUnit.health) {
@@ -53561,11 +53607,14 @@ var menus_commonBoxGraphics_NameBox = function(X,Y) {
 	if(X == null) {
 		X = 0;
 	}
+	this.nestedContainers = [];
 	this.textSize = 16;
 	this.backgroundSize = 10;
 	this.cornerSize = 10;
 	this.boxSpriteSheet = "assets/images/box_simple.png";
 	this.maxWidth = 300;
+	this.x = X;
+	this.y = Y;
 	this.initName(X,Y);
 	this.initBox(X,Y);
 	this.setName("Placeholder");
@@ -53573,7 +53622,7 @@ var menus_commonBoxGraphics_NameBox = function(X,Y) {
 };
 $hxClasses["menus.commonBoxGraphics.NameBox"] = menus_commonBoxGraphics_NameBox;
 menus_commonBoxGraphics_NameBox.__name__ = ["menus","commonBoxGraphics","NameBox"];
-menus_commonBoxGraphics_NameBox.__interfaces__ = [boxes_VarSizedBox];
+menus_commonBoxGraphics_NameBox.__interfaces__ = [utilities_LogicalContainerNester,boxes_VarSizedBox];
 menus_commonBoxGraphics_NameBox.prototype = {
 	initName: function(X,Y) {
 		this.nameText = new flixel_text_FlxText(X + this.cornerSize,Y + this.cornerSize,0,"Placeholder",this.textSize);
@@ -53586,6 +53635,7 @@ menus_commonBoxGraphics_NameBox.prototype = {
 		this.boxHeight = Math.floor(this.nameText.get_height() + this.cornerSize * 2);
 		this.nameBox = new boxes_ResizableBox(X,Y,this.boxWidth,this.boxHeight,this.boxSpriteSheet,this.cornerSize,this.backgroundSize);
 		this.boxSpriteGrp.add(this.nameBox.totalFlxGrp);
+		this.nestedContainers.push(this.nameBox);
 		this.nameBox.reveal();
 	}
 	,addAllFlxGrps: function() {
@@ -53599,8 +53649,32 @@ menus_commonBoxGraphics_NameBox.prototype = {
 		this.nameBox.resize(this.boxWidth,this.boxHeight);
 	}
 	,setPos: function(newX,newY) {
-		this.nameBox.setPos(newX,newY);
-		this.nameText.setPosition(newX + this.cornerSize,newY + this.cornerSize);
+		var xDiff = newX - this.x;
+		var yDiff = newY - this.y;
+		var f = $bind(this,this.moveObject);
+		var dX = xDiff;
+		var dY = yDiff;
+		this.totalFlxGrp.forEach(function(a1) {
+			f(a1,dX,dY);
+		},true);
+		this.updateLogicalPos(xDiff,yDiff);
+	}
+	,moveObject: function(targetObject,dX,dY) {
+		if(js_Boot.__instanceof(targetObject,flixel_FlxObject)) {
+			targetObject.x += dX;
+			targetObject.y += dY;
+		}
+	}
+	,updateLogicalPos: function(xDiff,yDiff) {
+		this.x += xDiff;
+		this.y += yDiff;
+		var _g = 0;
+		var _g1 = this.nestedContainers;
+		while(_g < _g1.length) {
+			var logicalContainer = _g1[_g];
+			++_g;
+			logicalContainer.updateLogicalPos(xDiff,yDiff);
+		}
 	}
 	,__class__: menus_commonBoxGraphics_NameBox
 };
@@ -53844,6 +53918,7 @@ var menus_cursorMenus_InventoryBox = function(X,Y) {
 	if(X == null) {
 		X = 0;
 	}
+	this.nestedContainers = [];
 	this.totalFlxGrp = new flixel_group_FlxTypedGroup();
 	this.optionFlxGrp = new flixel_group_FlxTypedGroup();
 	this.boxSpriteSheet = "assets/images/box_menu.png";
@@ -53858,7 +53933,7 @@ var menus_cursorMenus_InventoryBox = function(X,Y) {
 };
 $hxClasses["menus.cursorMenus.InventoryBox"] = menus_cursorMenus_InventoryBox;
 menus_cursorMenus_InventoryBox.__name__ = ["menus","cursorMenus","InventoryBox"];
-menus_cursorMenus_InventoryBox.__interfaces__ = [boxes_VarSizedBox];
+menus_cursorMenus_InventoryBox.__interfaces__ = [utilities_LogicalContainerNester,boxes_VarSizedBox];
 menus_cursorMenus_InventoryBox.prototype = {
 	initMenuBox: function(X,Y) {
 		this.boxWidth = 300;
@@ -53900,6 +53975,35 @@ menus_cursorMenus_InventoryBox.prototype = {
 		this.totalFlxGrp.add(this.boxSpriteGrp);
 		this.totalFlxGrp.add(this.itemSlotsGrp);
 		this.totalFlxGrp.add(this.optionFlxGrp);
+	}
+	,setPos: function(newX,newY) {
+		var xDiff = newX - this.x;
+		var yDiff = newY - this.y;
+		this.x = newX;
+		this.y = newY;
+		var f = $bind(this,this.moveObject);
+		var dX = xDiff;
+		var dY = yDiff;
+		this.totalFlxGrp.forEach(function(a1) {
+			f(a1,dX,dY);
+		},true);
+	}
+	,moveObject: function(targetObject,dX,dY) {
+		if(js_Boot.__instanceof(targetObject,flixel_FlxObject)) {
+			targetObject.x += dX;
+			targetObject.y += dY;
+		}
+	}
+	,updateLogicalPos: function(xDiff,yDiff) {
+		this.x += xDiff;
+		this.y += yDiff;
+		var _g = 0;
+		var _g1 = this.nestedContainers;
+		while(_g < _g1.length) {
+			var logicalContainer = _g1[_g];
+			++_g;
+			logicalContainer.updateLogicalPos(xDiff,yDiff);
+		}
 	}
 	,set_trackedInventory: function(newInv) {
 		this.trackedInventory = newInv;
@@ -53963,6 +54067,7 @@ menus_cursorMenus_InventoryMenu.prototype = $extend(menus_cursorMenus_CursorMenu
 	initInventoryBox: function(X,Y) {
 		this.inventoryBox = new menus_cursorMenus_InventoryBox(X,Y);
 		this.menuOptionArr = this.inventoryBox.menuOptionArr;
+		this.nestedContainers.push(this.inventoryBox);
 	}
 	,addAllFlxGrps: function() {
 		this.totalFlxGrp.add(this.inventoryBox.boxSpriteGrp);
@@ -54122,6 +54227,7 @@ menus_cursorMenus_ResizableBasicMenu.prototype = $extend(menus_cursorMenus_Basic
 		this.boxHeight = lastLabel.y + lastLabel.get_height() + this.cornerSize - Y;
 		this.resizableBox = new boxes_ResizableBox(X,Y,this.boxWidth,this.boxHeight,this.boxSpriteSheet,this.cornerSize,this.backgroundSize);
 		this.boxSpriteGrp = this.resizableBox.totalFlxGrp;
+		this.nestedContainers.push(this.resizableBox);
 	}
 	,changeMenuOptions: function(newBoolArray) {
 		this.setActiveLabels(newBoolArray);
@@ -54144,7 +54250,7 @@ menus_cursorMenus_ResizableBasicMenu.prototype = $extend(menus_cursorMenus_Basic
 	}
 	,setActiveLabels: function(newBoolArray) {
 		if(newBoolArray.length != this.activeLabels.length) {
-			haxe_Log.trace("ERROR: the array provided to setActiveLabels() has an incorrect number " + "of elements.",{ fileName : "ResizableBasicMenu.hx", lineNumber : 211, className : "menus.cursorMenus.ResizableBasicMenu", methodName : "setActiveLabels"});
+			haxe_Log.trace("ERROR: the array provided to setActiveLabels() has an incorrect number " + "of elements.",{ fileName : "ResizableBasicMenu.hx", lineNumber : 212, className : "menus.cursorMenus.ResizableBasicMenu", methodName : "setActiveLabels"});
 		} else {
 			this.numActiveLabels = 0;
 			var _g1 = 0;
@@ -54241,9 +54347,12 @@ menus_cursorMenus_TradeMenu.prototype = $extend(menus_cursorMenus_CursorMenuTemp
 	initNameBoxes: function(X,Y) {
 		this.nameBoxGrp = new flixel_group_FlxTypedGroup();
 		this.nameBox1 = new menus_commonBoxGraphics_NameBox(290,Y + 15);
-		this.nameBox2 = new menus_commonBoxGraphics_NameBox(640,Y + 15);
+		this.nameBox2 = new menus_commonBoxGraphics_NameBox();
+		this.nameBox2.setPos(640,Y + 15);
 		this.nameBoxGrp.add(this.nameBox1.totalFlxGrp);
 		this.nameBoxGrp.add(this.nameBox2.totalFlxGrp);
+		this.nestedContainers.push(this.nameBox1);
+		this.nestedContainers.push(this.nameBox2);
 	}
 	,initInventoryBoxes: function(X,Y) {
 		this.menuOptionArr = [];
@@ -54277,6 +54386,8 @@ menus_cursorMenus_TradeMenu.prototype = $extend(menus_cursorMenus_CursorMenuTemp
 		this.optionFlxGrp = new flixel_group_FlxTypedGroup();
 		this.optionFlxGrp.add(this.invBox1.optionFlxGrp);
 		this.optionFlxGrp.add(this.invBox2.optionFlxGrp);
+		this.nestedContainers.push(this.invBox1);
+		this.nestedContainers.push(this.invBox2);
 	}
 	,initSelectedCursor: function() {
 		this.selectedCursor = new flixel_FlxSprite(0,0,"assets/images/menu_cursor_simple.png");
@@ -54313,7 +54424,7 @@ menus_cursorMenus_TradeMenu.prototype = $extend(menus_cursorMenus_CursorMenuTemp
 	}
 	,refreshMenuOptions: function() {
 		if(this.selectedUnit == null || this.otherUnit == null) {
-			haxe_Log.trace("ERROR: setUnits() was not called before refreshInventories(), unit variables unset.",{ fileName : "TradeMenu.hx", lineNumber : 239, className : "menus.cursorMenus.TradeMenu", methodName : "refreshMenuOptions"});
+			haxe_Log.trace("ERROR: setUnits() was not called before refreshInventories(), unit variables unset.",{ fileName : "TradeMenu.hx", lineNumber : 245, className : "menus.cursorMenus.TradeMenu", methodName : "refreshMenuOptions"});
 			return;
 		}
 		this.invBox1.refreshDisplay();
@@ -54545,6 +54656,8 @@ var menus_targetMenus_AttackTargetMenu = function(ID) {
 	this.totalWidth = this.nameBox2.nameBox.x + this.nameBox2.boxWidth - this.nameBox1.nameBox.x;
 	this.doubleHitSprite = new flixel_FlxSprite(this.x,this.y,"assets/images/double_hit.png");
 	this.doubleHitSprite.set_active(false);
+	this.nestedContainers.push(this.nameBox1);
+	this.nestedContainers.push(this.nameBox2);
 	this.addAllFlxGrps();
 	this.hide();
 };
@@ -54666,19 +54779,15 @@ menus_targetMenus_AttackTargetMenu.prototype = $extend(menus_targetMenus_TargetM
 		this.InfoArray[menus_targetMenus_InfoWindowRows.HIT][colIndex].set_text(Std.string(Math.min(Math.max(new_unit.accuracy - enemy_unit.evade,0),100) | 0));
 		this.InfoArray[menus_targetMenus_InfoWindowRows.CRIT][colIndex].set_text(Std.string(Math.min(Math.max(new_unit.critChance - enemy_unit.dodge,0),100) | 0));
 		this.setDoubleHit(colIndex,new_unit,enemy_unit);
-		haxe_Log.trace(this.doubleHitSprite.visible,{ fileName : "AttackTargetMenu.hx", lineNumber : 332, className : "menus.targetMenus.AttackTargetMenu", methodName : "setInfoArrayColumn"});
 	}
 	,setDoubleHit: function(colIndex,new_unit,enemy_unit) {
-		haxe_Log.trace(colIndex,{ fileName : "AttackTargetMenu.hx", lineNumber : 337, className : "menus.targetMenus.AttackTargetMenu", methodName : "setDoubleHit", customParams : [new_unit.attackSpeed,enemy_unit.attackSpeed]});
 		if(new_unit.attackSpeed >= enemy_unit.attackSpeed + 4) {
-			haxe_Log.trace("Someone gets a double!",{ fileName : "AttackTargetMenu.hx", lineNumber : 340, className : "menus.targetMenus.AttackTargetMenu", methodName : "setDoubleHit"});
 			if(this.doubleHitColumn != colIndex) {
 				this.doubleHitSprite.setPosition(this.InfoArray[menus_targetMenus_InfoWindowRows.MIGHT][colIndex].x + this.doubleHitOffsetX,this.InfoArray[menus_targetMenus_InfoWindowRows.MIGHT][colIndex].y + this.doubleHitOffsetY);
 				this.doubleHitColumn = colIndex;
 			}
 			this.doubleHitSprite.set_visible(true);
 		} else if(this.doubleHitColumn == colIndex) {
-			haxe_Log.trace("deactivated double",{ fileName : "AttackTargetMenu.hx", lineNumber : 354, className : "menus.targetMenus.AttackTargetMenu", methodName : "setDoubleHit"});
 			this.doubleHitSprite.set_visible(false);
 			this.doubleHitColumn = menus_targetMenus_InfoWindowCols.NONE;
 		}
@@ -54709,19 +54818,11 @@ menus_targetMenus_AttackTargetMenu.prototype = $extend(menus_targetMenus_TargetM
 			}
 		}
 	}
-	,setPos: function(newX,newY) {
-		menus_targetMenus_TargetMenuTemplate.prototype.setPos.call(this,newX,newY);
-		this.nameBox1.nameBox.x = newX;
-		this.nameBox1.nameBox.y = newY;
-		this.nameBox2.nameBox.x = newX + this.nameBox2OffsetX;
-		this.nameBox2.nameBox.y = newY + this.nameBox2OffsetY;
-	}
 	,reveal: function() {
 		menus_targetMenus_TargetMenuTemplate.prototype.reveal.call(this);
 		if(this.doubleHitColumn == menus_targetMenus_InfoWindowCols.NONE) {
 			this.doubleHitSprite.set_visible(false);
 		}
-		haxe_Log.trace("reveal just happened",{ fileName : "AttackTargetMenu.hx", lineNumber : 426, className : "menus.targetMenus.AttackTargetMenu", methodName : "reveal"});
 	}
 	,__class__: menus_targetMenus_AttackTargetMenu
 	,__properties__: $extend(menus_targetMenus_TargetMenuTemplate.prototype.__properties__,{set_currWeaponIndex:"set_currWeaponIndex"})
@@ -55716,8 +55817,10 @@ missions_managers_UnitManager.prototype = {
 		this.unitArray[unit.subject.ID] = null;
 		this.unitMap[units_movement_MoveIDExtender.getRow(unit.preMoveMapPos)][units_movement_MoveIDExtender.getCol(unit.preMoveMapPos)] = -1;
 		this.teamMap[units_movement_MoveIDExtender.getRow(unit.preMoveMapPos)][units_movement_MoveIDExtender.getCol(unit.preMoveMapPos)] = units_TeamID.NONE;
+		this.unitMap[units_movement_MoveIDExtender.getRow(unit.mapPos)][units_movement_MoveIDExtender.getCol(unit.mapPos)] = -1;
+		this.teamMap[units_movement_MoveIDExtender.getRow(unit.mapPos)][units_movement_MoveIDExtender.getCol(unit.mapPos)] = units_TeamID.NONE;
 		this.tileChanges.push(new units_movement_TileChange(unit.preMoveMapPos,true,unit.teamID));
-		haxe_Log.trace("Unit Died...",{ fileName : "UnitManager.hx", lineNumber : 436, className : "missions.managers.UnitManager", methodName : "removeUnitFromMission"});
+		haxe_Log.trace("Unit Died...",{ fileName : "UnitManager.hx", lineNumber : 438, className : "missions.managers.UnitManager", methodName : "removeUnitFromMission"});
 	}
 	,getUnitAtLoc: function(row,col) {
 		var unitID = this.unitMap[row][col];
@@ -55836,7 +55939,7 @@ missions_managers_UnitManager.prototype = {
 	}
 	,onNotify: function(event,notifier) {
 		var notifyingUnit = notifier;
-		haxe_Log.trace("UnitManager's onNotify was called",{ fileName : "UnitManager.hx", lineNumber : 721, className : "missions.managers.UnitManager", methodName : "onNotify"});
+		haxe_Log.trace("UnitManager's onNotify was called",{ fileName : "UnitManager.hx", lineNumber : 723, className : "missions.managers.UnitManager", methodName : "onNotify"});
 		if(observerPattern_eventSystem_EventExtender.getType(event) == observerPattern_eventSystem_UnitEvents.DIED) {
 			this.removeUnitFromMission(notifyingUnit);
 		}
@@ -56175,7 +56278,7 @@ missions_managers_UnitManager.prototype = {
 					}
 				}
 			} else if(currTile.numTimesInBfQueue < 0) {
-				haxe_Log.trace("ERROR: The following tile is in the queue a negative # of times:",{ fileName : "UnitManager.hx", lineNumber : 1437, className : "missions.managers.UnitManager", methodName : "bfCalcMoveTiles", customParams : [currTile]});
+				haxe_Log.trace("ERROR: The following tile is in the queue a negative # of times:",{ fileName : "UnitManager.hx", lineNumber : 1439, className : "missions.managers.UnitManager", methodName : "bfCalcMoveTiles", customParams : [currTile]});
 				break;
 			}
 			++i;
@@ -56307,7 +56410,7 @@ missions_managers_UnitManager.prototype = {
 				colOffset = 1;
 				break;
 			default:
-				haxe_Log.trace("ERROR: Non-orthagonal move provided to updateMoveArrow.",{ fileName : "UnitManager.hx", lineNumber : 1708, className : "missions.managers.UnitManager", methodName : "findNeighborPathToTarget"});
+				haxe_Log.trace("ERROR: Non-orthagonal move provided to updateMoveArrow.",{ fileName : "UnitManager.hx", lineNumber : 1710, className : "missions.managers.UnitManager", methodName : "findNeighborPathToTarget"});
 			}
 			moveTile = this.selectedUnit.moveTiles.h[units_movement_MoveIDExtender.getOtherByOffset(moveTile.moveID,rowOffset,colOffset)];
 		}
@@ -56387,7 +56490,7 @@ missions_managers_UnitManager.prototype = {
 							colOffset = 1;
 							break;
 						default:
-							haxe_Log.trace("ERROR: Non-orthagonal move provided to updateMoveArrow.",{ fileName : "UnitManager.hx", lineNumber : 1855, className : "missions.managers.UnitManager", methodName : "updateMoveArrow"});
+							haxe_Log.trace("ERROR: Non-orthagonal move provided to updateMoveArrow.",{ fileName : "UnitManager.hx", lineNumber : 1857, className : "missions.managers.UnitManager", methodName : "updateMoveArrow"});
 						}
 						moveTile = this.selectedUnit.moveTiles.h[units_movement_MoveIDExtender.getOtherByOffset(moveTile.moveID,rowOffset,colOffset)];
 					}
@@ -56460,7 +56563,7 @@ missions_managers_UnitManager.prototype = {
 			vertMod = -1;
 			break;
 		default:
-			haxe_Log.trace("ERROR: currMoveDir was not a string representation of a direction.",{ fileName : "UnitManager.hx", lineNumber : 1984, className : "missions.managers.UnitManager", methodName : "moveUnit"});
+			haxe_Log.trace("ERROR: currMoveDir was not a string representation of a direction.",{ fileName : "UnitManager.hx", lineNumber : 1986, className : "missions.managers.UnitManager", methodName : "moveUnit"});
 		}
 		var moveDist = this.remainingMoveDist / this.framesLeftInMove;
 		this.remainingMoveDist -= moveDist;

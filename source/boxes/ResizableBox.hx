@@ -7,6 +7,7 @@ import flixel.group.FlxGroup;
 import flixel.math.FlxRect;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import utilities.HideableEntity;
+import utilities.LogicalContainer;
 
 /**
  * Resizable boxes, used in a situation where a box's size should change depending different
@@ -24,7 +25,7 @@ import utilities.HideableEntity;
  * 
  * @author Samuel Bumgardner
  */
-class ResizableBox implements HideableEntity implements VarSizedBox
+class ResizableBox implements HideableEntity implements VarSizedBox implements LogicalContainer
 {
 	///////////////////////////////////////
 	//         DATA  DECLARATION         //
@@ -131,8 +132,8 @@ class ResizableBox implements HideableEntity implements VarSizedBox
 	 * 
 	 * In most cases, you should use setPos() to change this value, since it'll
 	 * 	also update all resizable box components to match its position.
-	 * If the components have already moved, however, it's fine to change this
-	 * 	manually to match the box's new position.
+	 * If the components have already moved, however, this should be changed with
+	 *  updateLogicalPos().
 	 */
 	public var x:Float = 0;
 	
@@ -141,8 +142,8 @@ class ResizableBox implements HideableEntity implements VarSizedBox
 	 * 
 	 * In most cases, you should use setPos() to change this value, since it'll
 	 * 	also update all resizable box components to match its position.
-	 * If the components have already moved, however, it's fine to change this
-	 * 	manually to match the box's new position.
+	 * If the components have already moved, however, this should be changed with
+	 *  updateLogicalPos().
 	 */
 	public var y:Float = 0;
 	
@@ -268,10 +269,9 @@ class ResizableBox implements HideableEntity implements VarSizedBox
 		var xDiff:Float = newX - x;
 		var yDiff:Float = newY - y;
 		
-		x = newX;
-		y = newY;
-		
 		totalFlxGrp.forEach(moveObject.bind(_, xDiff, yDiff), true);
+		
+		updateLogicalPos(xDiff, yDiff);
 	}
 	
 	/**
@@ -293,6 +293,21 @@ class ResizableBox implements HideableEntity implements VarSizedBox
 			(cast targetObject).x += dX;
 			(cast targetObject).y += dY;
 		}
+	}
+	
+	/**
+	 * Function to satisfy LogicalContainer interface.
+	 * Is used to update just this containers overall logical position without changing any
+	 *  sprite positions. Needed when something composing this updates all sprite positions
+	 *  itself, then needs to update container logical positions to match.
+	 * 
+	 * @param	diffX	The amount to change this container's logical X position by.
+	 * @param	diffY	The amount to change this container's logical Y position by.
+	 */
+	public function updateLogicalPos(diffX:Float, diffY:Float):Void
+	{
+		x += diffX;
+		y += diffY;
 	}
 	
 	/**

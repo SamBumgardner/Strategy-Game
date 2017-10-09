@@ -1,6 +1,7 @@
 package menus.commonBoxGraphics;
 import boxes.BoxCreator;
 import boxes.VarSizedBox;
+import flixel.FlxBasic;
 import flixel.FlxObject;
 import flixel.FlxSprite;
 import flixel.group.FlxGroup;
@@ -9,12 +10,13 @@ import flixel.text.FlxText;
 import flixel.ui.FlxBar;
 import flixel.util.FlxColor;
 import units.Unit;
+import utilities.LogicalContainer;
 
 /**
  * ...
  * @author Samuel Bumgardner
  */
-class CombatHealthBox implements VarSizedBox
+class CombatHealthBox implements VarSizedBox implements LogicalContainer
 {
 
 	/* INTERFACE boxes.VarSizedBox */
@@ -48,15 +50,23 @@ class CombatHealthBox implements VarSizedBox
 	public var trackedUnit:Unit;
 	
 	
+	/**
+	 * x & y coordinates that all menu components should be positioned relative to.
+	 * Can be changed by external entities using setPos().
+	 */
+	public var x(default, null):Float = 0;
+	public var y(default, null):Float = 0;
+	
+	
 	public function new(?X:Float = 0, ?Y:Float = 0) 
 	{
 		initName();
 		initHealthComponents();
 		initBox();
 		
-		setPos(X, Y);
-		
 		addAllFlxGrps();
+		
+		setPos(X, Y);
 	}
 	
 	
@@ -111,13 +121,58 @@ class CombatHealthBox implements VarSizedBox
 		}
 	}
 	
-	public function setPos(X:Float, Y:Float):Void
+	/**
+	 * Public function for changing the position of the menu and all of its components.
+	 * 
+	 * @param	newX	The menu's new x value.
+	 * @param	newY	The menu's new y value.
+	 */
+	public function setPos(newX:Float, newY:Float):Void
 	{
-		boxSprite.setPosition(X, Y);
-		nameText.setPosition(X + cornerSize, Y + cornerSize);
+		var xDiff:Float = newX - x;
+		var yDiff:Float = newY - y;
 		
-		healthCount.setPosition(nameText.x, nameText.y + 20);
-		healthBar.setPosition(healthCount.x + healthCount.width + 5, healthCount.y + 6);
+		// Move all HaxeFlixel-inheriting components.
+		totalFlxGroup.forEach(moveObject.bind(_, xDiff, yDiff), true);
+		
+		// Update all nested logical x & y values.
+		updateLogicalPos(xDiff, yDiff);
+	}
+	
+	/**
+	 * Helper function used by setPos().
+	 * Is passed as the argument into an FlxGroup's forEach() to change the x values of all
+	 * 	sprites in the menu's totalFlxGrp. 
+	 * Because totalFlxGroup holds objects of type FlxBasic, the function has to test that the 
+	 * 	"targetSprite" FlxBasic object is actually an FlxObject (or something that inherits 
+	 * 	from it) so it has an x & y component to change.
+	 * 
+	 * @param	targetSprite	The FlxBasic object that is being operated upon.
+	 * @param	dX				The amount the targetObject's x should change by.
+	 * @param	dY				The amount the targetObject's y should change by.
+	 */
+	private function moveObject(targetObject:FlxBasic, dX:Float, dY:Float):Void
+	{
+		if (Std.is(targetObject, FlxObject))
+		{
+			(cast targetObject).x += dX;
+			(cast targetObject).y += dY;
+		}
+	}
+	
+	/**
+	 * Function to satisfy LogicalContainerNester interface.
+	 * Is used to update just this containers overall logical position without changing any
+	 *  sprite positions. Needed when something composing this updates all sprite positions
+	 *  itself, then needs to update container logical positions to match.
+	 * 
+	 * @param	diffX	The amount to change this container's logical X position by.
+	 * @param	diffY	The amount to change this container's logical Y position by.
+	 */
+	public function updateLogicalPos(xDiff:Float, yDiff:Float):Void
+	{
+		x += xDiff;
+		y += yDiff;
 	}
 	
 	public function update(elapsed:Float):Void

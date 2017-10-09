@@ -2,17 +2,21 @@ package menus.cursorMenus;
 
 import boxes.ResizableBox;
 import boxes.VarSizedBox;
+import flixel.FlxBasic;
+import flixel.FlxObject;
 import flixel.group.FlxGroup;
 import flixel.system.FlxAssets.FlxGraphicAsset;
 import flixel.util.FlxColor;
 import menus.commonBoxGraphics.InventorySlot;
 import units.items.Inventory;
+import utilities.LogicalContainer;
+import utilities.LogicalContainerNester;
 
 /**
  * ...
  * @author Sam Bumgardner
  */
-class InventoryBox implements VarSizedBox 
+class InventoryBox implements VarSizedBox implements LogicalContainerNester
 {
 	///////////////////////////////////////
 	//         DATA  DECLARATION         //
@@ -76,6 +80,19 @@ class InventoryBox implements VarSizedBox
 	 * 
 	 */
 	public var trackedInventory(default, set):Inventory;
+	
+	/**
+	 * x & y coordinates that all menu components should be positioned relative to.
+	 * Can be changed by external entities using setPos().
+	 */
+	public var x(default, null):Float;
+	public var y(default, null):Float;
+	
+	/**
+	 * Array of logical containers that will need logical position updates when this object's
+	 *  logical position updates.
+	 */
+	public var nestedContainers(null, null):Array<LogicalContainer> = new Array<LogicalContainer>();
 	
 	
 	///////////////////////////////////////
@@ -180,6 +197,64 @@ class InventoryBox implements VarSizedBox
 		totalFlxGrp.add(optionFlxGrp);
 	}
 	
+	
+	/**
+	 * Public function for changing the position of the box and all of its components.
+	 * 
+	 * @param	newX	The box's new x value.
+	 * @param	newY	The box's new y value.
+	 */
+	public function setPos(newX:Float, newY:Float):Void
+	{
+		var xDiff:Float = newX - x;
+		var yDiff:Float = newY - y;
+		
+		x = newX;
+		y = newY;
+		
+		totalFlxGrp.forEach(moveObject.bind(_, xDiff, yDiff), true);
+	}
+	
+	/**
+	 * Helper function used by setPos().
+	 * Is passed as the argument into an FlxGroup's forEach() to change the x values of all
+	 * 	sprites in the box's totalFlxGrp. 
+	 * Because totalFlxGroup holds objects of type FlxBasic, the function has to test that the 
+	 * 	"targetSprite" FlxBasic object is actually an FlxObject (or something that inherits 
+	 * 	from it) so it has an x & y component to change.
+	 * 
+	 * @param	targetSprite	The FlxBasic object that is being operated upon.
+	 * @param	dX				The amount the targetObject's x should change by.
+	 * @param	dY				The amount the targetObject's y should change by.
+	 */
+	private function moveObject(targetObject:FlxBasic, dX:Float, dY:Float):Void
+	{
+		if (Std.is(targetObject, FlxObject))
+		{
+			(cast targetObject).x += dX;
+			(cast targetObject).y += dY;
+		}
+	}
+	
+	/**
+	 * Function to satisfy LogicalContainerNester interface.
+	 * Is used to update just this containers overall logical position without changing any
+	 *  sprite positions. Needed when something composing this updates all sprite positions
+	 *  itself, then needs to update container logical positions to match.
+	 * 
+	 * @param	diffX	The amount to change this container's logical X position by.
+	 * @param	diffY	The amount to change this container's logical Y position by.
+	 */
+	public function updateLogicalPos(xDiff:Float, yDiff:Float):Void
+	{
+		x += xDiff;
+		y += yDiff;
+		
+		for (logicalContainer in nestedContainers) 
+		{
+			logicalContainer.updateLogicalPos(xDiff, yDiff);
+		}
+	}
 	
 	public function set_trackedInventory(newInv:Inventory):Inventory
 	{

@@ -65,6 +65,7 @@ class InventoryMenu extends CursorMenuTemplate
 	{
 		inventoryBox = new InventoryBox(X, Y);
 		menuOptionArr = inventoryBox.menuOptionArr;
+		nestedContainers.push(inventoryBox);
 	}
 	
 	
